@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leyenda — Crea tu jugador</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <img class="brand__logo" src="assets/logo/logo_leyenda_transparent.png" alt="Leyenda">
+  </div>
+  <p class="brand__tagline">Conviértete en una leyenda del fútbol</p>
+</header>
+
+<main class="creator">
+
+  <div class="creator__intro">
+    <h1>Crea tu ficha de jugador</h1>
+    <p>Cada dato que cargues se refleja al instante en tu carnet. Cuando esté completo, empiezas tu carrera.</p>
+  </div>
+
+  <div class="creator__body">
+
+  <!-- FICHA EN VIVO -->
+  <aside class="creator__card">
+    <div class="player-card">
+      <span class="player-card__ribbon">Nueva ficha</span>
+
+      <div class="player-card__progress">
+        <span class="progress-dot" data-progress="identidad"></span>
+        <span class="progress-dot" data-progress="nacionalidad"></span>
+        <span class="progress-dot" data-progress="posicion"></span>
+      </div>
+
+      <div class="player-card__badges">
+        <span>
+          <span class="player-card__pos" id="cardPos">--</span>
+          <span class="player-card__pos-label">Posición</span>
+        </span>
+        <span class="player-card__flag" id="cardFlag">🏳️</span>
+      </div>
+
+      <div class="jersey" id="jerseyPreview">
+        <svg viewBox="0 0 200 175" class="jersey__svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="jerseyFabric" x1="0" y1="0" x2="0.7" y2="1">
+              <stop offset="0%" stop-color="#ffffff" />
+              <stop offset="100%" stop-color="#d9e0ef" />
+            </linearGradient>
+          </defs>
+
+          <path id="jerseyBody" class="jersey__body"
+            d="M65,15 L85,5 Q100,18 115,5 L135,15 L185,43 L150,67 L142,57 L142,160
+               Q100,170 58,160 L58,57 L50,67 L15,43 Z" />
+
+          <!-- paneles laterales (costuras sutiles) -->
+          <rect class="jersey__panel" x="60" y="60" width="6" height="98" rx="3" />
+          <rect class="jersey__panel" x="134" y="60" width="6" height="98" rx="3" />
+
+          <!-- puños en el borde de cada manga -->
+          <line class="jersey__cuff" x1="21" y1="38" x2="56" y2="62" />
+          <line class="jersey__cuff" x1="179" y1="38" x2="144" y2="62" />
+
+          <!-- vivo de color en el cuello -->
+          <path id="jerseyTrim" class="jersey__trim"
+            d="M85,5 Q100,18 115,5 L121,15 Q100,26 79,15 Z" />
+        </svg>
+        <div class="jersey__text">
+          <span id="jerseyName" class="jersey__lastname">APELLIDO</span>
+          <span id="jerseyNumber" class="jersey__number">10</span>
+        </div>
+      </div>
+
+      <div class="player-card__meta">
+        <div class="player-card__metarow">
+          <span class="player-card__label">Nacionalidad</span>
+          <span class="player-card__value" id="cardCountryName">Sin elegir</span>
+        </div>
+        <div class="player-card__metarow">
+          <span class="player-card__label">Posición</span>
+          <span class="player-card__value" id="cardPosName">Sin elegir</span>
+        </div>
+        <div class="player-card__metarow">
+          <span class="player-card__label">Edad</span>
+          <span class="player-card__value" id="cardAge">--</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="creator__confirm">
+      <p class="creator__hint" id="summaryText">Completa los 3 pasos para continuar</p>
+      <button type="button" class="cta" id="startBtn" disabled>Comenzar carrera</button>
+    </div>
+  </aside>
+
+  <!-- FLUJO DE PASOS -->
+  <div class="creator__flow">
+
+    <section class="flow-step" id="card-identidad">
+      <h2 class="flow-step__header">
+        <span class="step" data-step="identidad">1</span>
+        <span class="flow-step__title">¿Quién eres?</span>
+        <span class="flow-step__summary" id="summaryIdentidad"></span>
+        <span class="flow-step__chev">⌄</span>
+      </h2>
+      <div class="flow-step__body">
+        <div class="flow-row">
+          <label class="field field--grow">
+            <span class="field__label">Apellido</span>
+            <input type="text" id="inputApellido" maxlength="16" placeholder="APELLIDO" autocomplete="off">
+          </label>
+        </div>
+
+        <div class="flow-row">
+          <div class="field field--grow">
+            <span class="field__label">Edad</span>
+            <div class="age-picker" id="agePicker"></div>
+          </div>
+          <div class="field field--grow">
+            <span class="field__label">Pierna hábil</span>
+            <div class="toggle" id="toggleLegs">
+              <button type="button" class="toggle__btn" data-leg="izquierda">Izquierda</button>
+              <button type="button" class="toggle__btn toggle__btn--active" data-leg="derecha">Derecha</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="flow-step" id="card-nacionalidad">
+      <h2 class="flow-step__header">
+        <span class="step" data-step="nacionalidad">2</span>
+        <span class="flow-step__title">¿De dónde eres?</span>
+        <span class="flow-step__summary" id="summaryNacionalidad"></span>
+        <span class="flow-step__chev">⌄</span>
+      </h2>
+      <div class="flow-step__body">
+        <div class="search">
+          <span class="search__icon">🔍</span>
+          <input type="text" id="searchCountry" placeholder="Buscar país" autocomplete="off">
+        </div>
+
+        <div class="country-grid" id="countryList"></div>
+      </div>
+    </section>
+
+    <section class="flow-step" id="card-posicion">
+      <h2 class="flow-step__header">
+        <span class="step" data-step="posicion">3</span>
+        <span class="flow-step__title">¿Dónde juegas?</span>
+        <span class="flow-step__summary" id="summaryPosicion"></span>
+        <span class="flow-step__chev">⌄</span>
+      </h2>
+      <div class="flow-step__body">
+        <div class="pitch">
+          <span class="pitch__corner pitch__corner--tl"></span>
+          <span class="pitch__corner pitch__corner--tr"></span>
+          <span class="pitch__corner pitch__corner--bl"></span>
+          <span class="pitch__corner pitch__corner--br"></span>
+
+          <div class="pitch__box pitch__box--top"></div>
+          <div class="pitch__box pitch__box--top-small"></div>
+          <div class="pitch__line pitch__line--mid"></div>
+          <div class="pitch__circle"></div>
+          <div class="pitch__spot"></div>
+          <div class="pitch__box pitch__box--bottom-small"></div>
+          <div class="pitch__box pitch__box--bottom"></div>
+
+          <div class="pitch__row">
+            <button type="button" class="pos-btn" data-pos="EI" data-label="Extremo Izquierdo" title="Extremo Izquierdo">EI</button>
+            <button type="button" class="pos-btn" data-pos="DC" data-label="Delantero Centro" title="Delantero Centro">DC</button>
+            <button type="button" class="pos-btn" data-pos="ED" data-label="Extremo Derecho" title="Extremo Derecho">ED</button>
+          </div>
+          <div class="pitch__row pitch__row--single">
+            <button type="button" class="pos-btn" data-pos="MCO" data-label="Mediocampista Ofensivo" title="Mediocampista Ofensivo">MCO</button>
+          </div>
+          <div class="pitch__row">
+            <button type="button" class="pos-btn" data-pos="MI" data-label="Mediocampista Izquierdo" title="Mediocampista Izquierdo">MI</button>
+            <button type="button" class="pos-btn" data-pos="MC" data-label="Mediocampista Central" title="Mediocampista Central">MC</button>
+            <button type="button" class="pos-btn" data-pos="MD" data-label="Mediocampista Derecho" title="Mediocampista Derecho">MD</button>
+          </div>
+          <div class="pitch__row">
+            <button type="button" class="pos-btn" data-pos="LI" data-label="Lateral Izquierdo" title="Lateral Izquierdo">LI</button>
+            <button type="button" class="pos-btn" data-pos="MCD" data-label="Mediocampista Defensivo" title="Mediocampista Defensivo">MCD</button>
+            <button type="button" class="pos-btn" data-pos="LD" data-label="Lateral Derecho" title="Lateral Derecho">LD</button>
+          </div>
+          <div class="pitch__row pitch__row--single">
+            <button type="button" class="pos-btn" data-pos="DFC" data-label="Defensor Central" title="Defensor Central">DFC</button>
+          </div>
+          <div class="pitch__row pitch__row--single">
+            <button type="button" class="pos-btn pos-btn--gk" data-pos="POR" data-label="Portero" title="Portero">POR</button>
+          </div>
+        </div>
+
+        <p class="pitch__hint" id="posHint">Elige tu posición en la cancha.</p>
+      </div>
+    </section>
+
+  </div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/config.js"></script>
+<script src="js/script.js"></script>
+</body>
+</html>

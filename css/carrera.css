@@ -1,0 +1,945 @@
+/* Layout base: hero fijo / centro scrollable / footer fijo */
+.body--career {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+/* ============ HERO ============ */
+.hero {
+  flex: 0 0 auto;
+  position: relative;
+  padding: 1.1rem 1.5rem 1.25rem;
+  background:
+    linear-gradient(120deg, rgba(13, 17, 32, 0.6), rgba(13, 17, 32, 0.88)),
+    linear-gradient(135deg, var(--team-a, #24304f), var(--team-b, #0f1428));
+  border-bottom: 1px solid var(--card-border);
+  z-index: 10;
+  transition: background 0.4s ease;
+}
+
+.hero__back {
+  position: absolute;
+  top: 1.1rem;
+  left: 1.5rem;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 1.1rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.15);
+  transition: all 0.15s ease;
+}
+.hero__back:hover { color: var(--accent); border-color: var(--accent); }
+
+.hero__main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-left: 2.75rem;
+}
+
+.hero__avatar {
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 6px 18px -6px #000a;
+  border-radius: 50%;
+}
+
+.hero__id {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+.hero__name {
+  font-weight: 900;
+  font-size: 1.4rem;
+  letter-spacing: 0.02em;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hero__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.75);
+  overflow: hidden;
+  white-space: nowrap;
+}
+.hero__meta span { overflow: hidden; text-overflow: ellipsis; }
+.hero__dot { opacity: 0.6; flex-shrink: 0; }
+/* Abreviatura de posición (p.ej. "DC"): solo se usa en móvil, ver media
+   query de abajo — en desktop se ve el nombre completo. */
+.hero__pos-abbr { display: none; }
+.hero__number-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 0.3rem;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--accent), #ffd166);
+  color: #1a1300;
+  font-weight: 900;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+/* Solo visible justo al cerrar temporada (ver carrera.js) — un clic pide
+   cambio de dorsal, que el club acepta o no según OVR y rendimiento. */
+.hero__number-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(0, 0, 0, 0.25);
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+.hero__number-edit:hover { border-color: var(--accent); color: var(--accent); }
+.hero__number-edit[hidden] { display: none; }
+
+/* ============ MODAL: solicitar cambio de dorsal ============ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 16, 0.7);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+/* `display:flex` de arriba empata en especificidad con la regla nativa
+   del navegador para [hidden] y, al venir después en la cascada, se la
+   gana — sin esto el modal quedaría siempre visible pese a `hidden`. */
+.modal-overlay[hidden] { display: none; }
+.modal-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  box-shadow: 0 20px 45px -20px #000d;
+}
+.modal-card__title { margin: 0; font-size: 1.05rem; }
+.modal-card__desc { margin: 0; font-size: 0.82rem; color: var(--text-dim); line-height: 1.4; }
+.modal-card__field { display: flex; flex-direction: column; gap: 0.4rem; }
+.modal-card__field input {
+  background: var(--bg-soft);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+  color: var(--text);
+  font-size: 0.95rem;
+  outline: none;
+}
+.modal-card__field input:focus { border-color: var(--accent-2); }
+.modal-card__actions { display: flex; gap: 0.6rem; margin-top: 0.2rem; }
+.modal-card__actions .btn { flex: 1; }
+
+.hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1rem;
+  padding-left: 2.75rem;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.value-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--accent-2);
+  color: var(--accent-2);
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.team-crest {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, var(--crest-a, var(--accent-2)), var(--crest-b, #1d4ed8));
+  text-shadow: 0 1px 2px #0006;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.team-crest--xs { width: 18px; height: 18px; font-size: 0.5rem; border-radius: 6px; }
+.team-crest--sm { width: 32px; height: 32px; font-size: 0.7rem; border-radius: 9px; }
+.team-crest--md { width: 40px; height: 40px; font-size: 0.8rem; border-radius: 10px; }
+.team-crest--avatar { width: 54px; height: 54px; font-size: 1.2rem; border-radius: 50%; }
+
+.ovr-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid var(--ovr-color, var(--text-dim));
+  color: var(--ovr-color, var(--text));
+  font-weight: 900;
+  font-size: 1.05rem;
+  line-height: 1;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+.ovr-badge__label { font-size: 0.5rem; font-weight: 700; color: var(--text-dim); letter-spacing: 0.05em; }
+.ovr-badge--sm { width: 38px; height: 38px; font-size: 0.9rem; }
+.ovr-badge--hero {
+  width: 64px;
+  height: 64px;
+  font-size: 1.4rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.ovr-badge--hero .ovr-badge__label { color: rgba(255, 255, 255, 0.6); }
+
+/* ============ CAREER MAIN ============ */
+.career {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+}
+.career::-webkit-scrollbar { width: 8px; }
+.career::-webkit-scrollbar-track { background: transparent; }
+.career::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+.career::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+.career { scrollbar-width: thin; scrollbar-color: var(--card-border) transparent; }
+
+/* ============ SPOTLIGHT (temporada actual) ============ */
+.spotlight-card {
+  background: linear-gradient(160deg, #1c2444 0%, #171f38 60%);
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft), 0 20px 45px -30px #000d;
+  border-radius: 18px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.spotlight-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.spotlight-card__season {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.spotlight-card__team {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  margin-top: 0.15rem;
+}
+
+.spotlight-card__status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.current-tag {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #1a1300;
+  background: var(--accent);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+
+.forma-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.lineup-tag {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  border: 1px solid var(--card-border);
+  color: var(--text-dim);
+}
+.lineup-tag--titular { color: var(--accent-2); border-color: var(--accent-2); background: #22d3ee1a; }
+.lineup-tag--suplente { color: var(--text-dim); background: var(--bg-soft); }
+
+.spotlight-card__body {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  flex-wrap: wrap;
+}
+
+/* Anillo de progreso de temporada */
+.progress-ring {
+  --progress: 0;
+  width: 108px;
+  height: 108px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: conic-gradient(var(--accent) calc(var(--progress) * 3.6deg), var(--bg-soft) 0deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.progress-ring::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: #171f38;
+}
+.progress-ring__text {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+.progress-ring__value { font-size: 1.4rem; font-weight: 900; }
+.progress-ring__label { font-size: 0.62rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.spotlight-card__stats {
+  flex: 1;
+  min-width: 260px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.6rem;
+}
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  background: var(--bg-soft);
+  border-radius: 10px;
+  padding: 0.7rem 0.3rem;
+}
+.stat__icon { font-size: 1rem; }
+.stat__value { font-weight: 800; font-size: 1.1rem; }
+.stat__label { font-size: 0.64rem; color: var(--text-dim); text-align: center; }
+
+@media (max-width: 640px) {
+  .spotlight-card__stats { grid-template-columns: repeat(3, 1fr); }
+}
+
+.trophies {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.trophy-card {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+}
+/* Solo ícono (historial): sin la píldora de fondo/borde, el trofeo
+   solo, bien más grande para que se note (con nombre al lado, en el
+   spotlight, la píldora sigue teniendo sentido y queda como estaba). */
+.trophy-card--icon-only {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.trophy-card--icon-only .trophy-card__icon-img { width: 2.1rem; height: 2.1rem; }
+.trophy-card--icon-only .trophy-card__icon { font-size: 1.9rem; }
+.trophy-card__icon { font-size: 0.95rem; }
+/* Silueta negra sobre transparente, rellenada del dorado del sistema
+   vía mask (ver GameConfig.trofeoIconHtml) — el color del PNG en sí no
+   importa, solo su alpha define la forma. */
+.trophy-card__icon-img {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  display: inline-block;
+  background-color: var(--accent);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.trophy-card__name { font-size: 0.72rem; font-weight: 700; color: var(--accent); }
+
+/* ============ TIMELINE (historial compacto) ============ */
+.timeline__title {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  color: var(--text-dim);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.timeline__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  flex-wrap: wrap;
+}
+/* El contenido de escritorio vive en una sola fila plana (ver más abajo);
+   `display: contents` hace que este wrapper sea invisible para el layout,
+   así sus hijos se comportan como si fueran hijos directos de
+   .timeline-item, sin cambiar en nada el resultado visual de desktop.
+   En móvil (media query al final del archivo) se oculta del todo y se
+   muestra en su lugar .timeline-item__mobile, con el layout de 2 tarjetas. */
+.timeline-item__desktop { display: contents; }
+.timeline-item__mobile { display: none; }
+.timeline-item__season {
+  min-width: 70px;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+.timeline-item__season span {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.timeline-item__team {
+  flex: 1;
+  min-width: 100px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.timeline-item__stats {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.timeline-item .trophy-card:not(.trophy-card--icon-only) {
+  padding: 0.15rem 0.5rem 0.15rem 0.35rem;
+}
+.timeline-item .trophy-card__name { font-size: 0.66rem; }
+
+/* ============ DECISIONS FOOTER ============ */
+.decisions {
+  flex: 0 0 auto;
+  background: rgba(13, 17, 32, 0.95);
+  border-top: 1px solid var(--card-border);
+  backdrop-filter: blur(6px);
+  padding: 0.85rem 1.5rem 1rem;
+  transition: opacity 0.18s ease;
+}
+/* Cambio de "escena" completo (ofertas ↔ eventos, eventos → continuar):
+   se apaga, se cambia el contenido y se vuelve a encender (ver
+   cambiarContenidoDecisiones en carrera.js), en vez de un corte seco. */
+.decisions--fade { opacity: 0; }
+
+.decisions__header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin-bottom: 0.65rem;
+}
+.decisions__header h2 { margin: 0; font-size: 1rem; }
+.decisions__count { font-size: 0.78rem; color: var(--text-dim); }
+
+.decisions__track {
+  display: flex;
+  gap: 0.85rem;
+  overflow-x: auto;
+  padding-bottom: 0.25rem;
+  scroll-snap-type: x proximity;
+}
+.decisions__track::-webkit-scrollbar { height: 6px; }
+.decisions__track::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 3px; }
+
+.decisions__empty {
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  padding: 0.75rem 0.25rem;
+}
+
+.decision-card {
+  position: relative;
+  scroll-snap-align: start;
+  flex: 0 0 340px;
+  max-width: calc(100vw - 3rem);
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-left: 3px solid var(--card-border);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.decision-card--resolved {
+  opacity: 0;
+  transform: scale(0.92);
+  pointer-events: none;
+}
+.decision-card--deportivo,
+.decision-card--personal {
+  /* Solo hay 2 tarjetas de evento por pausa: una ocupa cada mitad del espacio. */
+  flex: 0 0 calc(50% - 0.425rem);
+  max-width: calc(50% - 0.425rem);
+}
+.decision-card--deportivo { border-left-color: var(--accent); }
+.decision-card--personal { border-left-color: var(--accent-2); }
+
+/* Evento de Alto Impacto: se distingue al instante con el ⚠️ en la
+   esquina y un borde/resplandor rojo — reservado exclusivamente para
+   estos eventos (máximo 1 por temporada, ver carrera.js). */
+.decision-card--alto-impacto {
+  border-left-color: #ef4444;
+  box-shadow: 0 0 0 1px #ef444440, 0 8px 24px -12px #ef444466;
+}
+.decision-card__impacto {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.7rem;
+  font-size: 1.05rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 4px #ef444488);
+}
+
+.decision-card--oferta-club { border-left-color: #a78bfa; }
+.decision-card--oferta-club .decision-card__tag { background: #a78bfa26; color: #a78bfa; }
+.decision-card--quedarme { border-left-color: #34d399; }
+.decision-card--quedarme .decision-card__tag { background: #34d39926; color: #34d399; }
+.decision-card--retiro { border-left-color: #f97316; }
+.decision-card--retiro .decision-card__tag { background: #f9731626; color: #f97316; }
+/* Retiro forzoso: aparece solo (sin ofertas ni "quedarme"), así que en
+   vez del cuarto de ancho de las tarjetas de oferta ocupa toda la fila
+   — y un rojo más serio que el naranja del retiro voluntario, para que
+   se sienta definitivo. El selector combinado (dos clases) le gana en
+   especificidad a `.decision-card--oferta-club` sin importar el orden
+   ni el viewport (desktop o el grid 2x2 de móvil). */
+.decision-card--retiro.decision-card--retiro-forzoso { border-left-color: #ef4444; }
+.decision-card--retiro-forzoso .decision-card__tag { background: #ef444426; color: #ef4444; }
+.decision-card--oferta-club.decision-card--retiro-forzoso {
+  flex: 0 0 100%;
+  max-width: 100%;
+  text-align: center;
+}
+.decision-card--retiro-forzoso .decision-card__team { justify-content: center; }
+.decision-card--retiro-forzoso .decision-card__actions { max-width: 320px; margin: 0 auto; }
+
+/* Parte médico: aparece solo (sin eventos esa pausa), ocupa toda la
+   fila igual que el retiro forzoso. El color según el nivel comunica
+   la gravedad de un vistazo (amarillo leve → naranja moderado → rojo
+   grave), sin necesidad de leer el detalle. */
+.decision-card--lesion-informe {
+  flex: 0 0 100%;
+  max-width: 100%;
+  text-align: center;
+  align-items: center;
+}
+.decision-card--lesion-nivel3 { border-left-color: #eab308; }
+.decision-card--lesion-nivel3 .decision-card__tag { background: #eab30826; color: #eab308; }
+.decision-card--lesion-nivel2 { border-left-color: #f97316; }
+.decision-card--lesion-nivel2 .decision-card__tag { background: #f9731626; color: #f97316; }
+.decision-card--lesion-nivel1 { border-left-color: #ef4444; }
+.decision-card--lesion-nivel1 .decision-card__tag { background: #ef444426; color: #ef4444; }
+.decision-card__lesion-detalle {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* Las 4 tarjetas de oferta (o retiro) siempre entran en una sola fila,
+   sin necesitar scroll: el ancho es un cuarto de la pista, así que se
+   achican junto con la pantalla en vez de desbordarla. Diseño más
+   compacto que el de las tarjetas de evento para que el contenido
+   siga siendo legible a ese ancho. */
+.decision-card--oferta-club {
+  flex: 0 0 calc(25% - 0.6375rem);
+  max-width: calc(25% - 0.6375rem);
+  min-width: 0;
+  padding: 0.65rem 0.7rem;
+  gap: 0.45rem;
+}
+
+.decision-card__tag {
+  align-self: flex-start;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+}
+.decision-card--deportivo .decision-card__tag { background: var(--accent-soft); color: var(--accent); }
+.decision-card--personal .decision-card__tag { background: #22d3ee2b; color: var(--accent-2); }
+
+.decision-card__team {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.decision-card__team > div { min-width: 0; flex: 1; }
+.decision-card__teamname {
+  font-weight: 700;
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.decision-card__league {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  min-width: 0;
+}
+.decision-card__league span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.decision-card--oferta-club .decision-card__teamname { font-size: 0.76rem; }
+.decision-card--oferta-club .decision-card__league { font-size: 0.62rem; }
+
+.decision-card__desc {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.4;
+}
+.decision-card--oferta-club .decision-card__desc {
+  font-size: 0.68rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.decision-card--oferta-club .btn {
+  font-size: 0.7rem;
+  padding: 0.5rem 0.35rem;
+}
+
+/* En pantallas angostas, 4 en una fila queda ilegible: se pasa a
+   una grilla 2x2 (sigue sin hacer falta scroll, solo ocupa más alto). */
+@media (max-width: 640px) {
+  .decisions__track { flex-wrap: wrap; }
+  .decision-card--oferta-club {
+    flex: 0 0 calc(50% - 0.425rem);
+    max-width: calc(50% - 0.425rem);
+  }
+  .decision-card--personal,
+  .decision-card--deportivo {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+.decision-card__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+.decision-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.decision-option__efectos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+.efecto {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+}
+.efecto--pos { color: #34d399; }
+.efecto--neg { color: #ef4444; }
+.btn {
+  flex: 1;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--accent);
+  color: #1a1300;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn--ghost {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--text);
+}
+
+.continue-btn {
+  margin-top: 0.85rem;
+  width: 100%;
+  background: linear-gradient(90deg, var(--accent), #ffd166);
+  color: #1a1300;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.continue-btn:hover { transform: translateY(-1px); }
+.continue-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============ RESPONSIVE (móvil) ============ */
+/* El header y el footer de decisiones son fijos y le "roban" alto a la
+   temporada en curso, que es lo que más importa ver: en vez de dejarlos
+   crecer con su contenido (como en desktop), acá se los compacta al
+   máximo y el de decisiones pasa a scrollear internamente con un tope
+   de alto, para que siempre quede lugar visible para el resto. */
+@media (max-width: 640px) {
+  /* --- Header compacto: todo en una fila, sin que el OVR ni las chips
+     se vayan a su propia línea --- */
+  .hero { padding: 0.6rem 0.85rem 0.65rem; }
+  .hero__back {
+    top: 0.6rem; left: 0.7rem;
+    width: 1.6rem; height: 1.6rem;
+    font-size: 0.9rem;
+  }
+  .hero__main {
+    flex-wrap: nowrap;
+    padding-left: 2.15rem;
+    gap: 0.6rem;
+  }
+  .hero__avatar { width: 36px; height: 36px; }
+  /* El escudo es una <img> con esta clase adentro de .hero__avatar — sin
+     este ajuste queda fijo en 54px y se sale del contenedor achicado,
+     tapando el nombre y la fila de chips de abajo. */
+  .hero__avatar .team-crest--avatar { width: 36px; height: 36px; font-size: 0.85rem; }
+  .hero__id { flex-basis: auto; }
+  .hero__name { font-size: 1rem; }
+  .hero__meta {
+    font-size: 0.68rem;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+  }
+  .hero__meta span { overflow: hidden; text-overflow: ellipsis; }
+  /* Posición abreviada ("DC" en vez de "Delantero Centro") para dejarle
+     más ancho disponible al nombre del club, que es lo último de la fila. */
+  .hero__pos-full { display: none; }
+  .hero__pos-abbr { display: inline; }
+  #pbTeamName { flex: 1; min-width: 0; }
+  .ovr-badge--hero {
+    width: 38px; height: 38px;
+    font-size: 0.78rem;
+    margin-left: 0.4rem;
+  }
+  .ovr-badge--hero .ovr-badge__label { font-size: 0.42rem; }
+
+  .hero__chips {
+    margin-top: 0.55rem;
+    padding-left: 2.15rem;
+    gap: 0.4rem;
+  }
+  .chip, .value-badge {
+    padding: 0.28rem 0.55rem;
+    font-size: 0.7rem;
+    gap: 0.3rem;
+  }
+
+  /* --- Contenido central: menos aire, para que entre más en pantalla --- */
+  .career { padding: 1rem 1rem 0.75rem; gap: 1.1rem; }
+  .spotlight-card { padding: 1rem; gap: 0.85rem; border-radius: 14px; }
+  .spotlight-card__season { font-size: 1rem; }
+  .spotlight-card__body { justify-content: center; gap: 1rem; }
+  .spotlight-card__stats { min-width: 0; width: 100%; }
+  .progress-ring { width: 84px; height: 84px; }
+  .progress-ring::before { inset: 7px; }
+  .progress-ring__value { font-size: 1.15rem; }
+  .stat { padding: 0.55rem 0.25rem; }
+  .stat__icon { display: none; }
+  .stat__value { font-size: 1rem; }
+
+  /* Historial: en vez de la fila única de desktop, 2 tarjetas al 50% —
+     una con escudo+OVR arriba y el club abajo, otra con los trofeos
+     arriba y las estadísticas abajo. */
+  .timeline-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0.65rem 0.75rem;
+  }
+  .timeline-item__desktop { display: none; }
+  .timeline-item__mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    width: 100%;
+  }
+  .timeline-item__mobile > .timeline-item__season {
+    min-width: 0;
+  }
+  .timeline-item__mcards {
+    display: flex;
+    gap: 0.6rem;
+  }
+  .timeline-item__mcard {
+    flex: 1 1 50%;
+    min-width: 0;
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 0.55rem 0.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    text-align: center;
+    /* Las dos mcards ya quedan de igual alto (align-items:stretch por
+       defecto en .timeline-item__mcards) — esto reparte ese alto en vez
+       de dejar que el contenido de arriba (trofeos, que puede no estar)
+       corra la fila de abajo (club / estadísticas), que siempre debe
+       quedar pegada al fondo de la tarjeta. */
+    justify-content: space-between;
+  }
+  .timeline-item__mrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .timeline-item__mrow--trophies {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .timeline-item__mcard .timeline-item__team {
+    flex: none;
+    min-width: 0;
+    font-size: 0.78rem;
+  }
+  .timeline-item__mcard .timeline-item__stats {
+    font-size: 0.7rem;
+    white-space: normal;
+  }
+  .timeline-item__notrophy {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+  }
+
+  /* --- Footer de decisiones: alto acotado + scroll propio --- */
+  .decisions { padding: 0.6rem 0.85rem 0.75rem; }
+  .decisions__header { margin-bottom: 0.45rem; }
+  .decisions__header h2 { font-size: 0.9rem; }
+  .decisions__track {
+    max-height: 38vh;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+  }
+  .decisions__track::-webkit-scrollbar { width: 6px; }
+  .decision-card { padding: 0.65rem 0.75rem; gap: 0.45rem; }
+  .decision-card__desc { font-size: 0.74rem; }
+  .decision-option__efectos { gap: 0.25rem; }
+  .efecto { font-size: 0.58rem; padding: 0.12rem 0.4rem; }
+  .continue-btn { margin-top: 0.55rem; padding: 0.65rem 1rem; font-size: 0.82rem; }
+}

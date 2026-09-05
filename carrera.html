@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leyenda — Mi carrera</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/carrera.css">
+</head>
+<body class="body--career">
+
+<!-- HERO: identidad del jugador, con degradado en los colores del club actual -->
+<header class="hero" id="hero">
+  <a href="index.html" class="hero__back" title="Volver al inicio">←</a>
+
+  <div class="hero__main">
+    <div class="hero__avatar" id="pbAvatarWrap"></div>
+
+    <div class="hero__id">
+      <span class="hero__name" id="pbName">APELLIDO</span>
+      <span class="hero__meta">
+        <span id="pbPos">Posición</span>
+        <span class="hero__dot">·</span>
+        <span class="hero__number-badge" id="pbNumberBadge">10</span>
+        <button type="button" class="hero__number-edit" id="numeroEditBtn" title="Solicitar cambio de dorsal" hidden>✎</button>
+        <span id="pbTeamName">Equipo</span>
+      </span>
+    </div>
+
+    <div class="ovr-badge ovr-badge--hero" id="pbOvr">
+      <span id="pbOvrValue">--</span>
+      <span class="ovr-badge__label">OVR</span>
+    </div>
+  </div>
+
+  <div class="hero__chips">
+    <div class="chip" id="pbAge">
+      <span>🎂</span>
+      <span id="pbAgeValue">--</span>
+    </div>
+    <div class="chip" id="pbCountry">
+      <span id="pbFlag">🏳️</span>
+      <span id="pbCountryName">País</span>
+    </div>
+    <div class="value-badge" id="pbValue">
+      <span>💰</span>
+      <span id="pbValueAmount">--</span>
+    </div>
+  </div>
+</header>
+
+<main class="career">
+
+  <!-- TEMPORADA ACTUAL, en foco -->
+  <section id="spotlight"></section>
+
+  <!-- HISTORIAL, compacto -->
+  <section class="timeline">
+    <h2 class="timeline__title">Historial</h2>
+    <div class="timeline__list" id="timelineList"></div>
+  </section>
+
+</main>
+
+<!-- BARRA INFERIOR: decisiones / ofertas de la pausa activa -->
+<footer class="decisions">
+  <div class="decisions__header">
+    <h2 id="decisionsTitle">Decisiones</h2>
+    <span class="decisions__count" id="decisionsCount">-- pendientes</span>
+  </div>
+  <div class="decisions__track" id="decisionsTrack"></div>
+  <button type="button" class="continue-btn" id="continueBtn" hidden>Continuar temporada →</button>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<!-- Modal: solicitar cambio de dorsal (solo habilitado justo al cerrar temporada) -->
+<div class="modal-overlay" id="numeroModal" hidden>
+  <div class="modal-card">
+    <h3 class="modal-card__title">Solicitar cambio de dorsal</h3>
+    <p class="modal-card__desc">Elige el número que quieres pedirle al club. La decisión depende de tu OVR y de cómo te fue en la temporada — no hay garantía.</p>
+    <label class="modal-card__field">
+      <span class="field__label">Número</span>
+      <input type="number" id="numeroModalInput" min="1" max="99" value="10">
+    </label>
+    <div class="modal-card__actions">
+      <button type="button" class="btn btn--ghost" id="numeroModalCancelar">Ahora no</button>
+      <button type="button" class="btn" id="numeroModalConfirmar">Solicitar</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/database.js"></script>
+<script src="js/events.js"></script>
+<script src="js/carrera.js"></script>
+</body>
+</html>
