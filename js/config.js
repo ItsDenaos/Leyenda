@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.4.0-alpha",
-  FECHA_PUBLICACION: "6 de septiembre de 2026 · 18:14",
+  VERSION: "0.4.1-alpha",
+  FECHA_PUBLICACION: "6 de septiembre de 2026 · 18:32",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;

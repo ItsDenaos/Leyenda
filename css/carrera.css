@@ -574,7 +574,6 @@
   border-radius: 10px;
   padding: 0.7rem 0.3rem;
 }
-.stat__icon { font-size: 1rem; }
 .stat__value { font-weight: 800; font-size: 1.1rem; }
 .stat__label { font-size: 0.64rem; color: var(--text-dim); text-align: center; }
 

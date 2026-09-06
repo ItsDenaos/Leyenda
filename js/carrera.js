@@ -953,11 +953,11 @@ function renderSpotlight() {
         </div>
 
         <div class="spotlight-card__stats">
-          <div class="stat"><span class="stat__icon">🏟️</span><span class="stat__value" data-stat="partidos">${s.partidos}</span><span class="stat__label">Partidos</span></div>
-          <div class="stat"><span class="stat__icon">⚽</span><span class="stat__value" data-stat="goles">${s.goles}</span><span class="stat__label">Goles</span></div>
-          <div class="stat"><span class="stat__icon">🎯</span><span class="stat__value" data-stat="asistencias">${s.asistencias}</span><span class="stat__label">Asistencias</span></div>
-          <div class="stat"><span class="stat__icon">🏅</span><span class="stat__value" data-stat="mvp">${s.mvp}</span><span class="stat__label">MVP</span></div>
-          <div class="stat"><span class="stat__icon">⭐</span><span class="stat__value" data-stat="promedio">${s.promedio.toFixed(1)}</span><span class="stat__label">Promedio</span></div>
+          <div class="stat"><span class="stat__value" data-stat="partidos">${s.partidos}</span><span class="stat__label">Partidos</span></div>
+          <div class="stat"><span class="stat__value" data-stat="goles">${s.goles}</span><span class="stat__label">Goles</span></div>
+          <div class="stat"><span class="stat__value" data-stat="asistencias">${s.asistencias}</span><span class="stat__label">Asistencias</span></div>
+          <div class="stat"><span class="stat__value" data-stat="mvp">${s.mvp}</span><span class="stat__label">MVP</span></div>
+          <div class="stat"><span class="stat__value" data-stat="promedio">${s.promedio.toFixed(1)}</span><span class="stat__label">Promedio</span></div>
         </div>
       </div>
 
@@ -1575,12 +1575,12 @@ function renderResumenCarrera() {
     </div>
 
     <div class="resumen__stats">
-      <div class="stat"><span class="stat__icon">🏟️</span><span class="stat__value">${r.partidos}</span><span class="stat__label">Partidos</span></div>
-      <div class="stat"><span class="stat__icon">⚽</span><span class="stat__value">${r.goles}</span><span class="stat__label">Goles</span></div>
-      <div class="stat"><span class="stat__icon">🅰️</span><span class="stat__value">${r.asistencias}</span><span class="stat__label">Asistencias</span></div>
-      <div class="stat"><span class="stat__icon">⭐</span><span class="stat__value">${r.mvp}</span><span class="stat__label">MVP</span></div>
-      <div class="stat"><span class="stat__icon">📊</span><span class="stat__value">${r.promedio.toFixed(1)}</span><span class="stat__label">Promedio</span></div>
-      <div class="stat"><span class="stat__icon">💰</span><span class="stat__value">${formatMarketValue(r.mayorValor)}</span><span class="stat__label">Mayor valor</span></div>
+      <div class="stat"><span class="stat__value">${r.partidos}</span><span class="stat__label">Partidos</span></div>
+      <div class="stat"><span class="stat__value">${r.goles}</span><span class="stat__label">Goles</span></div>
+      <div class="stat"><span class="stat__value">${r.asistencias}</span><span class="stat__label">Asistencias</span></div>
+      <div class="stat"><span class="stat__value">${r.mvp}</span><span class="stat__label">MVP</span></div>
+      <div class="stat"><span class="stat__value">${r.promedio.toFixed(1)}</span><span class="stat__label">Promedio</span></div>
+      <div class="stat"><span class="stat__value">${formatMarketValue(r.mayorValor)}</span><span class="stat__label">Mayor valor</span></div>
     </div>
 
     <div class="resumen__section">
