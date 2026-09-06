@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 0.2.0-alpha — publicada el 5 de septiembre de 2026 · 22:41**
+**Versión 0.3.0-alpha — publicada el 6 de septiembre de 2026 · 13:44**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -62,7 +62,7 @@ Una vez que elegís, arranca tu Temporada 1.
 
 La pantalla principal tiene 3 partes fijas:
 
-- **Arriba (el header):** tu nombre, posición, dorsal, club actual y tu **OVR** (tu nivel general, el número más importante del juego — cuanto más alto, mejor sos). El color del círculo de tu OVR cambia según tu nivel: bronce, plata, oro, rubí, esmeralda y, en la cima absoluta, amatista. Debajo, tu edad, tu país y tu valor de mercado actual.
+- **Arriba (el header):** tu nombre, posición, dorsal, club actual y tu **OVR** (tu nivel general, el número más importante del juego — cuanto más alto, mejor sos). El color del círculo de tu OVR cambia según tu nivel: bronce, plata, oro, zafiro, rubí y, en la cima absoluta, amatista. Debajo, tu edad, tu país y tu valor de mercado actual.
 - **En el medio (scrolleable):** la temporada en curso — tu progreso (%), tus estadísticas de esta temporada (partidos, goles, asistencias, MVP y promedio de rating) y tu estado de forma — y, debajo, el **historial** de todas tus temporadas anteriores, con sus estadísticas y los trofeos que ganaste en cada una.
 - **Abajo (fijo):** el panel de **decisiones** — acá es donde interactuás. Cada tanto se abre una pausa con algo para resolver: dos decisiones para tomar, o un lote de ofertas de fichaje.
 
@@ -70,13 +70,12 @@ La pantalla principal tiene 3 partes fijas:
 
 ## 5. Cómo avanza una temporada
 
-Una temporada se divide en bloques de partidos ("tramos") separados por pausas. En total vas a ver **5 pausas por temporada** (4 en tu primera temporada):
+Una temporada se divide en bloques de partidos ("tramos") separados por pausas. En total vas a ver **4 pausas por temporada** (3 en tu primera temporada):
 
-1. Una ventana de fichajes al arrancar la temporada (a partir de la 2ª temporada — en la primera ya elegiste club en la creación).
+1. Una única ventana de fichajes al arrancar la temporada (a partir de la 2ª temporada — en la primera ya elegiste club en la creación). Es la **única** oportunidad de cambiar de club en todo el año: si fichás, arrancás la temporada entera de cero con tu club nuevo.
 2. Una pausa de decisiones, en algún punto de la primera mitad.
-3. Otra ventana de fichajes, siempre a mitad de temporada.
-4. Otra pausa de decisiones, en cualquier punto del año.
-5. Una última pausa de decisiones, ya sobre el cierre.
+3. Otra pausa de decisiones, en cualquier punto del año.
+4. Una última pausa de decisiones, ya sobre el cierre.
 
 Cada vez que resolvés todo lo que había en una pausa, el juego simula automáticamente el bloque de partidos siguiente: vas a ver tus estadísticas subir con una animación, tu OVR ajustarse, y tu progreso de temporada avanzar — todo eso pasa solo, no hace falta ningún clic extra.
 
@@ -114,7 +113,7 @@ Ser **titular** en un bloque de partidos también suma minutos reales — no es 
 
 ## 9. Lesiones
 
-Cada tanto, en una pausa de decisiones, en vez de las 2 tarjetas de siempre vas a ver un **parte médico**: te lesionaste. No hay nada que decidir ahí — se lee y la temporada sigue sola a los pocos segundos. Hay 3 niveles:
+Cada tanto, en una pausa de decisiones, en vez de las 2 tarjetas de siempre vas a ver un **parte médico**: te lesionaste. No hay nada que decidir ahí — lo leés y tocás "Continuar" cuando quieras seguir. Hay 3 niveles:
 
 - **Leve** — te perdés el próximo bloque de partidos, nada más.
 - **Moderada** — te perdés 1 o 2 bloques, tu forma queda "Tocado físicamente" mientras dura, y tu OVR baja un poquito.
@@ -158,17 +157,18 @@ Es cuánto "valés" en el mercado de fichajes — sube con tu OVR (cada punto ex
 
 ## 13. El mercado de fichajes
 
-En cada ventana de fichajes (2 por temporada) vas a ver hasta 4 tarjetas: normalmente **3 ofertas de otros clubes** + la carta de tu club actual (**"Quedarme"**). Un solo clic resuelve toda la pausa.
+En la única ventana de fichajes de cada temporada vas a ver hasta 4 tarjetas: normalmente **3 ofertas de otros clubes** + la carta de tu club actual (**"Quedarme"**). Esa carta de tu club siempre va **primera**, así la encontrás siempre en el mismo lugar; si en algún momento podés elegir retirarte, esa opción va **segunda**. Un solo clic resuelve toda la pausa.
 
 Cosas para tener en cuenta:
 
-- **Las ofertas tienen sentido**: no vas a recibir ofertas de clubes muy por debajo o muy por encima de tu nivel real — cada club solo aparece si de verdad estás a su altura.
-- **Al menos 2 de cada 3 ofertas** suelen ser de tu propia liga — con una excepción: **a partir de los 33 años**, ese cupo empieza a priorizar clubes **de tu país de origen**, para simular la vuelta a casa a cerrar la carrera, aunque la hayas jugado toda en el exterior.
+- **Las ofertas tienen sentido**: no vas a recibir ofertas de clubes muy por debajo o muy por encima de tu nivel real — cada club solo aparece si de verdad estás a su altura. Y ahora, si tu nivel da para los grandes de Europa, van a aparecer de verdad — antes, un nivel altísimo seguía trayendo casi solo ofertas de tu propia región.
+- **Al menos 2 de cada 3 ofertas suelen ser de tu propia liga — pero solo mientras siga siendo un destino a tu altura.** En cuanto tu nivel supera claramente a tu liga actual, esa garantía desaparece y vas a ver ofertas de todos lados según tu nivel real, no según dónde jugás hoy.
+- **Desde los 33 años**, ese mismo criterio de "entorno" pasa a mirar tu **país de origen** en vez de tu liga — para simular la vuelta a casa a cerrar la carrera, aunque la hayas jugado toda en el exterior. Pero si tu nivel ya superó de sobra a los clubes de tu país, esa vuelta a casa deja de estar garantizada: pasa a ser una posibilidad ocasional (una de cada tres ventanas, aproximadamente), no algo que vas a ver todos los años.
 - **Cuanto más joven seas, mejores clubes vas a ver** a igual nivel — un jugador de 27 años con buen OVR va a recibir mejores ofertas que uno de 38 con el mismo OVR: los clubes apuestan más fuerte a quien todavía tiene recorrido.
 - Vas a ver "Te valoran en €X" en cada oferta — es una referencia de cuánto te valora ESE club en particular, puede variar un poco de una oferta a otra aunque el nivel del club sea parecido.
 - **Recién fichado a un club, tenés 2 temporadas de tranquilidad**: por más que tu nivel no termine de convencer, ese club no te va a dejar ir hasta que hayas tenido esas 2 temporadas completas para demostrar algo.
 - **Desde los 36 años** podés elegir **retirarte voluntariamente** aunque tu club te siga queriendo — ocupa una de las 4 cartas.
-- Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de "Quedarme" se reemplaza por una de retiro — todavía podés fichar por otro club en esa misma pausa, si hay ofertas.
+- Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de "Quedarme" se reemplaza por una de retiro forzoso — todavía podés fichar por otro club en esa misma pausa, si hay ofertas.
 
 ---
 
@@ -184,7 +184,7 @@ Tu carrera termina cuando aceptás una carta de retiro — sea porque vos lo ele
 
 Al retirarte vas a ver 2 botones:
 
-- **"Ver resumen de mi carrera"** — abre una pantalla con todo lo que hiciste: tus estadísticas combinadas de punta a punta (partidos, goles, asistencias, MVP, promedio), el mayor OVR y el mayor valor de mercado que alcanzaste en toda tu carrera, cada club en el que jugaste (en orden), y todos los trofeos que ganaste — si repetiste alguno, vas a ver un "×N" al lado en vez de verlo repetido.
+- **"Ver resumen de mi carrera"** — abre una pantalla con todo lo que hiciste: un gráfico con la evolución de tu OVR temporada a temporada (de tu debut a tu pico), tus estadísticas combinadas de punta a punta (partidos, goles, asistencias, MVP, promedio, mayor valor de mercado), el recorrido completo de los clubes en los que jugaste (en orden), y todos los trofeos que ganaste — si repetiste alguno, vas a ver un "×N" al lado en vez de verlo repetido.
 - **"Aceptar"** — te lleva de vuelta al inicio, listo para empezar una carrera nueva.
 
 ---

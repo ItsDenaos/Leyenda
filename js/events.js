@@ -76,7 +76,7 @@ const GameEvents = {
       id: "gen-02", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un periodista te pregunta en conferencia sobre los rumores de fichaje de un compañero.",
       opciones: [
-        { texto: "Responder con humor y evitar el tema", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "La prensa se ríe y pasa al siguiente tema sin problemas." },
+        { texto: "Responder con humor y evitar el tema", efectos: { rendimiento: -1, forma: "animado", equipo: 0 }, resultado: "La prensa se ríe y pasa al siguiente tema sin problemas." },
         { texto: "Dar una respuesta seria y directa", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "Tu respuesta genera más preguntas incómodas en el vestuario." },
       ],
     },
@@ -100,7 +100,7 @@ const GameEvents = {
       id: "gen-05", tipo: "deportivo", personajes: ["rival"],
       pregunta: "Un rival te provoca verbalmente durante el calentamiento previo al partido.",
       opciones: [
-        { texto: "Ignorarlo y concentrarte", efectos: { rendimiento: 1, forma: "animado", equipo: 0 }, resultado: "Mantienes la calma y entras al partido con la cabeza fría." },
+        { texto: "Ignorarlo y concentrarte", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "Mantienes la calma y entras al partido con la cabeza fría." },
         { texto: "Responder a la provocación", efectos: { rendimiento: -1, forma: "bajo", equipo: -1 }, resultado: "La discusión te saca de foco antes de que arranque el partido." },
       ],
     },
@@ -108,7 +108,7 @@ const GameEvents = {
       id: "gen-06", tipo: "deportivo", personajes: ["hinchada"],
       pregunta: "La hinchada local te silba después de un error en el partido anterior.",
       opciones: [
-        { texto: "Pedir la pelota más seguido para responder en la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: 1 }, resultado: "Tu reacción convierte la presión en una gran actuación." },
+        { texto: "Pedir la pelota más seguido para responder en la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Tu reacción convierte la presión en una gran actuación." },
         { texto: "Bajar el perfil por unos partidos", efectos: { rendimiento: -1, forma: "desanimado", equipo: 0 }, resultado: "Te cuesta recuperar la confianza frente a tu propia gente." },
       ],
     },
@@ -140,7 +140,7 @@ const GameEvents = {
       id: "gen-10", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "En el vestuario surge una discusión sobre quién debería ser el próximo capitán.",
       opciones: [
-        { texto: "Proponer tu candidatura", efectos: { rendimiento: 0, forma: "animado", equipo: 1 }, resultado: "Tu iniciativa es bien recibida por buena parte del plantel." },
+        { texto: "Proponer tu candidatura", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Tu iniciativa es bien recibida por buena parte del plantel." },
         { texto: "Apoyar a otro compañero", efectos: { rendimiento: 0, forma: "regular", equipo: 1 }, resultado: "El grupo valora tu gesto de compañerismo y madurez." },
       ],
     },
@@ -148,7 +148,7 @@ const GameEvents = {
       id: "gen-11", tipo: "deportivo", personajes: ["rival", "companeros"],
       pregunta: "Antes del clásico, un compañero te sugiere ver videos de goles del rival para motivarte.",
       opciones: [
-        { texto: "Ver los videos con el equipo", efectos: { rendimiento: 1, forma: "inspirado", equipo: 1 }, resultado: "El grupo llega con la motivación a tope para el partido." },
+        { texto: "Ver los videos con el equipo", efectos: { rendimiento: 0, forma: "inspirado", equipo: 1 }, resultado: "El grupo llega con la motivación a tope para el partido." },
         { texto: "Preferir tu rutina habitual de concentración", efectos: { rendimiento: 1, forma: "regular", equipo: 0 }, resultado: "Mantienes tu enfoque personal, sin sumarte a la dinámica grupal." },
       ],
     },
@@ -156,7 +156,7 @@ const GameEvents = {
       id: "gen-12", tipo: "personal", personajes: ["prensa"],
       pregunta: "Te ofrecen participar en un documental sobre jugadores jóvenes del club.",
       opciones: [
-        { texto: "Participar en el documental", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Ganas exposición mediática y algunos elogios por tu perfil." },
+        { texto: "Participar en el documental", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Ganas exposición mediática y algunos elogios por tu perfil." },
         { texto: "Declinar la propuesta", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres mantener bajo perfil fuera de la cancha." },
       ],
     },
@@ -164,7 +164,7 @@ const GameEvents = {
       id: "gen-13", tipo: "deportivo", personajes: ["entrenador"],
       pregunta: "El entrenador te pregunta tu opinión sobre el sistema táctico antes del próximo partido.",
       opciones: [
-        { texto: "Dar tu opinión con sinceridad", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Se valora tu aporte y el vestuario gana en confianza colectiva." },
+        { texto: "Dar tu opinión con sinceridad", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Se valora tu aporte y el vestuario gana en confianza colectiva." },
         { texto: "Evitar opinar y dejarlo en manos del cuerpo técnico", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Mantienes bajo perfil dentro del grupo, sin mayores cambios." },
       ],
     },
@@ -172,7 +172,7 @@ const GameEvents = {
       id: "gen-14", tipo: "personal", personajes: ["familia"],
       pregunta: "Un familiar cercano necesita tu apoyo económico en un momento difícil.",
       opciones: [
-        { texto: "Ayudar económicamente", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Sientes tranquilidad por haber podido ayudar a tu familia." },
+        { texto: "Ayudar económicamente", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Sientes tranquilidad por haber podido ayudar a tu familia." },
         { texto: "Consultarlo primero con un asesor financiero", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "La demora genera algo de tensión familiar en el corto plazo." },
       ],
     },
@@ -188,7 +188,7 @@ const GameEvents = {
       id: "gen-16", tipo: "personal", personajes: ["hinchada"],
       pregunta: "Un grupo de hinchas te pide una foto justo antes de entrar a entrenar.",
       opciones: [
-        { texto: "Tomarte un momento para la foto", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Los hinchas se van felices y hablan bien de tu cercanía." },
+        { texto: "Tomarte un momento para la foto", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Los hinchas se van felices y hablan bien de tu cercanía." },
         { texto: "Disculparte y seguir de largo", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Llegas puntual al entrenamiento, aunque algunos hinchas quedan algo decepcionados." },
       ],
     },
@@ -196,7 +196,7 @@ const GameEvents = {
       id: "gen-17", tipo: "deportivo", personajes: ["rival"],
       pregunta: "En la previa, se filtra la posible alineación del rival para el próximo partido.",
       opciones: [
-        { texto: "Estudiar a fondo cada rival directo", efectos: { rendimiento: 2, forma: "animado", equipo: 1 }, resultado: "Llegas con ventaja táctica sobre tu marca directa." },
+        { texto: "Estudiar a fondo cada rival directo", efectos: { rendimiento: 2, forma: "animado", equipo: -1 }, resultado: "Llegas con ventaja táctica sobre tu marca directa." },
         { texto: "No darle mayor importancia a la filtración", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres centrarte en tu propio juego antes que en el rival." },
       ],
     },
@@ -204,7 +204,7 @@ const GameEvents = {
       id: "gen-18", tipo: "personal", personajes: ["agente"],
       pregunta: "Tu agente te avisa que un club del exterior pregunta por tu situación contractual.",
       opciones: [
-        { texto: "Pedirle más información", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "La noticia te genera ilusión y motivación extra en cada entrenamiento." },
+        { texto: "Pedirle más información", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "La noticia te genera ilusión y motivación extra en cada entrenamiento." },
         { texto: "Pedirle que no avance nada por ahora", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres mantener la cabeza enfocada en el presente." },
       ],
     },
@@ -212,7 +212,7 @@ const GameEvents = {
       id: "gen-19", tipo: "deportivo", personajes: ["entrenador"],
       pregunta: "El cuerpo técnico propone un cambio en la rutina de entrenamientos físicos.",
       opciones: [
-        { texto: "Sumarte sin objeciones", efectos: { rendimiento: 1, forma: "plenitud", equipo: 1 }, resultado: "El cambio de rutina te sienta bien físicamente." },
+        { texto: "Sumarte sin objeciones", efectos: { rendimiento: 1, forma: "plenitud", equipo: -2 }, resultado: "El cambio de rutina te sienta bien físicamente." },
         { texto: "Pedir mantener tu rutina personal", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "El cuerpo técnico accede, aunque queda una pequeña fricción." },
       ],
     },
@@ -220,7 +220,7 @@ const GameEvents = {
       id: "gen-20", tipo: "personal", personajes: ["pareja"],
       pregunta: "Tu pareja te propone mudarse a una casa más cerca del predio de entrenamiento.",
       opciones: [
-        { texto: "Aceptar la mudanza", efectos: { rendimiento: 1, forma: "plenitud", equipo: 0 }, resultado: "Ganas tiempo de descanso al reducir los traslados diarios." },
+        { texto: "Aceptar la mudanza", efectos: { rendimiento: 1, forma: "plenitud", equipo: -1 }, resultado: "Ganas tiempo de descanso al reducir los traslados diarios." },
         { texto: "Preferir quedarte en tu barrio actual", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Mantienes tu rutina de siempre, aunque los traslados siguen siendo largos." },
       ],
     },
@@ -236,7 +236,7 @@ const GameEvents = {
       id: "gen-22", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un medio deportivo te pide una nota íntima sobre tus comienzos en el fútbol.",
       opciones: [
-        { texto: "Aceptar contar tu historia", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "La nota emociona a muchos hinchas y mejora tu imagen pública." },
+        { texto: "Aceptar contar tu historia", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "La nota emociona a muchos hinchas y mejora tu imagen pública." },
         { texto: "Preferir mantener tu vida privada reservada", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Evitas la exposición mediática, manteniendo tu perfil bajo." },
       ],
     },
@@ -252,7 +252,7 @@ const GameEvents = {
       id: "gen-24", tipo: "personal", personajes: ["familia"],
       pregunta: "Tus padres viajan a verte jugar por primera vez en mucho tiempo.",
       opciones: [
-        { texto: "Organizar todo para que se sientan cómodos", efectos: { rendimiento: 1, forma: "inspirado", equipo: 0 }, resultado: "Jugar frente a ellos te llena de motivación extra." },
+        { texto: "Organizar todo para que se sientan cómodos", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Jugar frente a ellos te llena de motivación extra." },
         { texto: "Tratar el partido como uno más", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Mantienes la rutina de siempre sin darle mayor peso emocional." },
       ],
     },
@@ -260,7 +260,7 @@ const GameEvents = {
       id: "gen-25", tipo: "deportivo", personajes: ["rival"],
       pregunta: "El delantero rival es conocido por provocar a los defensores dentro del área.",
       opciones: [
-        { texto: "Mantener la calma ante cualquier provocación", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Tu temple ayuda a que el equipo no pierda el control del partido." },
+        { texto: "Mantener la calma ante cualquier provocación", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "Tu temple ayuda a que el equipo no pierda el control del partido." },
         { texto: "Responder con la misma intensidad", efectos: { rendimiento: -1, forma: "bajo", equipo: -1 }, resultado: "Te expones a una sanción innecesaria por la tensión generada." },
       ],
     },
@@ -268,7 +268,7 @@ const GameEvents = {
       id: "gen-26", tipo: "personal", personajes: ["hinchada"],
       pregunta: "Un hincha te escribe por redes sociales pidiendo ayuda para una causa solidaria.",
       opciones: [
-        { texto: "Sumarte a la causa solidaria", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Tu gesto solidario genera cariño genuino de la hinchada." },
+        { texto: "Sumarte a la causa solidaria", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Tu gesto solidario genera cariño genuino de la hinchada." },
         { texto: "No responder por falta de tiempo", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El mensaje queda sin respuesta, sin mayores consecuencias." },
       ],
     },
@@ -276,7 +276,7 @@ const GameEvents = {
       id: "gen-27", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "Se genera competencia interna por un puesto titular en el próximo partido.",
       opciones: [
-        { texto: "Redoblar el esfuerzo en cada entrenamiento", efectos: { rendimiento: 2, forma: "inspirado", equipo: 0 }, resultado: "Tu nivel en los entrenamientos convence al cuerpo técnico." },
+        { texto: "Redoblar el esfuerzo en cada entrenamiento", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Tu nivel en los entrenamientos convence al cuerpo técnico." },
         { texto: "Confiar en tu jerarquía habitual", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Mantienes tu lugar sin mayores sobresaltos, por ahora." },
       ],
     },
@@ -285,14 +285,14 @@ const GameEvents = {
       pregunta: "Tu agente te sugiere cambiar de representante para negociar mejores condiciones.",
       opciones: [
         { texto: "Escuchar la propuesta de cambio", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Abres la puerta a nuevas negociaciones a futuro." },
-        { texto: "Mantener la confianza en tu agente actual", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "La lealtad refuerza la relación de confianza con tu representante." },
+        { texto: "Mantener la confianza en tu agente actual", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "La lealtad refuerza la relación de confianza con tu representante." },
       ],
     },
     {
       id: "gen-29", tipo: "deportivo", personajes: ["entrenador", "companeros"],
       pregunta: "El entrenador pide voluntarios para ejecutar los penales del equipo.",
       opciones: [
-        { texto: "Ofrecerte como ejecutor", efectos: { rendimiento: 1, forma: "inspirado", equipo: 1 }, resultado: "Asumes una nueva responsabilidad que el grupo valora." },
+        { texto: "Ofrecerte como ejecutor", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Asumes una nueva responsabilidad que el grupo valora." },
         { texto: "Dejar que otro compañero se encargue", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Evitas la presión extra, delegando la responsabilidad." },
       ],
     },
@@ -316,7 +316,7 @@ const GameEvents = {
       id: "gen-32", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un rumor falso sobre tu vida personal circula en redes sociales.",
       opciones: [
-        { texto: "Aclarar la situación públicamente", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El desmentido calma la situación, aunque genera algo de desgaste." },
+        { texto: "Aclarar la situación públicamente", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "El desmentido calma la situación, aunque genera algo de desgaste." },
         { texto: "Ignorar el rumor por completo", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "El rumor sigue circulando, aunque decides no darle más importancia." },
       ],
     },
@@ -324,7 +324,7 @@ const GameEvents = {
       id: "gen-33", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "El equipo pierde varios partidos seguidos y el ambiente se tensa.",
       opciones: [
-        { texto: "Hablar frente al grupo para levantar el ánimo", efectos: { rendimiento: 1, forma: "inspirado", equipo: 2 }, resultado: "Tus palabras ayudan a recomponer la unión del plantel." },
+        { texto: "Hablar frente al grupo para levantar el ánimo", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Tus palabras te motivan a vos, pero no todos en el vestuario están de acuerdo con que te tomes esas atribuciones." },
         { texto: "Dejar que el cuerpo técnico maneje la situación", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "El ambiente sigue tenso por unos días más." },
       ],
     },
@@ -332,7 +332,7 @@ const GameEvents = {
       id: "gen-34", tipo: "personal", personajes: ["familia"],
       pregunta: "Tu hermano menor te pide consejos para empezar en las divisiones inferiores.",
       opciones: [
-        { texto: "Dedicarle tiempo para entrenar juntos", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Disfrutas el momento familiar y refuerzas tus propios fundamentos." },
+        { texto: "Dedicarle tiempo para entrenar juntos", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Disfrutas el momento familiar y refuerzas tus propios fundamentos." },
         { texto: "Recomendarle un entrenador especializado", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Tu hermano recibe una buena guía profesional externa." },
       ],
     },
@@ -348,7 +348,7 @@ const GameEvents = {
       id: "gen-36", tipo: "personal", personajes: ["hinchada"],
       pregunta: "Se viste una camiseta especial homenaje en el próximo partido y te consultan tu opinión.",
       opciones: [
-        { texto: "Apoyar la iniciativa con entusiasmo", efectos: { rendimiento: 0, forma: "inspirado", equipo: 1 }, resultado: "El gesto emociona a la hinchada y motiva al plantel entero." },
+        { texto: "Apoyar la iniciativa con entusiasmo", efectos: { rendimiento: -1, forma: "inspirado", equipo: 1 }, resultado: "El gesto emociona a la hinchada y motiva al plantel entero." },
         { texto: "Mantenerte neutral ante la decisión", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La iniciativa sigue adelante sin tu participación activa." },
       ],
     },
@@ -356,7 +356,7 @@ const GameEvents = {
       id: "gen-37", tipo: "deportivo", personajes: ["rival"],
       pregunta: "El próximo rival es un equipo históricamente débil según las estadísticas.",
       opciones: [
-        { texto: "Tomarlo con la misma seriedad de siempre", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Tu profesionalismo ayuda a evitar sorpresas indeseadas." },
+        { texto: "Tomarlo con la misma seriedad de siempre", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "Tu profesionalismo ayuda a evitar sorpresas indeseadas." },
         { texto: "Relajar un poco la preparación", efectos: { rendimiento: -1, forma: "regular", equipo: -1 }, resultado: "El exceso de confianza casi te juega una mala pasada." },
       ],
     },
@@ -364,7 +364,7 @@ const GameEvents = {
       id: "gen-38", tipo: "personal", personajes: ["agente"],
       pregunta: "Tu agente organiza una reunión con posibles patrocinadores para tu marca personal.",
       opciones: [
-        { texto: "Asistir a la reunión", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Se abren nuevas oportunidades comerciales interesantes." },
+        { texto: "Asistir a la reunión", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Se abren nuevas oportunidades comerciales interesantes." },
         { texto: "Postergarla para otro momento", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres enfocarte por completo en lo deportivo por ahora." },
       ],
     },
@@ -372,7 +372,7 @@ const GameEvents = {
       id: "gen-39", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "Un compañero extranjero tiene dificultades para adaptarse al idioma del grupo.",
       opciones: [
-        { texto: "Ayudarlo activamente con la integración", efectos: { rendimiento: 0, forma: "plenitud", equipo: 2 }, resultado: "El compañero se integra mejor y el grupo gana en unión." },
+        { texto: "Ayudarlo activamente con la integración", efectos: { rendimiento: -1, forma: "plenitud", equipo: 2 }, resultado: "El compañero se integra mejor y el grupo gana en unión." },
         { texto: "Dejar que se adapte a su propio ritmo", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La integración avanza, aunque de forma más lenta." },
       ],
     },
@@ -388,7 +388,7 @@ const GameEvents = {
       id: "gen-41", tipo: "deportivo", personajes: ["entrenador", "companeros"],
       pregunta: "El entrenador te pide asumir la cinta de capitán en un partido por ausencia del titular.",
       opciones: [
-        { texto: "Aceptar la responsabilidad", efectos: { rendimiento: 1, forma: "inspirado", equipo: 1 }, resultado: "Lideras al equipo con solvencia en un momento clave." },
+        { texto: "Aceptar la responsabilidad", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Lideras al equipo con solvencia en un momento clave." },
         { texto: "Sugerir que otro compañero más experimentado la lleve", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El grupo respeta tu decisión, aunque pierdes una oportunidad de liderazgo." },
       ],
     },
@@ -396,7 +396,7 @@ const GameEvents = {
       id: "gen-42", tipo: "personal", personajes: ["prensa"],
       pregunta: "Te invitan a un programa de televisión deportivo para debatir sobre la actualidad del fútbol.",
       opciones: [
-        { texto: "Aceptar la invitación", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Ganas exposición mediática y algunos elogios por tu criterio." },
+        { texto: "Aceptar la invitación", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Ganas exposición mediática y algunos elogios por tu criterio." },
         { texto: "Declinar por falta de tiempo", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres mantenerte enfocado en lo puramente deportivo." },
       ],
     },
@@ -404,7 +404,7 @@ const GameEvents = {
       id: "gen-43", tipo: "deportivo", personajes: ["rival", "entrenador"],
       pregunta: "Antes del partido, el entrenador rival hace declaraciones desafiantes en la prensa.",
       opciones: [
-        { texto: "Responder con seguridad en la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: 1 }, resultado: "Tu equipo responde de la mejor manera posible: con el resultado." },
+        { texto: "Responder con seguridad en la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Tu equipo responde de la mejor manera posible: con el resultado." },
         { texto: "No darle importancia a las declaraciones", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Mantienes la calma habitual sin mayores cambios en tu preparación." },
       ],
     },
@@ -412,7 +412,7 @@ const GameEvents = {
       id: "gen-44", tipo: "personal", personajes: ["hinchada"],
       pregunta: "Un grupo de hinchas organiza una banderaza en tu honor antes del partido.",
       opciones: [
-        { texto: "Agradecer el gesto públicamente", efectos: { rendimiento: 1, forma: "inspirado", equipo: 0 }, resultado: "El cariño de la gente te da un impulso extra de motivación." },
+        { texto: "Agradecer el gesto públicamente", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "El cariño de la gente te da un impulso extra de motivación." },
         { texto: "Mantener un perfil bajo ante el gesto", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Agradeces internamente, sin mayor exposición pública." },
       ],
     },
@@ -428,7 +428,7 @@ const GameEvents = {
       id: "gen-46", tipo: "personal", personajes: ["familia"],
       pregunta: "Tu familia te pide que participes de una tradición previa a cada partido importante.",
       opciones: [
-        { texto: "Mantener la tradición familiar", efectos: { rendimiento: 1, forma: "plenitud", equipo: 0 }, resultado: "La costumbre te da tranquilidad antes de cada compromiso importante." },
+        { texto: "Mantener la tradición familiar", efectos: { rendimiento: 1, forma: "plenitud", equipo: -1 }, resultado: "La costumbre te da tranquilidad antes de cada compromiso importante." },
         { texto: "Dejarla de lado por falta de tiempo", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "Sientes que algo falta en tu rutina previa al partido." },
       ],
     },
@@ -436,7 +436,7 @@ const GameEvents = {
       id: "gen-47", tipo: "deportivo", personajes: ["entrenador"],
       pregunta: "El cuerpo técnico introduce una nueva tecnología de análisis físico para el plantel.",
       opciones: [
-        { texto: "Aprovechar al máximo la nueva herramienta", efectos: { rendimiento: 2, forma: "animado", equipo: 1 }, resultado: "Los datos te ayudan a optimizar tu rendimiento notablemente." },
+        { texto: "Aprovechar al máximo la nueva herramienta", efectos: { rendimiento: 2, forma: "animado", equipo: -1 }, resultado: "Los datos te ayudan a optimizar tu rendimiento notablemente." },
         { texto: "Seguir confiando en tus propias sensaciones", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Mantienes tu método habitual, sin grandes cambios." },
       ],
     },
@@ -445,14 +445,14 @@ const GameEvents = {
       pregunta: "Tu agente te informa que una marca deportiva quiere que cambies de botines.",
       opciones: [
         { texto: "Aceptar el cambio de marca", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "El nuevo contrato mejora tus ingresos, aunque necesitas adaptarte al calzado." },
-        { texto: "Mantener tu marca de siempre", efectos: { rendimiento: 1, forma: "plenitud", equipo: 0 }, resultado: "Te sientes cómodo manteniendo lo que ya conoces y funciona." },
+        { texto: "Mantener tu marca de siempre", efectos: { rendimiento: 1, forma: "plenitud", equipo: -1 }, resultado: "Te sientes cómodo manteniendo lo que ya conoces y funciona." },
       ],
     },
     {
       id: "gen-49", tipo: "deportivo", personajes: ["rival"],
       pregunta: "El árbitro del próximo partido tiene fama de ser muy estricto con los reclamos.",
       opciones: [
-        { texto: "Jugar con máxima disciplina", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Evitas roces innecesarios y te mantienes concentrado en el juego." },
+        { texto: "Jugar con máxima disciplina", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "Evitas roces innecesarios y te mantienes concentrado en el juego." },
         { texto: "Jugar como siempre, sin cambiar tu forma de reclamar", efectos: { rendimiento: -1, forma: "regular", equipo: -1 }, resultado: "Te arriesgas a alguna amonestación innecesaria durante el partido." },
       ],
     },
@@ -468,7 +468,7 @@ const GameEvents = {
       id: "gen-51", tipo: "deportivo", personajes: ["entrenador"],
       pregunta: "El cuerpo técnico te cambia de esquema táctico a mitad de temporada sin previo aviso.",
       opciones: [
-        { texto: "Adaptarte rápido y proponer ajustes", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Tu flexibilidad ayuda a que la transición sea más fluida." },
+        { texto: "Adaptarte rápido y proponer ajustes", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "Tu flexibilidad ayuda a que la transición sea más fluida." },
         { texto: "Cuestionar el cambio abiertamente", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "El entrenador toma nota de tu resistencia al cambio." },
       ],
     },
@@ -492,7 +492,7 @@ const GameEvents = {
       id: "gen-54", tipo: "personal", personajes: ["agente"],
       pregunta: "Tu agente te presenta una oferta para protagonizar un videojuego de fútbol.",
       opciones: [
-        { texto: "Aceptar la propuesta", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Ganas popularidad entre una nueva generación de hinchas." },
+        { texto: "Aceptar la propuesta", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Ganas popularidad entre una nueva generación de hinchas." },
         { texto: "Rechazarla por falta de tiempo", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres concentrar tu energía en lo deportivo." },
       ],
     },
@@ -500,7 +500,7 @@ const GameEvents = {
       id: "gen-55", tipo: "deportivo", personajes: ["rival"],
       pregunta: "El equipo rival cambia de entrenador justo antes de enfrentarlos.",
       opciones: [
-        { texto: "Estudiar el nuevo estilo del rival", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Llegas mejor preparado ante lo desconocido." },
+        { texto: "Estudiar el nuevo estilo del rival", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Llegas mejor preparado ante lo desconocido." },
         { texto: "Confiar en el plan de siempre", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Te adaptas sobre la marcha durante el partido." },
       ],
     },
@@ -524,7 +524,7 @@ const GameEvents = {
       id: "gen-58", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un canal internacional te pide una entrevista sobre tu vida fuera del fútbol.",
       opciones: [
-        { texto: "Aceptar y mostrar tu lado más personal", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "La entrevista humaniza tu imagen ante el público." },
+        { texto: "Aceptar y mostrar tu lado más personal", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "La entrevista humaniza tu imagen ante el público." },
         { texto: "Mantener el hermetismo habitual", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres que hablen solo tus actuaciones en la cancha." },
       ],
     },
@@ -532,7 +532,7 @@ const GameEvents = {
       id: "gen-59", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "Se arma una interna en el plantel por la repartición de premios económicos.",
       opciones: [
-        { texto: "Proponer un reparto más equitativo", efectos: { rendimiento: 0, forma: "animado", equipo: 2 }, resultado: "Tu propuesta calma las aguas dentro del vestuario." },
+        { texto: "Proponer un reparto más equitativo", efectos: { rendimiento: -1, forma: "animado", equipo: 2 }, resultado: "Tu propuesta calma las aguas dentro del vestuario." },
         { texto: "Mantenerte al margen de la discusión", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "La tensión por el dinero sigue latente en el grupo." },
       ],
     },
@@ -541,7 +541,7 @@ const GameEvents = {
       pregunta: "Un grupo de hinchas critica fuertemente tus decisiones fuera de la cancha en redes sociales.",
       opciones: [
         { texto: "Responder con altura y seguir adelante", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Manejas bien la presión externa sin mayores consecuencias." },
-        { texto: "Bloquear y desconectarte de las redes por un tiempo", efectos: { rendimiento: 1, forma: "plenitud", equipo: 0 }, resultado: "Ganas paz mental alejándote del ruido digital." },
+        { texto: "Bloquear y desconectarte de las redes por un tiempo", efectos: { rendimiento: 1, forma: "plenitud", equipo: -1 }, resultado: "Ganas paz mental alejándote del ruido digital." },
       ],
     },
     {
@@ -549,14 +549,14 @@ const GameEvents = {
       pregunta: "En la previa del partido, un rival te reconoce públicamente como su ídolo de juventud.",
       opciones: [
         { texto: "Agradecer el gesto con humildad", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "El intercambio no afecta tu concentración para el partido." },
-        { texto: "Usarlo como motivación extra", efectos: { rendimiento: 1, forma: "inspirado", equipo: 0 }, resultado: "El halago te llena de energía positiva para competir." },
+        { texto: "Usarlo como motivación extra", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "El halago te llena de energía positiva para competir." },
       ],
     },
     {
       id: "gen-62", tipo: "personal", personajes: ["pareja"],
       pregunta: "Discutes fuerte con tu pareja la noche anterior a un partido importante.",
       opciones: [
-        { texto: "Buscar resolver las cosas antes de dormir", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Llegas al partido con la cabeza más tranquila." },
+        { texto: "Buscar resolver las cosas antes de dormir", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Llegas al partido con la cabeza más tranquila." },
         { texto: "Dejarlo para después del partido", efectos: { rendimiento: -1, forma: "bajo", equipo: 0 }, resultado: "La discusión sin resolver te pesa durante el juego." },
       ],
     },
@@ -564,7 +564,7 @@ const GameEvents = {
       id: "gen-63", tipo: "deportivo", personajes: ["entrenador"],
       pregunta: "El cuerpo técnico te pide liderar el calentamiento del equipo esta semana.",
       opciones: [
-        { texto: "Asumir el rol con entusiasmo", efectos: { rendimiento: 1, forma: "inspirado", equipo: 1 }, resultado: "El grupo responde bien a tu nueva responsabilidad." },
+        { texto: "Asumir el rol con entusiasmo", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "El grupo responde bien a tu nueva responsabilidad." },
         { texto: "Preferir que otro se encargue", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Sigues enfocado solo en tu propia preparación." },
       ],
     },
@@ -573,14 +573,14 @@ const GameEvents = {
       pregunta: "Tu agente te informa que hay interés de una marca de bebidas energéticas para patrocinarte.",
       opciones: [
         { texto: "Aceptar el patrocinio", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "El acuerdo mejora tus ingresos considerablemente." },
-        { texto: "Rechazarlo por no alinearse con tus valores", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Te mantienes fiel a la imagen que quieres proyectar." },
+        { texto: "Rechazarlo por no alinearse con tus valores", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Te mantienes fiel a la imagen que quieres proyectar." },
       ],
     },
     {
       id: "gen-65", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "Un compañero comete un error grave que le cuesta puntos al equipo en la tabla.",
       opciones: [
-        { texto: "Respaldarlo públicamente", efectos: { rendimiento: 0, forma: "animado", equipo: 2 }, resultado: "El compañero se recupera rápido gracias a tu apoyo." },
+        { texto: "Respaldarlo públicamente", efectos: { rendimiento: -1, forma: "animado", equipo: 2 }, resultado: "El compañero se recupera rápido gracias a tu apoyo." },
         { texto: "Expresar tu frustración abiertamente", efectos: { rendimiento: 0, forma: "bajo", equipo: -2 }, resultado: "El grupo queda con un clima incómodo por varios días." },
       ],
     },
@@ -596,7 +596,7 @@ const GameEvents = {
       id: "gen-67", tipo: "deportivo", personajes: ["rival"],
       pregunta: "Te enfrentas a un exjugador de tu club que se fue en malos términos.",
       opciones: [
-        { texto: "Mantener la profesionalidad de siempre", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "El partido se resuelve sin polémicas innecesarias." },
+        { texto: "Mantener la profesionalidad de siempre", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "El partido se resuelve sin polémicas innecesarias." },
         { texto: "Dejar que las viejas rencillas se noten en la cancha", efectos: { rendimiento: -1, forma: "bajo", equipo: -1 }, resultado: "El exceso de intensidad casi te cuesta una tarjeta." },
       ],
     },
@@ -604,7 +604,7 @@ const GameEvents = {
       id: "gen-68", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un periodista insinúa en una nota que estás perdiendo motivación.",
       opciones: [
-        { texto: "Desmentirlo con hechos en la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: 0 }, resultado: "Tu reacción en el campo calla cualquier especulación." },
+        { texto: "Desmentirlo con hechos en la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Tu reacción en el campo calla cualquier especulación." },
         { texto: "No responder y seguir como siempre", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Dejas que los rumores se disipen solos, con el tiempo." },
       ],
     },
@@ -620,7 +620,7 @@ const GameEvents = {
       id: "gen-70", tipo: "personal", personajes: ["companeros"],
       pregunta: "Organizas junto a tus compañeros una colecta solidaria para una escuela del barrio.",
       opciones: [
-        { texto: "Liderar la iniciativa", efectos: { rendimiento: 0, forma: "inspirado", equipo: 2 }, resultado: "El gesto solidario mejora la imagen de todo el plantel." },
+        { texto: "Liderar la iniciativa", efectos: { rendimiento: -1, forma: "inspirado", equipo: 2 }, resultado: "El gesto solidario mejora la imagen de todo el plantel." },
         { texto: "Colaborar sin protagonismo", efectos: { rendimiento: 0, forma: "regular", equipo: 1 }, resultado: "Aportas tu parte sin buscar reconocimiento extra." },
       ],
     },
@@ -628,7 +628,7 @@ const GameEvents = {
       id: "gen-71", tipo: "deportivo", personajes: ["hinchada"],
       pregunta: "Los hinchas piden que te quedes toda la vida en el club durante una entrevista improvisada.",
       opciones: [
-        { texto: "Comprometerte públicamente con el club", efectos: { rendimiento: 0, forma: "inspirado", equipo: 1 }, resultado: "El cariño mutuo con la hinchada se fortalece aún más." },
+        { texto: "Comprometerte públicamente con el club", efectos: { rendimiento: -1, forma: "inspirado", equipo: 1 }, resultado: "El cariño mutuo con la hinchada se fortalece aún más." },
         { texto: "Evitar comprometerte a futuro", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres no hacer promesas que no puedas cumplir." },
       ],
     },
@@ -636,7 +636,7 @@ const GameEvents = {
       id: "gen-72", tipo: "personal", personajes: ["familia", "pareja"],
       pregunta: "Tu pareja y tu familia no se llevan bien y eso te genera tensión constante.",
       opciones: [
-        { texto: "Organizar una reunión para mediar", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Logras acercar posiciones, aliviando bastante la tensión." },
+        { texto: "Organizar una reunión para mediar", efectos: { rendimiento: -1, forma: "plenitud", equipo: 0 }, resultado: "Logras acercar posiciones, aliviando bastante la tensión, aunque te resta algo de concentración en lo deportivo." },
         { texto: "Evitar mezclar ambos mundos", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "El problema de fondo sigue sin resolverse del todo." },
       ],
     },
@@ -644,7 +644,7 @@ const GameEvents = {
       id: "gen-73", tipo: "deportivo", personajes: ["rival"],
       pregunta: "Un rival histórico del club se juega el descenso en su próximo cruce contigo.",
       opciones: [
-        { texto: "Jugar con la máxima seriedad de siempre", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Tu profesionalismo evita cualquier polémica post partido." },
+        { texto: "Jugar con la máxima seriedad de siempre", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "Tu profesionalismo evita cualquier polémica post partido." },
         { texto: "Relajarte pensando que el resultado no te afecta", efectos: { rendimiento: -1, forma: "regular", equipo: -1 }, resultado: "Tu bajón de intensidad genera críticas del entorno." },
       ],
     },
@@ -652,7 +652,7 @@ const GameEvents = {
       id: "gen-74", tipo: "personal", personajes: ["agente"],
       pregunta: "Tu agente te sugiere invertir tus ahorros en un negocio fuera del fútbol.",
       opciones: [
-        { texto: "Invertir con asesoramiento profesional", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Comienzas a construir un futuro económico más sólido." },
+        { texto: "Invertir con asesoramiento profesional", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Comienzas a construir un futuro económico más sólido." },
         { texto: "Preferir ahorrar de forma conservadora", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Mantienes tus finanzas simples, sin grandes riesgos." },
       ],
     },
@@ -660,7 +660,7 @@ const GameEvents = {
       id: "gen-75", tipo: "deportivo", personajes: ["entrenador"],
       pregunta: "El entrenador te pide opinión sobre si sancionar a un compañero por llegar tarde.",
       opciones: [
-        { texto: "Pedir comprensión hacia el compañero", efectos: { rendimiento: 0, forma: "animado", equipo: 1 }, resultado: "El grupo valora tu empatía hacia los demás." },
+        { texto: "Pedir comprensión hacia el compañero", efectos: { rendimiento: -1, forma: "animado", equipo: 1 }, resultado: "El grupo valora tu empatía hacia los demás." },
         { texto: "Apoyar una sanción ejemplar", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El cuerpo técnico agradece tu compromiso con la disciplina." },
       ],
     },
@@ -668,7 +668,7 @@ const GameEvents = {
       id: "gen-76", tipo: "personal", personajes: ["pareja"],
       pregunta: "Tu pareja te pide más presencia en redes sociales compartiendo su vida en común.",
       opciones: [
-        { texto: "Compartir más momentos juntos públicamente", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Fortalecen su vínculo mostrando su relación con naturalidad." },
+        { texto: "Compartir más momentos juntos públicamente", efectos: { rendimiento: -1, forma: "animado", equipo: 0 }, resultado: "Fortalecen su vínculo mostrando su relación con naturalidad, aunque la mayor exposición te resta algo de foco." },
         { texto: "Preferir mantener la relación en privado", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Protegen su intimidad, aunque tu pareja queda algo dolida." },
       ],
     },
@@ -676,7 +676,7 @@ const GameEvents = {
       id: "gen-77", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "Eres elegido por tus compañeros para representar al plantel en una reunión con la dirigencia.",
       opciones: [
-        { texto: "Representar con firmeza los pedidos del grupo", efectos: { rendimiento: 0, forma: "inspirado", equipo: 2 }, resultado: "Ganas el respeto y la confianza de todo el plantel." },
+        { texto: "Representar con firmeza los pedidos del grupo", efectos: { rendimiento: -1, forma: "inspirado", equipo: 2 }, resultado: "Ganas el respeto y la confianza de todo el plantel." },
         { texto: "Ser conciliador para no generar conflictos", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La reunión termina sin grandes definiciones." },
       ],
     },
@@ -684,7 +684,7 @@ const GameEvents = {
       id: "gen-78", tipo: "personal", personajes: ["prensa"],
       pregunta: "Se viraliza un video antiguo tuyo celebrando de forma exagerada un gol amistoso.",
       opciones: [
-        { texto: "Reírte del momento públicamente", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "El video se convierte en un momento simpático y viral." },
+        { texto: "Reírte del momento públicamente", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "El video se convierte en un momento simpático y viral." },
         { texto: "Pedir que se elimine el contenido", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Evitas la exposición, aunque el video ya circuló bastante." },
       ],
     },
@@ -692,7 +692,7 @@ const GameEvents = {
       id: "gen-79", tipo: "deportivo", personajes: ["rival"],
       pregunta: "Un delantero rival rompe una racha de sequía de goles justo contra tu equipo.",
       opciones: [
-        { texto: "Redoblar la marca en la revancha", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Neutralizas por completo a tu marca en el siguiente cruce." },
+        { texto: "Redoblar la marca en la revancha", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Neutralizas por completo a tu marca en el siguiente cruce." },
         { texto: "Confiar en que fue solo un partido puntual", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El delantero rival vuelve a lastimar al equipo después." },
       ],
     },
@@ -716,7 +716,7 @@ const GameEvents = {
       id: "gen-82", tipo: "personal", personajes: ["companeros"],
       pregunta: "Un compañero te pide dinero prestado para resolver un problema personal urgente.",
       opciones: [
-        { texto: "Prestarle el dinero sin condiciones", efectos: { rendimiento: 0, forma: "plenitud", equipo: 1 }, resultado: "El gesto de confianza fortalece mucho el vínculo entre ambos." },
+        { texto: "Prestarle el dinero sin condiciones", efectos: { rendimiento: -1, forma: "plenitud", equipo: 1 }, resultado: "El gesto de confianza fortalece mucho el vínculo entre ambos." },
         { texto: "Ofrecerle ayuda de otra forma, sin dinero", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El compañero entiende tu postura, aunque queda algo incómodo." },
       ],
     },
@@ -733,14 +733,14 @@ const GameEvents = {
       pregunta: "Tu agente negocia una cláusula de salida más baja a cambio de una rebaja salarial.",
       opciones: [
         { texto: "Aceptar el trato", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Ganas libertad futura a cambio de resignar algo de ingresos." },
-        { texto: "Rechazar cualquier rebaja salarial", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Mantienes tus condiciones actuales sin cambios." },
+        { texto: "Rechazar cualquier rebaja salarial", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Mantienes tus condiciones actuales sin cambios." },
       ],
     },
     {
       id: "gen-85", tipo: "deportivo", personajes: ["rival"],
       pregunta: "El clásico de la ciudad se juega en un ambiente hostil y cargado de tensión.",
       opciones: [
-        { texto: "Bloquear el ambiente y enfocarte en el juego", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Tu templanza ayuda al equipo a manejar la presión del entorno." },
+        { texto: "Bloquear el ambiente y enfocarte en el juego", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "Tu templanza ayuda al equipo a manejar la presión del entorno." },
         { texto: "Dejarte contagiar por la tensión del momento", efectos: { rendimiento: -1, forma: "bajo", equipo: -1 }, resultado: "El nerviosismo colectivo afecta el rendimiento general del equipo." },
       ],
     },
@@ -756,7 +756,7 @@ const GameEvents = {
       id: "gen-87", tipo: "deportivo", personajes: ["entrenador"],
       pregunta: "El entrenador te pide sinceridad sobre el nivel físico real del plantel.",
       opciones: [
-        { texto: "Ser completamente honesto en tu evaluación", efectos: { rendimiento: 0, forma: "animado", equipo: 1 }, resultado: "Tu honestidad ayuda a planificar mejor la pretemporada." },
+        { texto: "Ser completamente honesto en tu evaluación", efectos: { rendimiento: -1, forma: "animado", equipo: 1 }, resultado: "Tu honestidad ayuda a planificar mejor la pretemporada." },
         { texto: "Suavizar la realidad para no generar alarma", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "El plan de trabajo no se ajusta a la necesidad real del plantel." },
       ],
     },
@@ -764,7 +764,7 @@ const GameEvents = {
       id: "gen-88", tipo: "personal", personajes: ["prensa"],
       pregunta: "Te acusan sin fundamento de haber favorecido a un compañero en la repartición de minutos.",
       opciones: [
-        { texto: "Aclarar la situación con calma", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La aclaración disuelve rápidamente el malentendido." },
+        { texto: "Aclarar la situación con calma", efectos: { rendimiento: -1, forma: "regular", equipo: 0 }, resultado: "La aclaración disuelve rápidamente el malentendido." },
         { texto: "Ignorar la acusación por completo", efectos: { rendimiento: 0, forma: "desanimado", equipo: -1 }, resultado: "El rumor sigue circulando dentro y fuera del vestuario." },
       ],
     },
@@ -772,7 +772,7 @@ const GameEvents = {
       id: "gen-89", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "El equipo consigue una racha histórica de partidos invicto.",
       opciones: [
-        { texto: "Celebrar el logro colectivo con humildad", efectos: { rendimiento: 0, forma: "inspirado", equipo: 2 }, resultado: "El grupo se mantiene enfocado en seguir sumando racha." },
+        { texto: "Celebrar el logro colectivo con humildad", efectos: { rendimiento: 0, forma: "inspirado", equipo: -2 }, resultado: "El grupo se mantiene enfocado en seguir sumando racha." },
         { texto: "Bajar la exigencia tras la buena racha", efectos: { rendimiento: -1, forma: "regular", equipo: -1 }, resultado: "La confianza excesiva pone en riesgo la racha lograda." },
       ],
     },
@@ -780,7 +780,7 @@ const GameEvents = {
       id: "gen-90", tipo: "personal", personajes: ["pareja"],
       pregunta: "Tu pareja consigue una oportunidad laboral importante que la haría viajar seguido.",
       opciones: [
-        { texto: "Apoyarla totalmente en su carrera", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "El apoyo mutuo fortalece muchísimo la relación." },
+        { texto: "Apoyarla totalmente en su carrera", efectos: { rendimiento: -1, forma: "plenitud", equipo: 0 }, resultado: "El apoyo mutuo fortalece muchísimo la relación, aunque la distancia ocasional te pesa un poco en lo futbolístico." },
         { texto: "Expresar tus dudas al respecto", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "La conversación deja algo de incertidumbre en la pareja." },
       ],
     },
@@ -796,7 +796,7 @@ const GameEvents = {
       id: "gen-92", tipo: "personal", personajes: ["familia"],
       pregunta: "Descubres que un familiar cercano atraviesa problemas económicos que no te había contado.",
       opciones: [
-        { texto: "Ofrecer tu ayuda de inmediato", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Tu apoyo alivia bastante la situación familiar." },
+        { texto: "Ofrecer tu ayuda de inmediato", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Tu apoyo alivia bastante la situación familiar." },
         { texto: "Esperar a que te lo pida directamente", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "La distancia con tu familiar se hace un poco más grande." },
       ],
     },
@@ -804,7 +804,7 @@ const GameEvents = {
       id: "gen-93", tipo: "deportivo", personajes: ["entrenador"],
       pregunta: "El cuerpo técnico prueba un nuevo sistema de juego en un amistoso de pretemporada.",
       opciones: [
-        { texto: "Comprometerte al máximo pese a ser un amistoso", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Tu compromiso ayuda a pulir mejor el nuevo sistema." },
+        { texto: "Comprometerte al máximo pese a ser un amistoso", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Tu compromiso ayuda a pulir mejor el nuevo sistema." },
         { texto: "Usar el amistoso solo para probar cosas nuevas", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El experimento deja dudas sobre su efectividad real." },
       ],
     },
@@ -813,14 +813,14 @@ const GameEvents = {
       pregunta: "Un reality show deportivo te invita a participar durante la pretemporada.",
       opciones: [
         { texto: "Aceptar la experiencia", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Ganas mucha popularidad fuera del ambiente futbolístico." },
-        { texto: "Rechazar para enfocarte en la pretemporada", efectos: { rendimiento: 1, forma: "plenitud", equipo: 0 }, resultado: "Llegas mejor preparado físicamente al inicio de la temporada." },
+        { texto: "Rechazar para enfocarte en la pretemporada", efectos: { rendimiento: 1, forma: "plenitud", equipo: -1 }, resultado: "Llegas mejor preparado físicamente al inicio de la temporada." },
       ],
     },
     {
       id: "gen-95", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "Un compañero de toda la vida en el club decide no renovar su contrato.",
       opciones: [
-        { texto: "Organizar una despedida especial para él", efectos: { rendimiento: 0, forma: "plenitud", equipo: 1 }, resultado: "El gesto emociona a todo el plantel y al propio compañero." },
+        { texto: "Organizar una despedida especial para él", efectos: { rendimiento: -1, forma: "plenitud", equipo: 1 }, resultado: "El gesto emociona a todo el plantel y al propio compañero." },
         { texto: "Vivirlo como una salida más del plantel", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La partida pasa sin mayor relevancia para el grupo." },
       ],
     },
@@ -828,7 +828,7 @@ const GameEvents = {
       id: "gen-96", tipo: "personal", personajes: ["hinchada"],
       pregunta: "Eres elegido por los hinchas como el jugador más querido de la temporada.",
       opciones: [
-        { texto: "Recibir el reconocimiento con humildad", efectos: { rendimiento: 0, forma: "inspirado", equipo: 0 }, resultado: "El cariño de la gente te motiva a seguir dando lo mejor." },
+        { texto: "Recibir el reconocimiento con humildad", efectos: { rendimiento: 0, forma: "inspirado", equipo: -1 }, resultado: "El cariño de la gente te motiva a seguir dando lo mejor." },
         { texto: "Restarle importancia al reconocimiento", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Agradeces el gesto, sin darle mayor trascendencia pública." },
       ],
     },
@@ -836,7 +836,7 @@ const GameEvents = {
       id: "gen-97", tipo: "deportivo", personajes: ["rival"],
       pregunta: "Antes del partido de vuelta, tu equipo arrastra una desventaja ajustada del partido de ida.",
       opciones: [
-        { texto: "Motivar al plantel para dar vuelta la serie", efectos: { rendimiento: 1, forma: "inspirado", equipo: 2 }, resultado: "El equipo sale con una actitud renovada a buscar la clasificación." },
+        { texto: "Motivar al plantel para dar vuelta la serie", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "El equipo sale con una actitud renovada a buscar la clasificación." },
         { texto: "Jugar con cautela para no arriesgar de más", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El equipo juega con más prudencia de la necesaria." },
       ],
     },
@@ -844,7 +844,7 @@ const GameEvents = {
       id: "gen-98", tipo: "personal", personajes: ["familia"],
       pregunta: "Tienes la posibilidad de comprarle una casa a tus padres con tus ahorros.",
       opciones: [
-        { texto: "Comprarles la casa cuanto antes", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "La alegría de tu familia te llena de una satisfacción enorme." },
+        { texto: "Comprarles la casa cuanto antes", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "La alegría de tu familia te llena de una satisfacción enorme." },
         { texto: "Esperar a tener más estabilidad económica", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres actuar con cautela financiera por el momento." },
       ],
     },
@@ -852,7 +852,7 @@ const GameEvents = {
       id: "gen-99", tipo: "deportivo", personajes: ["entrenador"],
       pregunta: "El entrenador te confiesa en privado que confía en ti para liderar el recambio generacional del equipo.",
       opciones: [
-        { texto: "Aceptar el desafío con compromiso", efectos: { rendimiento: 1, forma: "inspirado", equipo: 1 }, resultado: "Asumes con orgullo el nuevo rol dentro del proyecto." },
+        { texto: "Aceptar el desafío con compromiso", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Asumes con orgullo el nuevo rol dentro del proyecto." },
         { texto: "Expresar dudas sobre asumir ese peso", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El entrenador respeta tu sinceridad, aunque queda pensando en otras opciones." },
       ],
     },
@@ -860,7 +860,7 @@ const GameEvents = {
       id: "gen-100", tipo: "personal", personajes: ["pareja"],
       pregunta: "Con tu pareja deciden dar un paso importante y comprometerse formalmente.",
       opciones: [
-        { texto: "Celebrarlo junto a familia y amigos", efectos: { rendimiento: 0, forma: "inspirado", equipo: 0 }, resultado: "El compromiso te llena de una felicidad que se nota hasta en la cancha." },
+        { texto: "Celebrarlo junto a familia y amigos", efectos: { rendimiento: 0, forma: "inspirado", equipo: -1 }, resultado: "El compromiso te llena de una felicidad que se nota hasta en la cancha." },
         { texto: "Mantenerlo en la intimidad por ahora", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Disfrutan el momento a su manera, sin exposición pública." },
       ],
     },
@@ -874,7 +874,7 @@ const GameEvents = {
         id: "nov-01", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "Es tu primer llamado a entrenar con el plantel principal y los nervios te dominan.",
         opciones: [
-          { texto: "Mostrarte con confianza pese a los nervios", efectos: { rendimiento: 2, forma: "inspirado", equipo: 0 }, resultado: "Sorprendes al cuerpo técnico con tu personalidad en la cancha." },
+          { texto: "Mostrarte con confianza pese a los nervios", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Sorprendes al cuerpo técnico con tu personalidad en la cancha." },
           { texto: "Mantenerte discreto y observar a los mayores", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Aprendes mucho observando, aunque pasas algo desapercibido." },
         ],
       },
@@ -882,7 +882,7 @@ const GameEvents = {
         id: "nov-02", tipo: "personal", personajes: ["companeros"],
         pregunta: "Los jugadores veteranos del plantel te hacen una broma de iniciación.",
         opciones: [
-          { texto: "Seguirles el juego con buena actitud", efectos: { rendimiento: 0, forma: "animado", equipo: 2 }, resultado: "Te ganas rápido el cariño y respeto del vestuario." },
+          { texto: "Seguirles el juego con buena actitud", efectos: { rendimiento: -1, forma: "animado", equipo: 2 }, resultado: "Te ganas rápido el cariño y respeto del vestuario." },
           { texto: "Tomarlo con seriedad y pedir respeto", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "Marcas un límite, aunque quedas algo distanciado del grupo." },
         ],
       },
@@ -890,7 +890,7 @@ const GameEvents = {
         id: "nov-03", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "El entrenador te da minutos en un partido importante antes de lo esperado.",
         opciones: [
-          { texto: "Asumir el desafío con decisión", efectos: { rendimiento: 2, forma: "inspirado", equipo: 1 }, resultado: "Respondes a la altura y ganas la confianza del cuerpo técnico." },
+          { texto: "Asumir el desafío con decisión", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Respondes a la altura y ganas la confianza del cuerpo técnico." },
           { texto: "Jugar con extrema cautela para no arriesgar", efectos: { rendimiento: -1, forma: "regular", equipo: 0 }, resultado: "Cumples sin sobresaltos, aunque sin destacar demasiado." },
         ],
       },
@@ -898,7 +898,7 @@ const GameEvents = {
         id: "nov-04", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un medio te define como \"la próxima gran promesa\" del club.",
         opciones: [
-          { texto: "Disfrutar la exposición con humildad", efectos: { rendimiento: 1, forma: "animado", equipo: 0 }, resultado: "Manejas bien la presión mediática desde el primer momento." },
+          { texto: "Disfrutar la exposición con humildad", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Manejas bien la presión mediática desde el primer momento." },
           { texto: "Evitar leer o comentar la nota", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres mantenerte al margen del ruido mediático." },
         ],
       },
@@ -914,7 +914,7 @@ const GameEvents = {
         id: "nov-06", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "Un jugador veterano te ofrece enseñarte trucos tácticos después de los entrenamientos.",
         opciones: [
-          { texto: "Aceptar las clases extra con entusiasmo", efectos: { rendimiento: 2, forma: "animado", equipo: 1 }, resultado: "Aprendes conceptos que aceleran notablemente tu desarrollo." },
+          { texto: "Aceptar las clases extra con entusiasmo", efectos: { rendimiento: 2, forma: "animado", equipo: -1 }, resultado: "Aprendes conceptos que aceleran notablemente tu desarrollo." },
           { texto: "Preferir entrenar por tu cuenta", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Avanzas a tu propio ritmo, sin la guía de un veterano." },
         ],
       },
@@ -922,15 +922,15 @@ const GameEvents = {
         id: "nov-07", tipo: "personal", personajes: ["agente"],
         pregunta: "Tu agente te presiona para firmar tu primer contrato profesional cuanto antes.",
         opciones: [
-          { texto: "Firmar rápido para asegurar tu lugar", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Aseguras estabilidad económica, aunque firmas sin mucha experiencia." },
+          { texto: "Firmar rápido para asegurar tu lugar", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Aseguras estabilidad económica, aunque firmas sin mucha experiencia." },
           { texto: "Tomarte tiempo para evaluar bien la oferta", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Ganas tranquilidad al no apresurar una decisión tan importante." },
         ],
       },
       {
-        id: "nov-08", tipo: "deportivo", personajes: ["rival"],
+        id: "nov-08", tipo: "deportivo", personajes: ["rival"], debut: true,
         pregunta: "Un defensor experimentado te marca de forma intimidante en tu debut.",
         opciones: [
-          { texto: "Encarar el desafío sin bajar los brazos", efectos: { rendimiento: 2, forma: "inspirado", equipo: 1 }, resultado: "Le ganas varios duelos y ganas confianza para el resto de la temporada." },
+          { texto: "Encarar el desafío sin bajar los brazos", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Le ganas varios duelos y ganas confianza para el resto de la temporada." },
           { texto: "Jugar de manera más conservadora", efectos: { rendimiento: -1, forma: "regular", equipo: 0 }, resultado: "Evitas riesgos, aunque no logras destacar en tu debut." },
         ],
       },
@@ -938,7 +938,7 @@ const GameEvents = {
         id: "nov-09", tipo: "personal", personajes: ["hinchada"],
         pregunta: "Los hinchas más jóvenes ya piden tu camiseta en la tienda del club.",
         opciones: [
-          { texto: "Sacarte fotos y firmar camisetas con gusto", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Te ganas el cariño temprano de una nueva generación de hinchas." },
+          { texto: "Sacarte fotos y firmar camisetas con gusto", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Te ganas el cariño temprano de una nueva generación de hinchas." },
           { texto: "Mantener bajo perfil pese a la popularidad", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Sigues enfocado en lo deportivo, sin buscar mayor exposición." },
         ],
       },
@@ -946,7 +946,7 @@ const GameEvents = {
         id: "nov-10", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "El entrenador te pide más paciencia antes de exigir la titularidad.",
         opciones: [
-          { texto: "Aceptar el proceso con humildad", efectos: { rendimiento: 1, forma: "plenitud", equipo: 1 }, resultado: "Tu madurez sorprende gratamente al cuerpo técnico." },
+          { texto: "Aceptar el proceso con humildad", efectos: { rendimiento: 0, forma: "plenitud", equipo: 1 }, resultado: "Tu madurez sorprende gratamente al cuerpo técnico." },
           { texto: "Insistir en que estás listo para ser titular", efectos: { rendimiento: 1, forma: "desanimado", equipo: -1 }, resultado: "Tu insistencia genera algo de fricción con el entrenador." },
         ],
       },
@@ -954,7 +954,7 @@ const GameEvents = {
         id: "nov-11", tipo: "personal", personajes: ["companeros"],
         pregunta: "Un compañero de tu edad te invita a salir de fiesta la noche antes de un entrenamiento fuerte.",
         opciones: [
-          { texto: "Rechazar la invitación por el entrenamiento", efectos: { rendimiento: 1, forma: "regular", equipo: 0 }, resultado: "Llegas fresco y con energía a la sesión del día siguiente." },
+          { texto: "Rechazar la invitación por el entrenamiento", efectos: { rendimiento: 1, forma: "regular", equipo: -1 }, resultado: "Llegas fresco y con energía a la sesión del día siguiente." },
           { texto: "Aceptar la salida por un rato", efectos: { rendimiento: -1, forma: "desanimado", equipo: 0 }, resultado: "Llegas algo cansado y te cuesta rendir al máximo nivel." },
         ],
       },
@@ -962,7 +962,7 @@ const GameEvents = {
         id: "nov-12", tipo: "deportivo", personajes: ["rival", "companeros"],
         pregunta: "Juegas tu primer clásico y la presión del ambiente te resulta abrumadora.",
         opciones: [
-          { texto: "Buscar apoyo en un compañero experimentado", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Sus consejos te ayudan a manejar mejor la presión del momento." },
+          { texto: "Buscar apoyo en un compañero experimentado", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Sus consejos te ayudan a manejar mejor la presión del momento." },
           { texto: "Enfrentar la presión completamente solo", efectos: { rendimiento: 0, forma: "bajo", equipo: 0 }, resultado: "Te cuesta bastante manejar los nervios en un ambiente tan intenso." },
         ],
       },
@@ -970,7 +970,7 @@ const GameEvents = {
         id: "nov-13", tipo: "personal", personajes: ["prensa"],
         pregunta: "Recibes tu primera crítica dura de un periodista tras un partido flojo.",
         opciones: [
-          { texto: "Tomarla como aprendizaje y seguir adelante", efectos: { rendimiento: 1, forma: "animado", equipo: 0 }, resultado: "Usas la crítica como combustible para mejorar cada día." },
+          { texto: "Tomarla como aprendizaje y seguir adelante", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Usas la crítica como combustible para mejorar cada día." },
           { texto: "Sentirte muy afectado por la crítica", efectos: { rendimiento: -1, forma: "bajo", equipo: 0 }, resultado: "La crítica te pesa más de lo que esperabas en los días siguientes." },
         ],
       },
@@ -978,7 +978,7 @@ const GameEvents = {
         id: "nov-14", tipo: "deportivo", personajes: ["entrenador", "agente"],
         pregunta: "Te preguntan si prefieres ir a préstamo a otro club para sumar más minutos.",
         opciones: [
-          { texto: "Aceptar salir a préstamo", efectos: { rendimiento: 1, forma: "animado", equipo: 0 }, resultado: "Ganas experiencia valiosa jugando con mayor continuidad." },
+          { texto: "Aceptar salir a préstamo", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Ganas experiencia valiosa jugando con mayor continuidad." },
           { texto: "Preferir quedarte a pelear un lugar en el plantel principal", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Sigues entrenando con el primer equipo, aunque con pocos minutos." },
         ],
       },
@@ -986,7 +986,7 @@ const GameEvents = {
         id: "nov-15", tipo: "personal", personajes: ["familia"],
         pregunta: "Con tu primer sueldo importante, no sabes bien cómo administrar el dinero.",
         opciones: [
-          { texto: "Buscar asesoramiento financiero profesional", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Empiezas a manejar tus finanzas de forma responsable desde joven." },
+          { texto: "Buscar asesoramiento financiero profesional", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Empiezas a manejar tus finanzas de forma responsable desde joven." },
           { texto: "Gastarlo en algo que siempre quisiste", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Disfrutas el momento, aunque sin un plan financiero claro." },
         ],
       },
@@ -994,7 +994,7 @@ const GameEvents = {
         id: "nov-16", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "Te dan la oportunidad de patear un penal decisivo en tu segundo partido como profesional.",
         opciones: [
-          { texto: "Asumir la responsabilidad de patear", efectos: { rendimiento: 2, forma: "inspirado", equipo: 1 }, resultado: "Conviertes y ganas una confianza enorme de cara al futuro." },
+          { texto: "Asumir la responsabilidad de patear", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Conviertes y ganas una confianza enorme de cara al futuro." },
           { texto: "Cederle el penal a un compañero con más experiencia", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Evitas la presión extra, dejando la responsabilidad en otro jugador." },
         ],
       },
@@ -1002,7 +1002,7 @@ const GameEvents = {
         id: "nov-17", tipo: "personal", personajes: ["agente"],
         pregunta: "Un club grande del exterior pregunta informalmente por tu situación, siendo tan joven.",
         opciones: [
-          { texto: "Ilusionarte con la posibilidad a futuro", efectos: { rendimiento: 1, forma: "inspirado", equipo: 0 }, resultado: "La noticia te motiva a redoblar el esfuerzo cada día." },
+          { texto: "Ilusionarte con la posibilidad a futuro", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "La noticia te motiva a redoblar el esfuerzo cada día." },
           { texto: "No darle importancia todavía", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres mantener los pies sobre la tierra por ahora." },
         ],
       },
@@ -1010,7 +1010,7 @@ const GameEvents = {
         id: "nov-18", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "En un entrenamiento exigente, cometes un error que genera burlas de algunos veteranos.",
         opciones: [
-          { texto: "Reírte también y no tomarlo personal", efectos: { rendimiento: 0, forma: "animado", equipo: 1 }, resultado: "Ganas simpatía dentro del grupo por tu buena actitud." },
+          { texto: "Reírte también y no tomarlo personal", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Ganas simpatía dentro del grupo por tu buena actitud." },
           { texto: "Sentirte muy afectado por las burlas", efectos: { rendimiento: -1, forma: "bajo", equipo: 0 }, resultado: "Te cuesta sacarte el momento incómodo de la cabeza." },
         ],
       },
@@ -1018,7 +1018,7 @@ const GameEvents = {
         id: "nov-19", tipo: "personal", personajes: ["familia"],
         pregunta: "Vives solo por primera vez, lejos de tu familia, y te cuesta organizar tu día a día.",
         opciones: [
-          { texto: "Pedir ayuda a un compañero más grande", efectos: { rendimiento: 0, forma: "animado", equipo: 1 }, resultado: "Aprendes rápido a organizar tu nueva rutina de vida." },
+          { texto: "Pedir ayuda a un compañero más grande", efectos: { rendimiento: -1, forma: "animado", equipo: 1 }, resultado: "Aprendes rápido a organizar tu nueva rutina de vida." },
           { texto: "Resolverlo todo por tu cuenta", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "Te cuesta bastante adaptarte a vivir solo tan joven." },
         ],
       },
@@ -1026,7 +1026,7 @@ const GameEvents = {
         id: "nov-20", tipo: "deportivo", personajes: ["rival"],
         pregunta: "En un partido de reserva, un rival mucho mayor te trata con dureza física.",
         opciones: [
-          { texto: "Responder con el juego, sin provocaciones", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Ganas experiencia valiosa sobre cómo manejar la intensidad." },
+          { texto: "Responder con el juego, sin provocaciones", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Ganas experiencia valiosa sobre cómo manejar la intensidad." },
           { texto: "Dejarte intimidar por la diferencia física", efectos: { rendimiento: -1, forma: "bajo", equipo: 0 }, resultado: "El partido se te hace muy cuesta arriba mentalmente." },
         ],
       },
@@ -1034,7 +1034,7 @@ const GameEvents = {
         id: "nov-21", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un video tuyo entrenando se viraliza y de la noche a la mañana ganas miles de seguidores.",
         opciones: [
-          { texto: "Manejar tus redes con cabeza fría", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Aprovechas la ola de popularidad sin perder el foco." },
+          { texto: "Manejar tus redes con cabeza fría", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Aprovechas la ola de popularidad sin perder el foco." },
           { texto: "Dejarte absorber por la nueva atención", efectos: { rendimiento: -1, forma: "regular", equipo: 0 }, resultado: "Te distraes más de lo que esperabas con las redes sociales." },
         ],
       },
@@ -1042,7 +1042,7 @@ const GameEvents = {
         id: "nov-22", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "En tu primer viaje largo con el plantel, no conoces a casi nadie del grupo.",
         opciones: [
-          { texto: "Acercarte activamente a hacer amigos", efectos: { rendimiento: 0, forma: "plenitud", equipo: 2 }, resultado: "Te integras rápido y el viaje se hace mucho más ameno." },
+          { texto: "Acercarte activamente a hacer amigos", efectos: { rendimiento: -1, forma: "plenitud", equipo: 2 }, resultado: "Te integras rápido y el viaje se hace mucho más ameno." },
           { texto: "Mantenerte reservado durante todo el viaje", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El viaje pasa sin pena ni gloria en lo social." },
         ],
       },
@@ -1050,7 +1050,7 @@ const GameEvents = {
         id: "nov-23", tipo: "personal", personajes: ["agente"],
         pregunta: "Te ofrecen tu primer contrato de representación siendo muy joven todavía.",
         opciones: [
-          { texto: "Firmar con un agente reconocido", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Ganas respaldo profesional para encarar tu carrera." },
+          { texto: "Firmar con un agente reconocido", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Ganas respaldo profesional para encarar tu carrera." },
           { texto: "Esperar a tener más trayectoria antes de firmar", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres no atarte a nadie todavía." },
         ],
       },
@@ -1058,7 +1058,7 @@ const GameEvents = {
         id: "nov-24", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "Te expulsan por primera vez en tu carrera profesional por una entrada innecesaria.",
         opciones: [
-          { texto: "Asumir el error y pedir disculpas al grupo", efectos: { rendimiento: 0, forma: "desanimado", equipo: 1 }, resultado: "El plantel valora tu madurez para reconocer el error." },
+          { texto: "Asumir el error y pedir disculpas al grupo", efectos: { rendimiento: -1, forma: "desanimado", equipo: 1 }, resultado: "El plantel valora tu madurez para reconocer el error." },
           { texto: "Justificar la jugada como parte del fútbol", efectos: { rendimiento: 0, forma: "bajo", equipo: -1 }, resultado: "El entrenador espera una autocrítica que no llega." },
         ],
       },
@@ -1074,7 +1074,7 @@ const GameEvents = {
         id: "nov-26", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "Un ídolo del club, ya veterano, te elige como su recambio directo en el equipo.",
         opciones: [
-          { texto: "Absorber todo lo posible de su experiencia", efectos: { rendimiento: 2, forma: "inspirado", equipo: 1 }, resultado: "Su guía acelera muchísimo tu crecimiento futbolístico." },
+          { texto: "Absorber todo lo posible de su experiencia", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Su guía acelera muchísimo tu crecimiento futbolístico." },
           { texto: "Sentir la presión de reemplazar a un ídolo", efectos: { rendimiento: -1, forma: "bajo", equipo: 0 }, resultado: "La comparación constante te genera bastante ansiedad." },
         ],
       },
@@ -1090,7 +1090,7 @@ const GameEvents = {
         id: "nov-28", tipo: "deportivo", personajes: ["rival"],
         pregunta: "En un torneo juvenil internacional, te comparan constantemente con una futura estrella rival.",
         opciones: [
-          { texto: "Usar la comparación como motivación", efectos: { rendimiento: 2, forma: "inspirado", equipo: 0 }, resultado: "Rindes por encima de las expectativas puestas en ti." },
+          { texto: "Usar la comparación como motivación", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Rindes por encima de las expectativas puestas en ti." },
           { texto: "Sentir que la comparación te pesa demasiado", efectos: { rendimiento: -1, forma: "bajo", equipo: 0 }, resultado: "La presión externa afecta bastante tu naturalidad de juego." },
         ],
       },
@@ -1098,7 +1098,7 @@ const GameEvents = {
         id: "nov-29", tipo: "personal", personajes: ["prensa"],
         pregunta: "Te invitan a tu primera conferencia de prensa importante como profesional.",
         opciones: [
-          { texto: "Prepararte a fondo para las preguntas", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Manejas la conferencia con una soltura sorprendente." },
+          { texto: "Prepararte a fondo para las preguntas", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Manejas la conferencia con una soltura sorprendente." },
           { texto: "Ir sin mayor preparación", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Respondes con nervios, aunque sin mayores inconvenientes." },
         ],
       },
@@ -1106,7 +1106,7 @@ const GameEvents = {
         id: "nov-30", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "El cuerpo técnico te felicita en privado, pero te pide no confiarte demasiado.",
         opciones: [
-          { texto: "Tomar el consejo con humildad", efectos: { rendimiento: 1, forma: "plenitud", equipo: 1 }, resultado: "Mantienes los pies sobre la tierra pese a los elogios." },
+          { texto: "Tomar el consejo con humildad", efectos: { rendimiento: 1, forma: "plenitud", equipo: -1 }, resultado: "Mantienes los pies sobre la tierra pese a los elogios." },
           { texto: "Sentir que ya lo lograste todo", efectos: { rendimiento: -1, forma: "regular", equipo: 0 }, resultado: "El exceso de confianza empieza a notarse en tu juego." },
         ],
       },
@@ -1119,10 +1119,10 @@ const GameEvents = {
         ],
       },
       {
-        id: "nov-32", tipo: "deportivo", personajes: ["rival"],
+        id: "nov-32", tipo: "deportivo", personajes: ["rival"], debut: true,
         pregunta: "Debutas en un estadio gigante y el ruido de la hinchada rival te resulta abrumador.",
         opciones: [
-          { texto: "Concentrarte en tu propia respiración y juego", efectos: { rendimiento: 1, forma: "animado", equipo: 0 }, resultado: "Logras bloquear el ruido externo y rendir a tu nivel." },
+          { texto: "Concentrarte en tu propia respiración y juego", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Logras bloquear el ruido externo y rendir a tu nivel." },
           { texto: "Dejarte intimidar por el ambiente hostil", efectos: { rendimiento: -1, forma: "bajo", equipo: 0 }, resultado: "El ambiente te supera durante buena parte del partido." },
         ],
       },
@@ -1130,7 +1130,7 @@ const GameEvents = {
         id: "nov-33", tipo: "personal", personajes: ["familia"],
         pregunta: "Tienes que decidir si repartir tu primer sueldo grande entre ayudar a tu familia o ahorrar para ti.",
         opciones: [
-          { texto: "Priorizar ayudar a tu familia", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "La alegría de poder ayudar en casa no tiene precio." },
+          { texto: "Priorizar ayudar a tu familia", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "La alegría de poder ayudar en casa no tiene precio." },
           { texto: "Ahorrar pensando en tu futuro", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Construyes una base financiera sólida desde joven." },
         ],
       },
@@ -1146,7 +1146,7 @@ const GameEvents = {
         id: "nov-35", tipo: "personal", personajes: ["agente"],
         pregunta: "Descubres que tu primer agente no te estaba representando de la mejor manera.",
         opciones: [
-          { texto: "Cambiarte a un agente de mayor confianza", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Sientes un gran alivio al tener mejor respaldo profesional." },
+          { texto: "Cambiarte a un agente de mayor confianza", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Sientes un gran alivio al tener mejor respaldo profesional." },
           { texto: "Darle una segunda oportunidad", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "La incertidumbre sobre tu representación sigue presente." },
         ],
       },
@@ -1158,7 +1158,7 @@ const GameEvents = {
         id: "prom-01", tipo: "deportivo", personajes: ["entrenador", "companeros"],
         pregunta: "El club te ofrece la cinta de capitán de forma permanente.",
         opciones: [
-          { texto: "Aceptar la capitanía", efectos: { rendimiento: 1, forma: "inspirado", equipo: 2 }, resultado: "Asumes el liderazgo con naturalidad y el grupo responde muy bien." },
+          { texto: "Aceptar la capitanía", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Asumes el liderazgo con naturalidad y el grupo responde muy bien." },
           { texto: "Declinar y sugerir a otro compañero", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres seguir enfocado solo en lo futbolístico, sin cargos extra." },
         ],
       },
@@ -1182,7 +1182,7 @@ const GameEvents = {
         id: "prom-04", tipo: "personal", personajes: ["agente"],
         pregunta: "Te ofrecen renovar contrato por varios años con una mejora salarial importante.",
         opciones: [
-          { texto: "Renovar de inmediato", efectos: { rendimiento: 0, forma: "plenitud", equipo: 1 }, resultado: "Ganas estabilidad y tranquilidad para encarar el resto de la temporada." },
+          { texto: "Renovar de inmediato", efectos: { rendimiento: -1, forma: "plenitud", equipo: 1 }, resultado: "Ganas estabilidad y tranquilidad para encarar el resto de la temporada." },
           { texto: "Negociar condiciones adicionales antes de firmar", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La negociación se extiende, generando algo de incertidumbre." },
         ],
       },
@@ -1206,7 +1206,7 @@ const GameEvents = {
         id: "prom-07", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "Llega un nuevo entrenador con ideas tácticas muy distintas a las habituales.",
         opciones: [
-          { texto: "Adaptarte con una mente abierta", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Te ganas rápido la confianza del nuevo cuerpo técnico." },
+          { texto: "Adaptarte con una mente abierta", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "Te ganas rápido la confianza del nuevo cuerpo técnico." },
           { texto: "Mostrarte reacio a los cambios", efectos: { rendimiento: -1, forma: "desanimado", equipo: -1 }, resultado: "Te cuesta adaptarte y la relación con el entrenador arranca fría." },
         ],
       },
@@ -1222,7 +1222,7 @@ const GameEvents = {
         id: "prom-09", tipo: "deportivo", personajes: ["companeros", "entrenador"],
         pregunta: "Te ofrecen ser el referente del equipo en los partidos más difíciles de la temporada.",
         opciones: [
-          { texto: "Asumir el rol de referente", efectos: { rendimiento: 2, forma: "inspirado", equipo: 1 }, resultado: "Tu liderazgo marca la diferencia en los momentos clave." },
+          { texto: "Asumir el rol de referente", efectos: { rendimiento: 2, forma: "inspirado", equipo: 0 }, resultado: "Tu liderazgo marca la diferencia en los momentos clave." },
           { texto: "Preferir compartir la responsabilidad con otros", efectos: { rendimiento: 0, forma: "regular", equipo: 1 }, resultado: "El grupo reparte mejor la presión entre varios jugadores." },
         ],
       },
@@ -1238,7 +1238,7 @@ const GameEvents = {
         id: "prom-11", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "El vestuario está dividido por diferencias con el nuevo esquema táctico.",
         opciones: [
-          { texto: "Mediar para unificar posturas", efectos: { rendimiento: 0, forma: "animado", equipo: 2 }, resultado: "Tu intervención ayuda a recomponer el clima grupal." },
+          { texto: "Mediar para unificar posturas", efectos: { rendimiento: -1, forma: "animado", equipo: 2 }, resultado: "Tu intervención ayuda a recomponer el clima grupal." },
           { texto: "Mantenerte al margen de la discusión", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "La tensión interna sigue latente por un tiempo más." },
         ],
       },
@@ -1246,7 +1246,7 @@ const GameEvents = {
         id: "prom-12", tipo: "personal", personajes: ["familia"],
         pregunta: "Empiezas a pensar en estudiar para obtener tu licencia de entrenador a futuro.",
         opciones: [
-          { texto: "Comenzar el curso en paralelo a la temporada", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Disfrutas aprender una nueva faceta del fútbol desde otra mirada." },
+          { texto: "Comenzar el curso en paralelo a la temporada", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Disfrutas aprender una nueva faceta del fútbol desde otra mirada." },
           { texto: "Postergarlo para el final de tu carrera", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres mantener el cien por ciento del foco en jugar." },
         ],
       },
@@ -1262,7 +1262,7 @@ const GameEvents = {
         id: "prom-14", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un periodista te pregunta directamente si te ves como el próximo capitán del club.",
         opciones: [
-          { texto: "Responder con ambición y seguridad", efectos: { rendimiento: 1, forma: "inspirado", equipo: 0 }, resultado: "Tu declaración genera expectativas positivas en el entorno del club." },
+          { texto: "Responder con ambición y seguridad", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Tu declaración genera expectativas positivas en el entorno del club." },
           { texto: "Responder con humildad, sin adelantar nada", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Evitas generar presión extra sobre ti mismo." },
         ],
       },
@@ -1270,7 +1270,7 @@ const GameEvents = {
         id: "prom-15", tipo: "deportivo", personajes: ["rival"],
         pregunta: "Te toca marcar al máximo goleador de la liga en el próximo partido.",
         opciones: [
-          { texto: "Prepararte a fondo para el duelo individual", efectos: { rendimiento: 2, forma: "animado", equipo: 1 }, resultado: "Neutralizas bien a tu rival directo durante todo el partido." },
+          { texto: "Prepararte a fondo para el duelo individual", efectos: { rendimiento: 2, forma: "animado", equipo: -1 }, resultado: "Neutralizas bien a tu rival directo durante todo el partido." },
           { texto: "Confiar en tu experiencia habitual", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Cumples correctamente, sin sobresaltos ni grandes destaques." },
         ],
       },
@@ -1302,7 +1302,7 @@ const GameEvents = {
         id: "prom-19", tipo: "personal", personajes: ["pareja"],
         pregunta: "Tu pareja te propone terapia de pareja para fortalecer la relación en medio de tanto viaje.",
         opciones: [
-          { texto: "Aceptar y comprometerte con el proceso", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "La relación mejora notablemente con el tiempo." },
+          { texto: "Aceptar y comprometerte con el proceso", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "La relación mejora notablemente con el tiempo." },
           { texto: "Sentir que no es necesario", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "La relación queda en un punto de tensión sin resolver." },
         ],
       },
@@ -1310,7 +1310,7 @@ const GameEvents = {
         id: "prom-20", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "Eres el jugador con el salario más alto del plantel y eso genera algo de envidia.",
         opciones: [
-          { texto: "Ser generoso y cercano con todo el grupo", efectos: { rendimiento: 0, forma: "animado", equipo: 2 }, resultado: "Tu actitud disuelve cualquier resentimiento en el vestuario." },
+          { texto: "Ser generoso y cercano con todo el grupo", efectos: { rendimiento: -1, forma: "animado", equipo: 2 }, resultado: "Tu actitud disuelve cualquier resentimiento en el vestuario." },
           { texto: "Ignorar los comentarios y seguir tu rutina", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "Algunas miradas incómodas persisten dentro del plantel." },
         ],
       },
@@ -1319,14 +1319,14 @@ const GameEvents = {
         pregunta: "Tus padres empiezan a tener problemas de pareja y te piden consejo.",
         opciones: [
           { texto: "Escucharlos y acompañarlos en el proceso", efectos: { rendimiento: -1, forma: "desanimado", equipo: 0 }, resultado: "Estar presente para tu familia te resta algo de energía mental." },
-          { texto: "Mantener distancia del conflicto", efectos: { rendimiento: 1, forma: "regular", equipo: 0 }, resultado: "Proteges tu cabeza para el fútbol, aunque sientes cierta culpa." },
+          { texto: "Mantener distancia del conflicto", efectos: { rendimiento: 1, forma: "regular", equipo: -1 }, resultado: "Proteges tu cabeza para el fútbol, aunque sientes cierta culpa." },
         ],
       },
       {
         id: "prom-22", tipo: "deportivo", personajes: ["rival"],
         pregunta: "Un exjugador tuyo del club ahora juega para el clásico rival de la ciudad.",
         opciones: [
-          { texto: "Vivirlo con total profesionalismo", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "El partido se resuelve sin mayores tensiones extra." },
+          { texto: "Vivirlo con total profesionalismo", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "El partido se resuelve sin mayores tensiones extra." },
           { texto: "Dejar que la rivalidad personal se note", efectos: { rendimiento: -1, forma: "bajo", equipo: -1 }, resultado: "El foco en la revancha personal te saca del partido colectivo." },
         ],
       },
@@ -1334,7 +1334,7 @@ const GameEvents = {
         id: "prom-23", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un exfutbolista reconocido te critica públicamente en un programa de televisión.",
         opciones: [
-          { texto: "Responder con respeto y argumentos", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Tu respuesta madura te gana el respeto del público." },
+          { texto: "Responder con respeto y argumentos", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Tu respuesta madura te gana el respeto del público." },
           { texto: "Ignorar completamente la crítica", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La crítica sigue circulando sin que la enfrentes." },
         ],
       },
@@ -1342,7 +1342,7 @@ const GameEvents = {
         id: "prom-24", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "El entrenador te pide jugar de líbero, una posición completamente nueva para ti.",
         opciones: [
-          { texto: "Aceptar el desafío con curiosidad", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Sorprendes a todos adaptándote bien a la nueva función." },
+          { texto: "Aceptar el desafío con curiosidad", efectos: { rendimiento: 0, forma: "animado", equipo: 1 }, resultado: "Sorprendes a todos adaptándote bien a la nueva función." },
           { texto: "Pedir mantenerte en tu posición habitual", efectos: { rendimiento: 1, forma: "regular", equipo: 0 }, resultado: "El entrenador respeta tu pedido, sin mayores cambios." },
         ],
       },
@@ -1350,7 +1350,7 @@ const GameEvents = {
         id: "prom-25", tipo: "personal", personajes: ["agente"],
         pregunta: "Te ofrecen ser imagen de una fundación que ayuda a chicos en situación de calle.",
         opciones: [
-          { texto: "Comprometerte activamente con la causa", efectos: { rendimiento: 0, forma: "inspirado", equipo: 0 }, resultado: "El compromiso social te da una enorme satisfacción personal." },
+          { texto: "Comprometerte activamente con la causa", efectos: { rendimiento: 0, forma: "inspirado", equipo: -1 }, resultado: "El compromiso social te da una enorme satisfacción personal." },
           { texto: "Colaborar solo económicamente, sin exposición", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Ayudas igual, aunque de una forma más discreta." },
         ],
       },
@@ -1366,7 +1366,7 @@ const GameEvents = {
         id: "prom-27", tipo: "personal", personajes: ["pareja"],
         pregunta: "Con tu pareja atraviesan una crisis por los celos que genera tu exposición pública.",
         opciones: [
-          { texto: "Trabajar juntos en la confianza mutua", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "La relación sale fortalecida tras superar la crisis." },
+          { texto: "Trabajar juntos en la confianza mutua", efectos: { rendimiento: -1, forma: "plenitud", equipo: 0 }, resultado: "La relación sale fortalecida tras superar la crisis, aunque el desgaste emocional te resta algo de concentración." },
           { texto: "Restarle importancia al problema", efectos: { rendimiento: 0, forma: "bajo", equipo: 0 }, resultado: "La crisis de pareja sigue latente y te quita concentración." },
         ],
       },
@@ -1374,7 +1374,7 @@ const GameEvents = {
         id: "prom-28", tipo: "deportivo", personajes: ["rival"],
         pregunta: "Se genera un historial de tarjetas entre tú y un rival directo tras varios cruces.",
         opciones: [
-          { texto: "Buscar hacer las paces antes del próximo cruce", efectos: { rendimiento: 0, forma: "animado", equipo: 1 }, resultado: "El partido se juega con mucha más deportividad." },
+          { texto: "Buscar hacer las paces antes del próximo cruce", efectos: { rendimiento: 0, forma: "animado", equipo: -2 }, resultado: "El partido se juega con mucha más deportividad." },
           { texto: "Mantener la rivalidad activa", efectos: { rendimiento: -1, forma: "bajo", equipo: -1 }, resultado: "El historial de roces sigue sumando episodios tensos." },
         ],
       },
@@ -1390,7 +1390,7 @@ const GameEvents = {
         id: "prom-30", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "El entrenador te pide ser más vocal dentro de la cancha para ordenar al equipo.",
         opciones: [
-          { texto: "Asumir un rol de mayor liderazgo verbal", efectos: { rendimiento: 1, forma: "inspirado", equipo: 1 }, resultado: "El equipo se ordena mucho mejor con tu voz de mando." },
+          { texto: "Asumir un rol de mayor liderazgo verbal", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "El equipo se ordena mucho mejor con tu voz de mando." },
           { texto: "Preferir liderar solo con el ejemplo", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Sigues aportando, aunque el equipo pide más comunicación." },
         ],
       },
@@ -1398,7 +1398,7 @@ const GameEvents = {
         id: "prom-31", tipo: "personal", personajes: ["agente"],
         pregunta: "Recibes una propuesta para abrir tu propia academia de fútbol formativo.",
         opciones: [
-          { texto: "Empezar a poner en marcha el proyecto", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Das el primer paso hacia tu vida después del retiro." },
+          { texto: "Empezar a poner en marcha el proyecto", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Das el primer paso hacia tu vida después del retiro." },
           { texto: "Postergarlo para cuando te retires", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres enfocar toda tu energía en el presente deportivo." },
         ],
       },
@@ -1406,7 +1406,7 @@ const GameEvents = {
         id: "prom-32", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "Un compañero con el que tienes buena relación es transferido a mitad de temporada.",
         opciones: [
-          { texto: "Ayudarlo a despedirse bien del grupo", efectos: { rendimiento: 0, forma: "plenitud", equipo: 1 }, resultado: "La salida se vive con cariño y buen ambiente general." },
+          { texto: "Ayudarlo a despedirse bien del grupo", efectos: { rendimiento: -1, forma: "plenitud", equipo: 1 }, resultado: "La salida se vive con cariño y buen ambiente general." },
           { texto: "Evitar involucrarte demasiado emocionalmente", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La partida pasa sin mayor impacto en el grupo." },
         ],
       },
@@ -1414,7 +1414,7 @@ const GameEvents = {
         id: "prom-33", tipo: "personal", personajes: ["prensa"],
         pregunta: "Te consultan tu opinión sobre un tema social delicado que divide a la opinión pública.",
         opciones: [
-          { texto: "Dar tu opinión con responsabilidad", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Tu postura genera respeto, aunque también algo de polémica." },
+          { texto: "Dar tu opinión con responsabilidad", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Tu postura genera respeto, aunque también algo de polémica." },
           { texto: "Evitar opinar sobre temas fuera del fútbol", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres mantener tu imagen alejada de la polémica." },
         ],
       },
@@ -1422,7 +1422,7 @@ const GameEvents = {
         id: "prom-34", tipo: "deportivo", personajes: ["rival"],
         pregunta: "Te enfrentas a un equipo que suele jugar de forma muy física y desgastante.",
         opciones: [
-          { texto: "Preparar físicamente al equipo para el choque", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "El equipo aguanta bien la exigencia física del rival." },
+          { texto: "Preparar físicamente al equipo para el choque", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "El equipo aguanta bien la exigencia física del rival." },
           { texto: "Confiar solo en el nivel futbolístico", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El partido se hace más difícil de lo esperado físicamente." },
         ],
       },
@@ -1450,7 +1450,7 @@ const GameEvents = {
         id: "vet-02", tipo: "personal", personajes: ["prensa"],
         pregunta: "La prensa empieza a preguntarte reiteradamente sobre tu fecha de retiro.",
         opciones: [
-          { texto: "Hablar abiertamente sobre tus planes", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La transparencia calma la especulación mediática por un tiempo." },
+          { texto: "Hablar abiertamente sobre tus planes", efectos: { rendimiento: 0, forma: "regular", equipo: -1 }, resultado: "La transparencia calma la especulación mediática por un tiempo." },
           { texto: "Evitar el tema por completo", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "Las preguntas sobre tu retiro siguen apareciendo constantemente." },
         ],
       },
@@ -1466,7 +1466,7 @@ const GameEvents = {
         id: "vet-04", tipo: "deportivo", personajes: ["entrenador", "agente"],
         pregunta: "El club te ofrece un año más de contrato con condiciones especiales de descanso.",
         opciones: [
-          { texto: "Aceptar la renovación", efectos: { rendimiento: 0, forma: "plenitud", equipo: 1 }, resultado: "Sumas un año más de carrera con condiciones a tu medida." },
+          { texto: "Aceptar la renovación", efectos: { rendimiento: -1, forma: "plenitud", equipo: 1 }, resultado: "Sumas un año más de carrera con condiciones a tu medida." },
           { texto: "Empezar a evaluar el retiro", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Comienzas a planificar con calma el cierre de tu carrera." },
         ],
       },
@@ -1482,7 +1482,7 @@ const GameEvents = {
         id: "vet-06", tipo: "deportivo", personajes: ["rival"],
         pregunta: "Un rival joven te desafía públicamente, cuestionando si todavía tienes nivel para competir.",
         opciones: [
-          { texto: "Responder con jerarquía dentro de la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: 1 }, resultado: "Callas las críticas con una gran actuación en el campo de juego." },
+          { texto: "Responder con jerarquía dentro de la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Callas las críticas con una gran actuación en el campo de juego." },
           { texto: "No darle importancia a la provocación", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Mantienes la calma habitual, sin necesidad de demostrar nada extra." },
         ],
       },
@@ -1490,7 +1490,7 @@ const GameEvents = {
         id: "vet-07", tipo: "personal", personajes: ["hinchada"],
         pregunta: "La hinchada organiza un homenaje especial por tus años de trayectoria en el club.",
         opciones: [
-          { texto: "Recibir el homenaje con emoción", efectos: { rendimiento: 1, forma: "inspirado", equipo: 0 }, resultado: "El cariño de la gente te llena de energía para seguir compitiendo." },
+          { texto: "Recibir el homenaje con emoción", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "El cariño de la gente te llena de energía para seguir compitiendo." },
           { texto: "Pedir que el homenaje sea breve y sencillo", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Agradeces el gesto sin buscar mayor protagonismo." },
         ],
       },
@@ -1498,7 +1498,7 @@ const GameEvents = {
         id: "vet-08", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "El plantel te pide asumir la capitanía definitiva por tu experiencia y liderazgo.",
         opciones: [
-          { texto: "Aceptar la capitanía definitiva", efectos: { rendimiento: 1, forma: "inspirado", equipo: 2 }, resultado: "Tu liderazgo se vuelve clave en los momentos más difíciles de la temporada." },
+          { texto: "Aceptar la capitanía definitiva", efectos: { rendimiento: 1, forma: "inspirado", equipo: 0 }, resultado: "Tu liderazgo se vuelve clave en los momentos más difíciles de la temporada." },
           { texto: "Ceder la cinta a un jugador más joven", efectos: { rendimiento: 0, forma: "plenitud", equipo: 1 }, resultado: "Fomentas el recambio generacional dentro del plantel." },
         ],
       },
@@ -1506,7 +1506,7 @@ const GameEvents = {
         id: "vet-09", tipo: "personal", personajes: ["agente"],
         pregunta: "Tu agente te propone comenzar a planificar tu vida financiera post retiro.",
         opciones: [
-          { texto: "Empezar a planificar cuanto antes", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Ganas tranquilidad mental pensando en tu futuro fuera de las canchas." },
+          { texto: "Empezar a planificar cuanto antes", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Ganas tranquilidad mental pensando en tu futuro fuera de las canchas." },
           { texto: "Postergarlo para más adelante", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres enfocarte solo en el presente deportivo por ahora." },
         ],
       },
@@ -1514,7 +1514,7 @@ const GameEvents = {
         id: "vet-10", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "El cuerpo técnico te pide opinión sobre qué juveniles merecen sumar minutos.",
         opciones: [
-          { texto: "Dar tu opinión con total honestidad", efectos: { rendimiento: 0, forma: "animado", equipo: 1 }, resultado: "Tu criterio ayuda a tomar mejores decisiones para el futuro del club." },
+          { texto: "Dar tu opinión con total honestidad", efectos: { rendimiento: -1, forma: "animado", equipo: 1 }, resultado: "Tu criterio ayuda a tomar mejores decisiones para el futuro del club." },
           { texto: "Preferir no opinar sobre esas decisiones", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Dejas esas decisiones completamente en manos del cuerpo técnico." },
         ],
       },
@@ -1522,7 +1522,7 @@ const GameEvents = {
         id: "vet-11", tipo: "personal", personajes: ["pareja"],
         pregunta: "Con tu pareja comienzan a planificar dónde vivir una vez finalizada tu carrera.",
         opciones: [
-          { texto: "Definir juntos el lugar de retiro", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Sientes tranquilidad al tener un plan de vida claro a futuro." },
+          { texto: "Definir juntos el lugar de retiro", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Sientes tranquilidad al tener un plan de vida claro a futuro." },
           { texto: "Dejar esa decisión para más adelante", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres no adelantarte a una decisión tan importante todavía." },
         ],
       },
@@ -1530,7 +1530,7 @@ const GameEvents = {
         id: "vet-12", tipo: "deportivo", personajes: ["rival"],
         pregunta: "Te enfrentas a un exequipo tuyo, con quienes compartiste muchos años de carrera.",
         opciones: [
-          { texto: "Vivirlo con toda la intensidad competitiva de siempre", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "El partido especial te saca lo mejor dentro de la cancha." },
+          { texto: "Vivirlo con toda la intensidad competitiva de siempre", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "El partido especial te saca lo mejor dentro de la cancha." },
           { texto: "Vivirlo con nostalgia y cierta cautela", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Las emociones del reencuentro pesan un poco en tu concentración." },
         ],
       },
@@ -1538,7 +1538,7 @@ const GameEvents = {
         id: "vet-13", tipo: "personal", personajes: ["prensa"],
         pregunta: "Te consultan si te gustaría dedicarte al periodismo deportivo tras retirarte.",
         opciones: [
-          { texto: "Mostrar interés genuino en esa posibilidad", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Empiezas a visualizar con entusiasmo tu futuro fuera de las canchas." },
+          { texto: "Mostrar interés genuino en esa posibilidad", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Empiezas a visualizar con entusiasmo tu futuro fuera de las canchas." },
           { texto: "Descartar esa idea por completo", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres pensar en otras alternativas para tu vida después del retiro." },
         ],
       },
@@ -1562,7 +1562,7 @@ const GameEvents = {
         id: "vet-16", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "El plantel te pide algunas palabras de motivación antes de una final importante.",
         opciones: [
-          { texto: "Dar un discurso desde tu experiencia", efectos: { rendimiento: 1, forma: "inspirado", equipo: 2 }, resultado: "Tus palabras se convierten en un antes y un después para el grupo." },
+          { texto: "Dar un discurso desde tu experiencia", efectos: { rendimiento: 0, forma: "inspirado", equipo: 2 }, resultado: "Tus palabras se convierten en un antes y un después para el grupo." },
           { texto: "Preferir motivar con el ejemplo, sin palabras", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Tu profesionalismo silencioso también inspira a los más jóvenes." },
         ],
       },
@@ -1570,7 +1570,7 @@ const GameEvents = {
         id: "vet-17", tipo: "deportivo", personajes: ["entrenador"],
         pregunta: "El club te pregunta si te interesaría integrarte al cuerpo técnico tras el retiro.",
         opciones: [
-          { texto: "Mostrar interés genuino en el cuerpo técnico", efectos: { rendimiento: 0, forma: "animado", equipo: 1 }, resultado: "Empiezas a proyectar tu futuro dentro del club." },
+          { texto: "Mostrar interés genuino en el cuerpo técnico", efectos: { rendimiento: -1, forma: "animado", equipo: 1 }, resultado: "Empiezas a proyectar tu futuro dentro del club." },
           { texto: "Preferir explorar otras alternativas", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Dejas abiertas otras puertas para el día de mañana." },
         ],
       },
@@ -1578,7 +1578,7 @@ const GameEvents = {
         id: "vet-18", tipo: "personal", personajes: ["familia"],
         pregunta: "Tus hijos ya adolescentes empiezan a mostrar interés en seguir tus pasos futbolísticos.",
         opciones: [
-          { texto: "Acompañarlos de cerca en sus primeros pasos", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Disfrutas muchísimo compartir el fútbol con tus hijos." },
+          { texto: "Acompañarlos de cerca en sus primeros pasos", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "Disfrutas muchísimo compartir el fútbol con tus hijos." },
           { texto: "Dejar que decidan su camino sin tu influencia", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Respetas su independencia, aunque te gustaría estar más presente." },
         ],
       },
@@ -1586,7 +1586,7 @@ const GameEvents = {
         id: "vet-19", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "Un jugador joven te supera claramente en las pruebas físicas de pretemporada.",
         opciones: [
-          { texto: "Tomarlo como motivación para superarte", efectos: { rendimiento: 1, forma: "inspirado", equipo: 0 }, resultado: "Sorprendes a todos manteniendo un nivel físico altísimo." },
+          { texto: "Tomarlo como motivación para superarte", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Sorprendes a todos manteniendo un nivel físico altísimo." },
           { texto: "Aceptar que los años empiezan a notarse", efectos: { rendimiento: 0, forma: "desanimado", equipo: 0 }, resultado: "Empiezas a asumir con realismo el paso del tiempo." },
         ],
       },
@@ -1594,7 +1594,7 @@ const GameEvents = {
         id: "vet-20", tipo: "personal", personajes: ["agente"],
         pregunta: "Un canal deportivo te ofrece ser comentarista fijo apenas te retires.",
         opciones: [
-          { texto: "Aceptar el ofrecimiento a futuro", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "Aseguras una salida laboral tranquila tras el retiro." },
+          { texto: "Aceptar el ofrecimiento a futuro", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Aseguras una salida laboral tranquila tras el retiro." },
           { texto: "Preferir decidir tu futuro con más calma", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Dejas la puerta abierta sin comprometerte todavía." },
         ],
       },
@@ -1602,7 +1602,7 @@ const GameEvents = {
         id: "vet-21", tipo: "deportivo", personajes: ["rival"],
         pregunta: "Te enfrentas por última vez a un rival histórico con quien compartiste toda tu carrera.",
         opciones: [
-          { texto: "Vivir el partido con intensidad y respeto", efectos: { rendimiento: 1, forma: "inspirado", equipo: 1 }, resultado: "El cruce se convierte en un momento memorable de tu carrera." },
+          { texto: "Vivir el partido con intensidad y respeto", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "El cruce se convierte en un momento memorable de tu carrera." },
           { texto: "Vivirlo con nostalgia, algo distraído", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Las emociones del momento pesan un poco en tu concentración." },
         ],
       },
@@ -1626,7 +1626,7 @@ const GameEvents = {
         id: "vet-24", tipo: "personal", personajes: ["familia"],
         pregunta: "Tienes la oportunidad de mudar a toda tu familia a tu ciudad natal para tus últimos años de carrera.",
         opciones: [
-          { texto: "Concretar la mudanza", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "La cercanía familiar te da una paz enorme en el tramo final." },
+          { texto: "Concretar la mudanza", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "La cercanía familiar te da una paz enorme en el tramo final." },
           { texto: "Mantenerse donde están por estabilidad", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Priorizan no generar más cambios en la rutina familiar." },
         ],
       },
@@ -1634,7 +1634,7 @@ const GameEvents = {
         id: "vet-25", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "El plantel te pide organizar la fiesta de fin de temporada por tu experiencia y liderazgo.",
         opciones: [
-          { texto: "Organizar un evento memorable", efectos: { rendimiento: 0, forma: "inspirado", equipo: 2 }, resultado: "El plantel cierra la temporada con una unión enorme." },
+          { texto: "Organizar un evento memorable", efectos: { rendimiento: -1, forma: "inspirado", equipo: 2 }, resultado: "El plantel cierra la temporada con una unión enorme." },
           { texto: "Delegar la organización en los más jóvenes", efectos: { rendimiento: 0, forma: "regular", equipo: 1 }, resultado: "Fomentas el protagonismo de la nueva generación del plantel." },
         ],
       },
@@ -1642,7 +1642,7 @@ const GameEvents = {
         id: "vet-26", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un documental sobre tu carrera busca tu autorización para contar tu historia completa.",
         opciones: [
-          { texto: "Autorizar el documental sin filtros", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "El documental se convierte en un homenaje muy sentido a tu carrera." },
+          { texto: "Autorizar el documental sin filtros", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "El documental se convierte en un homenaje muy sentido a tu carrera." },
           { texto: "Pedir controlar qué partes se cuentan", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El documental avanza, aunque con algunas limitaciones acordadas." },
         ],
       },
@@ -1682,7 +1682,7 @@ const GameEvents = {
         id: "vet-31", tipo: "deportivo", personajes: ["companeros"],
         pregunta: "Un jugador joven te pide ser el padrino de su primer hijo, en señal de respeto y cariño.",
         opciones: [
-          { texto: "Aceptar el gesto con cariño", efectos: { rendimiento: 0, forma: "plenitud", equipo: 1 }, resultado: "El vínculo humano con el joven se profundiza muchísimo." },
+          { texto: "Aceptar el gesto con cariño", efectos: { rendimiento: -1, forma: "plenitud", equipo: 1 }, resultado: "El vínculo humano con el joven se profundiza muchísimo." },
           { texto: "Agradecer, pero mantener distancia profesional", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El joven entiende tu postura, sin resentimientos." },
         ],
       },
@@ -1698,7 +1698,7 @@ const GameEvents = {
         id: "vet-33", tipo: "deportivo", personajes: ["rival"],
         pregunta: "En tu último clásico como profesional, la previa mediática es enorme.",
         opciones: [
-          { texto: "Disfrutar el momento con toda la intensidad", efectos: { rendimiento: 1, forma: "inspirado", equipo: 1 }, resultado: "Vives uno de los partidos más especiales de tu carrera." },
+          { texto: "Disfrutar el momento con toda la intensidad", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Vives uno de los partidos más especiales de tu carrera." },
           { texto: "Intentar aislarte de tanta exposición", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Prefieres vivirlo con calma, lejos del ruido mediático." },
         ],
       },
@@ -1706,7 +1706,7 @@ const GameEvents = {
         id: "vet-34", tipo: "personal", personajes: ["pareja"],
         pregunta: "Con tu pareja empiezan a planificar juntos cómo será tu ceremonia de despedida del fútbol.",
         opciones: [
-          { texto: "Involucrarla activamente en la organización", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "El evento se convierte en un homenaje compartido en pareja." },
+          { texto: "Involucrarla activamente en la organización", efectos: { rendimiento: 0, forma: "plenitud", equipo: -1 }, resultado: "El evento se convierte en un homenaje compartido en pareja." },
           { texto: "Dejar la organización en manos del club", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "El club organiza todo, aunque sientes que falta un toque personal." },
         ],
       },
@@ -1721,7 +1721,7 @@ const GameEvents = {
       pregunta: "Se filtra en los medios que tu pareja te fue infiel y la noticia explota justo antes de un partido decisivo.",
       opciones: [
         { texto: "Pedir unos días para poner en orden tu cabeza", efectos: { rendimiento: -4, forma: "bajo", equipo: -2 }, resultado: "Te alejas unos días para procesar el golpe, pero el equipo siente tu ausencia." },
-        { texto: "Salir a jugar igual, tragándote el dolor", efectos: { rendimiento: -2, forma: "desanimado", equipo: -1 }, resultado: "Rindes por debajo de tu nivel, con la cabeza en otro lado." },
+        { texto: "Salir a jugar igual, tragándote el dolor", efectos: { rendimiento: -2, forma: "desanimado", equipo: -3 }, resultado: "Rindes por debajo de tu nivel, con la cabeza en otro lado." },
       ],
     },
     {
@@ -1736,7 +1736,7 @@ const GameEvents = {
       id: "ai-03", tipo: "personal", personajes: ["companeros", "agente"],
       pregunta: "Un compañero te involucra públicamente en un escándalo por presunto consumo de sustancias en la pretemporada.",
       opciones: [
-        { texto: "Someterte voluntariamente a un control antidopaje", efectos: { rendimiento: 1, forma: "animado", equipo: 1 }, resultado: "Tu transparencia limpia tu imagen por completo ante el club y la prensa." },
+        { texto: "Someterte voluntariamente a un control antidopaje", efectos: { rendimiento: 1, forma: "animado", equipo: -4 }, resultado: "Tu transparencia limpia tu imagen por completo ante el club y la prensa." },
         { texto: "Evitar el tema y esperar que se olvide", efectos: { rendimiento: -3, forma: "bajo", equipo: -3 }, resultado: "La sospecha queda instalada y afecta tu relación con el cuerpo técnico." },
       ],
     },
@@ -1745,14 +1745,14 @@ const GameEvents = {
       pregunta: "Sufres un accidente automovilístico camino a un entrenamiento; por suerte no es grave, pero el susto es enorme.",
       opciones: [
         { texto: "Tomarte el tiempo médico necesario para recuperarte del todo", efectos: { rendimiento: -3, forma: "lesionado", equipo: -1 }, resultado: "Te pierdes varios partidos, pero vuelves sin secuelas." },
-        { texto: "Volver a las canchas antes de lo recomendado", efectos: { rendimiento: -2, forma: "lesionado", equipo: 0 }, resultado: "Vuelves rápido, aunque arrastras molestias que te acompañan toda la temporada." },
+        { texto: "Volver a las canchas antes de lo recomendado", efectos: { rendimiento: -2, forma: "lesionado", equipo: -2 }, resultado: "Vuelves rápido, pero el cuerpo médico queda muy preocupado por la decisión y arrastras molestias toda la temporada." },
       ],
     },
     {
       id: "ai-05", tipo: "deportivo", personajes: ["companeros", "entrenador"],
       pregunta: "Una discusión en el vestuario termina en una pelea física con un compañero delante de todo el plantel.",
       opciones: [
-        { texto: "Pedir disculpas públicamente y hablarlo en privado", efectos: { rendimiento: -2, forma: "desanimado", equipo: -1 }, resultado: "El grupo valora el gesto, aunque el clima queda tenso por un tiempo." },
+        { texto: "Pedir disculpas públicamente y hablarlo en privado", efectos: { rendimiento: -4, forma: "desanimado", equipo: -1 }, resultado: "El grupo valora el gesto, aunque el clima queda tenso por un tiempo." },
         { texto: "Sostener que tenías razón en la discusión", efectos: { rendimiento: -3, forma: "bajo", equipo: -4 }, resultado: "El vestuario se divide y el entrenador te aparta de varios partidos." },
       ],
     },
@@ -1761,14 +1761,14 @@ const GameEvents = {
       pregunta: "Recibes la noticia de la muerte repentina de un familiar muy cercano en medio de la temporada.",
       opciones: [
         { texto: "Tomarte el tiempo que necesites para el duelo", efectos: { rendimiento: -4, forma: "bajo", equipo: -1 }, resultado: "El club te respalda por completo mientras atraviesas el duelo." },
-        { texto: "Volver a jugar rápido para distraerte del dolor", efectos: { rendimiento: -2, forma: "desanimado", equipo: 0 }, resultado: "Jugar te distrae a ratos, pero el dolor sigue muy presente." },
+        { texto: "Volver a jugar rápido para distraerte del dolor", efectos: { rendimiento: -2, forma: "desanimado", equipo: -2 }, resultado: "Jugar te distrae a ratos, pero el dolor sigue muy presente." },
       ],
     },
     {
       id: "ai-07", tipo: "personal", personajes: ["familia"],
       pregunta: "Tus padres atraviesan un divorcio muy conflictivo y te piden que tomes partido.",
       opciones: [
-        { texto: "Mantenerte neutral pese a la presión de ambos", efectos: { rendimiento: -1, forma: "desanimado", equipo: 0 }, resultado: "Proteges tu estabilidad emocional, aunque ambos se sienten algo dolidos." },
+        { texto: "Mantenerte neutral pese a la presión de ambos", efectos: { rendimiento: -1, forma: "desanimado", equipo: -1 }, resultado: "Proteges tu estabilidad emocional, aunque ambos se sienten algo dolidos." },
         { texto: "Tomar partido por uno de los dos", efectos: { rendimiento: -2, forma: "bajo", equipo: 0 }, resultado: "El conflicto familiar se profundiza y te afecta mucho más de lo esperado." },
       ],
     },
@@ -1776,7 +1776,7 @@ const GameEvents = {
       id: "ai-08", tipo: "deportivo", personajes: ["entrenador", "companeros"],
       pregunta: "Discutes violentamente con el entrenador delante de todo el plantel tras ser sustituido.",
       opciones: [
-        { texto: "Disculparte públicamente al día siguiente", efectos: { rendimiento: -1, forma: "desanimado", equipo: -1 }, resultado: "El entrenador acepta tus disculpas, aunque la relación quedó dañada." },
+        { texto: "Disculparte públicamente al día siguiente", efectos: { rendimiento: -1, forma: "desanimado", equipo: -4 }, resultado: "El entrenador acepta tus disculpas, aunque la relación quedó dañada." },
         { texto: "Mantener tu postura sin retractarte", efectos: { rendimiento: -3, forma: "bajo", equipo: -3 }, resultado: "Pierdes minutos de titular durante varias semanas por decisión técnica." },
       ],
     },
@@ -1792,7 +1792,7 @@ const GameEvents = {
       id: "ai-10", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "Descubres que un compañero habló mal de ti ante la dirigencia para quitarte el puesto de titular.",
       opciones: [
-        { texto: "Confrontarlo directamente y luego dejarlo atrás", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Aclaras la situación, aunque la confianza mutua no vuelve a ser la misma." },
+        { texto: "Confrontarlo directamente y luego dejarlo atrás", efectos: { rendimiento: 0, forma: "animado", equipo: -3 }, resultado: "Aclaras la situación, aunque la confianza mutua no vuelve a ser la misma." },
         { texto: "Guardarte el rencor y jugar con eso en la cabeza", efectos: { rendimiento: -3, forma: "bajo", equipo: -2 }, resultado: "El rencor te consume mentalmente y afecta tu juego varias semanas." },
       ],
     },
@@ -1801,7 +1801,7 @@ const GameEvents = {
       pregunta: "Recibes la oferta de tu vida de un club top, pero tu pareja no puede acompañarte por motivos laborales.",
       opciones: [
         { texto: "Rechazar la oferta y priorizar tu relación", efectos: { rendimiento: 0, forma: "plenitud", equipo: 0 }, resultado: "Ganas en estabilidad emocional, aunque siempre te preguntarás qué hubiera pasado." },
-        { texto: "Aceptar la oferta y arriesgar la relación", efectos: { rendimiento: 3, forma: "inspirado", equipo: 0 }, resultado: "Das un salto enorme en tu carrera, aunque la relación no sobrevive a la distancia." },
+        { texto: "Aceptar la oferta y arriesgar la relación", efectos: { rendimiento: 3, forma: "inspirado", equipo: -1 }, resultado: "Das un salto enorme en tu carrera, aunque la relación no sobrevive a la distancia." },
       ],
     },
     {
@@ -1816,7 +1816,7 @@ const GameEvents = {
       id: "ai-13", tipo: "personal", personajes: ["prensa", "agente"],
       pregunta: "Una foto tuya, sacada de contexto, se viraliza y genera un escándalo mediático nacional.",
       opciones: [
-        { texto: "Dar una conferencia de prensa para aclarar todo", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "La aclaración calma bastante la situación mediática." },
+        { texto: "Dar una conferencia de prensa para aclarar todo", efectos: { rendimiento: 0, forma: "regular", equipo: -2 }, resultado: "La aclaración calma bastante la situación mediática." },
         { texto: "Guardar silencio absoluto", efectos: { rendimiento: -2, forma: "bajo", equipo: -1 }, resultado: "El silencio alimenta más rumores y la presión mediática crece." },
       ],
     },
@@ -1824,7 +1824,7 @@ const GameEvents = {
       id: "ai-14", tipo: "deportivo", personajes: ["hinchada"],
       pregunta: "Un sector de la hinchada te increpa duramente e incluso te amenaza tras una racha floja de resultados.",
       opciones: [
-        { texto: "Pedir refuerzo de seguridad y seguir tu rutina", efectos: { rendimiento: -1, forma: "desanimado", equipo: 0 }, resultado: "Te sientes protegido, aunque el miedo no desaparece del todo." },
+        { texto: "Pedir refuerzo de seguridad y seguir tu rutina", efectos: { rendimiento: -1, forma: "desanimado", equipo: -3 }, resultado: "Te sientes protegido, aunque el miedo no desaparece del todo." },
         { texto: "Enfrentar públicamente a los hinchas violentos", efectos: { rendimiento: -2, forma: "bajo", equipo: -2 }, resultado: "La situación escala y genera un problema mayor con la hinchada." },
       ],
     },
@@ -1832,7 +1832,7 @@ const GameEvents = {
       id: "ai-15", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un periodista publica una nota falsa y difamatoria sobre tu vida privada.",
       opciones: [
-        { texto: "Iniciar acciones legales contra el medio", efectos: { rendimiento: 0, forma: "animado", equipo: 0 }, resultado: "La justicia te da la razón y tu imagen se limpia con el tiempo." },
+        { texto: "Iniciar acciones legales contra el medio", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "La justicia te da la razón y tu imagen se limpia con el tiempo." },
         { texto: "Dejarlo pasar para no alimentar la polémica", efectos: { rendimiento: -1, forma: "desanimado", equipo: 0 }, resultado: "La mentira queda instalada en una parte de la opinión pública." },
       ],
     },
@@ -1840,7 +1840,7 @@ const GameEvents = {
       id: "ai-16", tipo: "deportivo", personajes: ["medico", "entrenador"],
       pregunta: "Sufres una lesión grave e inesperada en pleno partido que pone en duda varios meses de tu carrera.",
       opciones: [
-        { texto: "Seguir el proceso de rehabilitación al pie de la letra", efectos: { rendimiento: -4, forma: "lesionado", equipo: 0 }, resultado: "Te recuperas de forma completa, aunque pierdes gran parte de la temporada." },
+        { texto: "Seguir el proceso de rehabilitación al pie de la letra", efectos: { rendimiento: -4, forma: "lesionado", equipo: -2 }, resultado: "Te recuperas de forma completa, aunque tu ausencia prolongada genera malestar en el plantel." },
         { texto: "Apurar la vuelta antes de lo recomendado", efectos: { rendimiento: -5, forma: "lesionado", equipo: -1 }, resultado: "La vuelta apresurada te genera una recaída todavía más grave." },
       ],
     },
@@ -1856,7 +1856,7 @@ const GameEvents = {
       id: "ai-18", tipo: "personal", personajes: ["familia", "medico"],
       pregunta: "La presión constante te pasa factura y sufres una crisis de ansiedad antes de un partido importante.",
       opciones: [
-        { texto: "Pedir ayuda profesional de un psicólogo deportivo", efectos: { rendimiento: -2, forma: "desanimado", equipo: 0 }, resultado: "Empiezas un proceso que te ayuda muchísimo a mediano plazo." },
+        { texto: "Pedir ayuda profesional de un psicólogo deportivo", efectos: { rendimiento: -2, forma: "desanimado", equipo: -2 }, resultado: "Empiezas un proceso que te ayuda muchísimo a mediano plazo." },
         { texto: "Ocultarlo y jugar igual, como si nada pasara", efectos: { rendimiento: -4, forma: "bajo", equipo: -1 }, resultado: "El problema se agrava por no haber pedido ayuda a tiempo." },
       ],
     },
@@ -1864,7 +1864,7 @@ const GameEvents = {
       id: "ai-19", tipo: "personal", personajes: ["companeros", "agente"],
       pregunta: "Te das cuenta de que las apuestas deportivas empezaron a consumir buena parte de tu tiempo y tu dinero.",
       opciones: [
-        { texto: "Buscar ayuda profesional para controlarlo a tiempo", efectos: { rendimiento: -1, forma: "regular", equipo: 0 }, resultado: "Logras frenar el problema antes de que se vuelva más serio." },
+        { texto: "Buscar ayuda profesional para controlarlo a tiempo", efectos: { rendimiento: -1, forma: "regular", equipo: -2 }, resultado: "Logras frenar el problema antes de que se vuelva más serio." },
         { texto: "Minimizar el problema y seguir apostando", efectos: { rendimiento: -3, forma: "bajo", equipo: -1 }, resultado: "El problema crece y empieza a afectar tu concentración y tus finanzas." },
       ],
     },
@@ -1872,7 +1872,7 @@ const GameEvents = {
       id: "ai-20", tipo: "deportivo", personajes: ["rival", "prensa"],
       pregunta: "Te cruzas por casualidad con un rival directo fuera de la cancha y la discusión casi termina a golpes.",
       opciones: [
-        { texto: "Retirarte de la situación antes de que escale", efectos: { rendimiento: 0, forma: "regular", equipo: 0 }, resultado: "Evitas un escándalo mayor con una salida a tiempo." },
+        { texto: "Retirarte de la situación antes de que escale", efectos: { rendimiento: 0, forma: "regular", equipo: -3 }, resultado: "Evitas un escándalo mayor con una salida a tiempo." },
         { texto: "Responder a la provocación físicamente", efectos: { rendimiento: -3, forma: "bajo", equipo: -2 }, resultado: "El escándalo mediático te cuesta una sanción disciplinaria seria." },
       ],
     },
@@ -1880,7 +1880,7 @@ const GameEvents = {
       id: "ai-21", tipo: "personal", personajes: ["prensa", "agente"],
       pregunta: "Te detienen conduciendo bajo los efectos del alcohol después de una celebración con amigos.",
       opciones: [
-        { texto: "Asumir públicamente el error y pedir disculpas", efectos: { rendimiento: -2, forma: "desanimado", equipo: -2 }, resultado: "El club te sanciona, pero valora que hayas dado la cara." },
+        { texto: "Asumir públicamente el error y pedir disculpas", efectos: { rendimiento: -2, forma: "desanimado", equipo: -4 }, resultado: "El club te sanciona, pero valora que hayas dado la cara." },
         { texto: "Intentar minimizar el episodio ante la prensa", efectos: { rendimiento: -3, forma: "bajo", equipo: -3 }, resultado: "La estrategia de minimizar el hecho te sale muy cara en imagen." },
       ],
     },

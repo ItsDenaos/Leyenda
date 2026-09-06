@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.
 
-**Versión:** 0.2.0-alpha — publicada el 5 de septiembre de 2026 · 22:41.
+**Versión:** 0.3.0-alpha — publicada el 6 de septiembre de 2026 · 13:44.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -107,7 +107,7 @@ carrera.html (el juego)
         │  arranca la Temporada 1 con ese club y ese OVR inicial
         │  ┌─────────────────────────────────────────────┐
         │  │  Se repite temporada tras temporada:          │
-        │  │  calendario de 5 pausas → tramos → cierre     │
+        │  │  calendario de 4 pausas → tramos → cierre     │
         │  └─────────────────────────────────────────────┘
         ▼
 Retiro (forzoso por edad, o elegido) → resumen de carrera → volver a index.html
@@ -173,17 +173,17 @@ Es el archivo más grande (1500+ líneas): mezcla el **estado del juego**, la **
 
 ```js
 let temporadaActual;          // la temporada en curso (objeto mutable)
-let temporadasFinalizadas = []; // historial completo, incluye filas partidas por traspasos a mitad de año
+let temporadasFinalizadas = []; // historial completo, una fila por temporada
 let temporadasEnClubActual = 0; // temporadas completas en el club actual (para el período de gracia de contrato)
 let carreraFinalizada = false;
 const edadRetiroForzoso = GameConfig.randomInt(41, 45); // sorteada UNA VEZ por carrera, al cargar la página
 ```
 
-`temporadaActual` (creada por `crearTemporada()`, [carrera.js:122-153](js/carrera.js:122)) contiene, entre otras cosas: `numero`, `anio`, `equipoId`, `ovr`, `partidos/goles/asistencias/mvp/sumaRating/promedio`, `valorMercado`, `trofeos[]`, `forma`, `titular`, `progreso` (0–100%), `calendario[]`, `checkpointIndex`, `tramoIndex`, `lesionActiva`, `bufferRendimiento`/`bufferEquipo` (efecto acumulado de las decisiones del tramo en curso, sin aplicar todavía) y `competiciones` (liga + copa nacional + copa internacional de esa temporada).
+`temporadaActual` (creada por `crearTemporada()`, [carrera.js:138](js/carrera.js:138)) contiene, entre otras cosas: `numero`, `anio`, `equipoId`, `ovr`, `partidos/goles/asistencias/mvp/sumaRating/promedio`, `valorMercado`, `trofeos[]`, `forma`, `titular`, `progreso` (0–100%), `calendario[]`, `checkpointIndex`, `tramoIndex`, `lesionActiva`, `bufferRendimiento`/`bufferEquipo` (efecto acumulado de las decisiones del tramo en curso, sin aplicar todavía) y `competiciones` (liga + copa nacional + copa internacional de esa temporada).
 
 Si se abre `carrera.html` sin haber pasado por la creación de personaje (sin `equipoId`/`ovrInicial` válidos en `localStorage`), arranca una **carrera demo** ya avanzada, con el mismo motor real (totalmente jugable) — [carrera.js:758-785](js/carrera.js:758).
 
-**La edad sube 1 año por cada temporada, nunca dentro de una misma temporada** — `getEdadActual()` ([carrera.js:787-789](js/carrera.js:787)):
+**La edad sube 1 año por cada temporada, nunca dentro de una misma temporada** — `getEdadActual()` ([carrera.js:869-871](js/carrera.js:869)):
 
 ```
 edadActual = edad de creación + (número de temporada actual − 1)
@@ -195,19 +195,20 @@ Todas las fórmulas que dependen de la edad (crecimiento/declive de OVR, riesgo 
 
 ## 7. Calendario de temporada
 
-Cada temporada tiene **3 "tramos"** (`TOTAL_TRAMOS_TEMPORADA`, [config.js:534](js/config.js:534)) — bloques de partidos que se simulan de una vez — separados por **5 pausas** donde el jugador interactúa: 3 de decisiones y 2 de fichajes.
+Cada temporada tiene **3 "tramos"** (`TOTAL_TRAMOS_TEMPORADA`, [config.js:590](js/config.js:590)) — bloques de partidos que se simulan de una vez — separados por pausas donde el jugador interactúa: 3 de decisiones y, a partir de la Temporada 2, **1 sola ventana de fichajes**.
 
-`crearCalendarioTemporada(numeroTemporada)` ([config.js:539-550](js/config.js:539)) arma:
+`crearCalendarioTemporada(numeroTemporada)` ([config.js:594-604](js/config.js:594)) arma:
 
 | Pausa | Momento (`progreso` %) | Nota |
 |---|---|---|
-| Oferta (pretemporada) | 0% | **Solo a partir de la Temporada 2** — en la 1 ya elegiste equipo en la creación. |
+| Oferta (pretemporada) | 0% | **Solo a partir de la Temporada 2** — en la 1 ya elegiste equipo en la creación, y en el resto **es la única ventana de fichajes del año** (ver nota abajo). |
 | Decisión | aleatorio entre 5% y 45% | "antes de la mitad" |
-| Oferta (mitad de temporada) | 50% siempre | Fija |
 | Decisión | aleatorio entre 0% y 100% | "en cualquier punto" |
 | Decisión | aleatorio entre 92% y 99% | "último momento" |
 
-Las 5 (o 4, en la Temporada 1) se ordenan por `progreso` para que el calendario quede cronológico. Cada pausa de decisión resuelta dispara la simulación del tramo siguiente (`simularTramoYAvanzar`) y avanza al próximo checkpoint (`avanzarCheckpoint`, [carrera.js:453-460](js/carrera.js:453)); al agotarse el calendario, se cierra la temporada (`finalizarTemporada`).
+Las 4 (o 3, en la Temporada 1) se ordenan por `progreso` para que el calendario quede cronológico. Cada pausa de decisión resuelta dispara la simulación del tramo siguiente (`simularTramoYAvanzar`) y avanza al próximo checkpoint (`avanzarCheckpoint`); al agotarse el calendario, se cierra la temporada (`finalizarTemporada`).
+
+**Por qué una sola ventana, y siempre en pretemporada**: antes había una segunda pausa de fichajes a mitad de año, lo que permitía que un traspaso partiera una temporada en dos (dos clubes distintos, dos filas de historial, el mismo año). Se sacó a propósito — ahora un fichaje sale siempre con la temporada en cero (0 partidos jugados con el club nuevo) y la corres entera de punta a punta con ese club, tal como pasaría en la realidad con una ventana de pases real. `resolveOferta` ([carrera.js:1299-1343](js/carrera.js:1299)) ya no tiene ninguna rama de "traspaso a mitad de camino": cambiar de club siempre resetea `competiciones` (liga + copa nacional; la clasificación internacional NO se hereda, es del club, no del jugador) desde cero.
 
 **Alto Impacto**: al crear la temporada se sortea si va a haber un evento de alto impacto (30% de probabilidad) y, si sale, en cuál de los 3 tramos va a aparecer (`altoImpactoPausa`, [carrera.js:145](js/carrera.js:145)). Ver [sección 19](#19-banco-de-eventos-de-temporada-jseventsjs).
 
@@ -377,7 +378,7 @@ Sube con la edad a partir de los 30 años, con un techo del 18%.
 
 La duración exacta (`duracionLesion`, [config.js:857-868](js/config.js:857)) y la pérdida de OVR (`ovrPerdidoPorLesion`, [config.js:870-874](js/config.js:870)) se sortean dentro de esos rangos, siempre topeados por los tramos que en verdad quedan en la temporada. Cada nivel tiene su propio banco de nombres/descripciones de lesión real (rotura de LCA, esguince, desgarro, etc. — ver [sección 19](#19-banco-de-eventos-de-temporada-jseventsjs)).
 
-Cuando sale una lesión nueva, esa pausa entera se reemplaza por un **parte médico** (sin decisiones que tomar) que se lee y avanza solo a los 3.2 segundos (`LESION_INFORME_MS`, [carrera.js:976](js/carrera.js:976)).
+Cuando sale una lesión nueva, esa pausa entera se reemplaza por un **parte médico** (sin decisiones que tomar, `crearLesionCard`, [carrera.js:1197-1221](js/carrera.js:1197)): muestra nombre, descripción, OVR perdido (si corresponde) y pausas de baja, y el jugador confirma con un botón **"Continuar"** para avanzar el tramo — no hay temporizador ni avance automático. En mobile esa tarjeta ocupa el ancho completo del carrusel de decisiones en vez de compartir espacio como una tarjeta más.
 
 **Recuperación al darte de alta**: al cumplirse los tramos de baja, se te devuelve el **50%** del OVR que perdiste por esa lesión (`LESION_RECUPERACION_OVR`, [config.js:907](js/config.js:907), aplicado en [carrera.js:636-645](js/carrera.js:636)) — fue un golpe físico puntual, no una pérdida de nivel definitiva. El toast de "te recuperaste" muestra cuánto OVR recuperaste, si fue mayor a 0.
 
@@ -442,7 +443,7 @@ Para las **ofertas de fichaje** se usa una variante cosmética, `valorOfrecidoPo
 
 ## 16. Sistema de fichajes y ofertas
 
-Toda la lógica vive en `generarLoteOfertas(equipoActualId, ovr, edad, valorActual)` ([carrera.js:187-317](js/carrera.js:187)), que corre en cada pausa de "oferta" del calendario.
+Toda la lógica vive en `generarLoteOfertas(equipoActualId, ovr, edad, valorActual)` ([carrera.js:203-375](js/carrera.js:203)), que corre en la única pausa de "oferta" de cada temporada (ver [sección 7](#7-calendario-de-temporada)).
 
 ### 16.1 Retiro forzoso (el corte final)
 
@@ -452,7 +453,7 @@ if (edad >= edadRetiroForzoso) return [ solo la carta de retiro forzoso ];
 
 `edadRetiroForzoso` se sortea **una sola vez por carrera**, entre 41 y 45 años (`EDAD_RETIRO_FORZOSO_MIN`/`MAX`). A partir de esa edad, no importa el club ni el OVR: la única carta es retirarte.
 
-**Transición previa (no es un corte seco)**: en las **2 temporadas** justo antes de esa edad (`EDAD_RETIRO_TRANSICION`, [config.js:490](js/config.js:490)), el cupo de ofertas de club se reduce a **1** en vez de 2 — cada vez menos clubes se animan a día ofertarte, hasta que en la última temporada esa única oferta también desaparece. Se implementa como una tercera categoría de cupo en [carrera.js:241-248](js/carrera.js:241): `enTransicionRetiro` reduce `cantidadOfertasClub` a 1 (solo si el contrato actual sigue en pie), antes de llegar al corte total de la edad forzosa.
+**Transición previa (no es un corte seco)**: en las **2 temporadas** justo antes de esa edad (`EDAD_RETIRO_TRANSICION`, [config.js:513](js/config.js:513)), el cupo de ofertas de club se reduce a **1** en vez de 2 — cada vez menos clubes se animan a día ofertarte, hasta que en la última temporada esa única oferta también desaparece. Se implementa como una tercera categoría de cupo en [carrera.js:241-248](js/carrera.js:241): `enTransicionRetiro` reduce `cantidadOfertasClub` a 1 (solo si el contrato actual sigue en pie), antes de llegar al corte total de la edad forzosa.
 
 ### 16.2 Período de gracia de contrato
 
@@ -464,7 +465,7 @@ Mientras estés en gracia (tus primeras **2 temporadas completas** en el club ac
 
 ### 16.3 ¿Tu club actual te renueva?
 
-Pasado el período de gracia, `contratoDebeTerminar(nivelEquipo, nivelLiga, ovr)` ([config.js:483-486](js/config.js:483)) compara tu OVR contra la "ventana de OVR" de tu propio club (ver 16.5 más abajo): si caíste por debajo del mínimo que ese nivel tolera, no te renuevan — la carta de "Quedarme" se reemplaza por una de retiro (no forzoso, con el texto "tu nivel ya no alcanza").
+Pasado el período de gracia, `contratoDebeTerminar(nivelEquipo, nivelLiga, ovr)` ([config.js:525-528](js/config.js:525)) compara tu OVR contra la "ventana de OVR" de tu propio club (ver 16.5 más abajo): si caíste por debajo del mínimo que ese nivel tolera, no te renuevan — la carta de "Quedarme" se reemplaza por una de retiro (no forzoso, con el texto "tu nivel ya no alcanza").
 
 ### 16.4 Retiro voluntario
 
@@ -476,16 +477,16 @@ Desde los 36 años podés elegir colgar los botines aunque tu club te siga queri
 
 ### 16.5 Elegibilidad real: la "ventana de OVR" de cada club
 
-Cada combinación equipo+liga solo puede ofertarte si tu OVR cae dentro de su ventana — `equipoElegibleParaOvr` / `ventanaOvrOferta` ([config.js:430-449](js/config.js:430)):
+Cada combinación equipo+liga solo puede ofertarte si tu OVR cae dentro de su ventana — `equipoElegibleParaOvr` / `ventanaOvrOferta` ([config.js:472-486](js/config.js:472)):
 
 ```
 centro = 45 + calidadCombinada(nivelEquipo, nivelLiga) × 54    (mapeado a todo el rango 45-99 de carrera)
 ventana = [ clamp(centro − 13, 45, 99) , clamp(centro + 13, 45, 99) ]     (OFERTA_TOLERANCIA_OVR = 13)
 ```
 
-Es un **corte duro**, no solo "menos probable": un club chico deja de poder ofertarte en cuanto sos demasiado bueno para él, y uno grande no entra en juego hasta que estás a su altura (con la tolerancia de 13 puntos, los clubes top del mundo ya son alcanzables desde ~86 de OVR).
+Es un **corte duro**, no solo "menos probable": un club chico deja de poder ofertarte en cuanto sos demasiado bueno para él, y uno grande no entra en juego hasta que estás a su altura (con la tolerancia de 13 puntos, los clubes top del mundo ya son alcanzables desde ~86 de OVR). Esta ventana de elegibilidad **no cambió** con el ajuste de pesos de 16.6 — lo que cambió es solo cómo se prioriza/ordena a los ya elegibles, no quién entra al pool.
 
-Además, la oferta tiene que tener sentido en plata: `ofertaTieneValorRazonable(valorActual, valorEnClub)` ([config.js:219-222](js/config.js:219)) descarta clubes donde fichar implicaría un desplome de más del 60% de tu valor de mercado actual (`OFERTA_UMBRAL_CAIDA_VALOR = 0.4`, es decir el club tiene que ofrecerte como mínimo el 40% de lo que valés hoy), aunque el margen de OVR lo deje pasar.
+Además, la oferta tiene que tener sentido en plata: `ofertaTieneValorRazonable(valorActual, valorEnClub)` ([config.js:230-232](js/config.js:230)) descarta clubes donde fichar implicaría un desplome de más del 60% de tu valor de mercado actual (`OFERTA_UMBRAL_CAIDA_VALOR = 0.4`, es decir el club tiene que ofrecerte como mínimo el 40% de lo que valés hoy), aunque el margen de OVR lo deje pasar.
 
 Si el cruce de ambos filtros deja el pool vacío (dataset chico o caso límite), se relaja primero el filtro de valor, y si todavía no alcanza, se usan todos los candidatos — nunca se deja al jugador sin ofertas.
 
@@ -503,54 +504,67 @@ Dentro del pool ya elegible, no se sortea parejo entre todos:
 
    Esto **no** toca la elegibilidad real del punto 16.5 (esa sigue siendo puro OVR) — solo decide, entre los clubes ya alcanzables, cuáles se priorizan. A igual OVR, un jugador de 27 años apunta más arriba que uno de 38.
 
-2. Con ese potencial se calcula el "nivel objetivo" de equipo y de liga (`nivelEquipoObjetivo`/`nivelLigaObjetivo`, [config.js:394-402](js/config.js:394) — cuanto más prestigio, más cerca de nivel 1), y el peso de cada candidato según qué tan cerca está de ese objetivo (`pesoPorCercaniaNivel`, [config.js:408-412](js/config.js:408)):
+2. Con ese potencial se calcula el "nivel objetivo" de equipo y de liga (`nivelEquipoObjetivo`/`nivelLigaObjetivo` — cuanto más prestigio, más cerca de nivel 1), y el peso de cada candidato según qué tan cerca está de ese objetivo (`pesoPorCercaniaNivel`, [config.js:437-448](js/config.js:437)):
 
    ```
-   distancia = |nivelEquipo − objetivo| + |nivelLiga − objetivoLiga| × 0.6
+   deltaEquipo = nivelEquipo − objetivoEquipo
+   deltaLiga   = nivelLiga − objetivoLiga
+   factor(delta) = 1 si delta > 0 (te "sobra" nivel), 0.05 si no (PESO_FACTOR_SOBRAR)
+   distancia = |deltaEquipo| × factor(deltaEquipo) + |deltaLiga| × factor(deltaLiga) × 0.6
    peso = 1 / (1 + distancia)^2.2
    ```
 
-3. **`elegirMejorEncaje`** ([config.js:376-381](js/config.js:376)): ordena los candidatos por peso descendente, y sortea (ponderado, para que siga habiendo variedad) **solo dentro del 40% superior** (`OFERTA_TOP_ENCAJE_FRACCION`) — así, si tu nivel da para los grandes, van a ser los grandes los que en verdad aparezcan, en vez de perderse en un sorteo parejo contra todo el pool elegible.
+   **Asimétrico a propósito**: "quedarte corto" de nivel (delta negativo) pesa la distancia completa, pero "sobrar" de nivel (delta positivo — un club/liga mejor de lo que tu potencial pide) casi no penaliza (factor 0.05 en vez de 1). Antes la fórmula era simétrica y penalizaba por igual quedarte corto o pasarte: un OVR de 83 terminaba viendo casi solo clubes de nivel medio (el "objetivo" real a ese OVR, en una escala de prestigio de 45 a 99), porque un club top "se pasaba" del objetivo tanto como un club chico se quedaba corto, y ambos pesaban lo mismo — en la práctica, nunca aparecían los grandes de Europa hasta OVRs absurdamente altos. Con el peso asimétrico, un club mejor que tu objetivo deja de competir en desventaja contra uno que directamente te queda grande.
 
-### 16.7 Cuántas ofertas de club, y la garantía de "tu entorno"
+3. **`elegirMejorEncaje`** ([config.js:398-401](js/config.js:398)): apoyada en `gruposTierAlto` ([config.js:392-396](js/config.js:392), ver también 16.7), ordena los candidatos por peso descendente y sortea (ponderado, para que siga habiendo variedad) **solo dentro del 40% superior** (`OFERTA_TOP_ENCAJE_FRACCION`) — así, si tu nivel da para los grandes, van a ser los grandes los que en verdad aparezcan, en vez de perderse en un sorteo parejo contra todo el pool elegible.
+
+### 16.7 Cuántas ofertas de club, y la garantía de "tu entorno" (condicional)
 
 - **3 cupos de club** normalmente (+ la carta de tu club actual = 4 tarjetas en total).
 - **2 cupos** si podés elegir retiro voluntario (16.4) — ahí no hay garantía de entorno, queda 100% libre.
 
-Con 3 cupos, **hasta 2 de las 3** salen garantizadas de tu "entorno" ([carrera.js:246-264](js/carrera.js:246)) — exactamente 2 si hay al menos 2 candidatos ahí, menos si no los hay (nunca se fuerza una oferta sin sentido solo para completar el cupo local):
+Con 3 cupos, la garantía de "tu entorno" ya **no es incondicional** — solo se activa si ese entorno sigue siendo un destino de tu nivel:
 
-- Normalmente, de **tu liga actual**.
-- Desde los **33 años** (`EDAD_OCASO_RETORNO_PAIS`, [config.js:521](js/config.js:521)), ese criterio cambia a **tu país de origen** — para simular volver a cerrar la carrera en casa, aunque la hayas jugado toda en el exterior.
+- `gruposTierAlto(elegibles, pesoFn)` ([config.js:392-396](js/config.js:392)) calcula el mismo 40% superior por peso que usa `elegirMejorEncaje` (16.6) sobre **todos** los elegibles, sin filtrar por entorno.
+- Si algún club de tu entorno cae dentro de ese tier alto, se garantizan **hasta 2 ofertas** de ahí — exactamente 2 si hay al menos 2 candidatos en esa intersección, menos si no los hay.
+- Si **ningún** club de tu entorno llega al tier alto (tu nivel ya superó a tu liga actual, o a tu país de origen si sos veterano), la garantía **desaparece del todo** — salvo la excepción de abajo para veteranos.
 
-El resto de los cupos (y todo, si no hay candidatos "locales" suficientes) sale libre del pool elegible completo, mismo criterio de mejor encaje. Si aun así faltan candidatos distintos, se completa repitiendo clubes antes que mostrar menos ofertas de las que corresponden.
+"Tu entorno" es:
 
-Las 3-4 cartas resultantes se mezclan en orden aleatorio, con la carta de tu club actual (quedarme/retiro) siempre al final, para que el jugador la encuentre siempre en el mismo lugar.
+- Normalmente, **tu liga actual**.
+- Desde los **33 años** (`EDAD_OCASO_RETORNO_PAIS`, [config.js:568](js/config.js:568)), pasa a ser **tu país de origen** — para simular volver a cerrar la carrera en casa, aunque la hayas jugado toda en el exterior.
 
-### 16.8 Resolver la pausa
+**Retorno nostálgico esporádico (solo veteranos, 33+)**: si tu país de origen ya no entra en el tier alto (tu nivel lo superó de sobra) pero igual hay clubes elegibles ahí, aparece **como máximo 1** oferta de esos clubes con **30% de probabilidad** por ventana (`PROB_OFERTA_NOSTALGICA`, [config.js:569](js/config.js:569)) — ya no es una garantía, es una posibilidad ocasional de que un club de tu país intente el gesto sentimental de traerte de vuelta, sin que se sienta forzado en cada carrera.
 
-Un solo clic resuelve toda la pausa:
+El resto de los cupos (y todo, si no hay candidatos de entorno) sale libre del pool elegible completo, mismo criterio de mejor encaje. Si aun así faltan candidatos distintos, se completa repitiendo clubes antes que mostrar menos ofertas de las que corresponden.
+
+### 16.8 Orden de las cartas, y resolver la pausa
+
+Las cartas ya **no se mezclan en orden aleatorio**: la carta de tu club actual (quedarme, o el retiro forzoso si no te renuevan) va siempre **primera**; si además aparece la opción de retirarte voluntariamente (16.4), esa va **segunda**. El resto de ofertas de club llena los cupos restantes, en cualquier orden — así el jugador siempre encuentra "seguir acá" (y "retirarme", si corresponde) en el mismo lugar de la fila, en vez de tener que buscarlos entre las demás ofertas.
+
+Un solo clic resuelve toda la pausa (`resolveOferta`, [carrera.js:1299-1343](js/carrera.js:1299)):
 
 - **Retiro** → cierra la carrera ([sección 17](#17-fin-de-carrera-retiro-y-resumen)).
-- **Fichar por un club nuevo** → si ya jugaste partidos con el club actual esta temporada, esa parte se archiva como su propia fila del historial (con sus propias estadísticas — el historial puede mostrar 2 filas para el mismo año si hubo un traspaso a mitad de camino); se actualiza club, liga, valor de mercado, se resetea `temporadasEnClubActual` a 0 y la forma vuelve a "regular".
+- **Fichar por un club nuevo** → la ventana única de fichajes (ver [sección 7](#7-calendario-de-temporada)) cae siempre en pretemporada, así que el traspaso arranca la temporada entera de cero con el club nuevo (nunca parte un año en dos filas de historial): se actualiza club, liga, valor de mercado, se reinician `competiciones` desde cero (la clasificación internacional no se hereda — es del club, no tuya), se resetea `temporadasEnClubActual` a 0 y la forma vuelve a "regular".
 - **Quedarme** → sin cambios, solo un mensaje de confirmación.
 
 ---
 
 ## 17. Fin de carrera: retiro y resumen
 
-Al aceptar una carta de retiro (`finalizarCarrera`, [carrera.js:1326-1350](js/carrera.js:1326)):
+Al aceptar una carta de retiro (`finalizarCarrera`, [carrera.js:1402-1434](js/carrera.js:1402)):
 
 - Se archiva la temporada en curso tal como quedó.
 - El spotlight desaparece y el panel de decisiones muestra el mensaje de despedida con **2 botones**:
-  - **"Ver resumen de mi carrera"** → abre un modal con:
-    - Escudo del último club, posición, temporadas jugadas y edad de retiro.
-    - Estadísticas combinadas de **toda** la carrera (todas las filas de `temporadasFinalizadas`, incluidas las partidas por traspasos): partidos, goles, asistencias, MVP y promedio de rating.
-    - Mayor OVR y mayor valor de mercado alcanzados en cualquier punto de la carrera.
-    - Todos los clubes en los que jugaste, **en el orden en que los fichaste**, sin repetir.
-    - Todos los trofeos ganados, **agrupados por tipo** (un solo ícono por trofeo distinto, con un contador "×N" si lo ganaste más de una vez).
+  - **"Ver resumen de mi carrera"** → abre un modal (`renderResumenCarrera`, [carrera.js:1540-1580](js/carrera.js:1540)) con:
+    - **Banner** con el degradado de colores del último club (mismo lenguaje visual que el hero de `carrera.html`, vía `--rb-a`/`--rb-b`): escudo, nombre, posición, temporadas jugadas, edad de retiro, y el **badge de pico de OVR** (`ovr-badge--hero`, coloreado con `ovrTierColor` — ver [sección 21](#21-interfaz-componentes-animaciones-y-responsive)) a un costado.
+    - **Gráfico de evolución de OVR**: un SVG de área + línea (`ovrArcoSvg`, [carrera.js:1494-1512](js/carrera.js:1494)) con el OVR de cada temporada de punta a punta, coloreado con el mismo color de gema/metal que el badge de pico — la caption de al lado indica "De X a Y" (OVR de la Temporada 1 al pico alcanzado).
+    - **Estadísticas combinadas** de **toda** la carrera (todas las filas de `temporadasFinalizadas`): partidos, goles, asistencias, MVP, promedio de rating y mayor valor de mercado, cada una con su ícono.
+    - **Clubes**, como un recorrido horizontal con flechas entre escudos (en el orden en que los fichaste, sin repetir) en vez de una grilla suelta — con scroll propio si fueron muchos.
+    - **Trofeos**, agrupados por tipo (un solo ícono por trofeo distinto, con un contador "×N" si lo ganaste más de una vez).
   - **"Aceptar"** → vuelve a `index.html` para arrancar una carrera nueva.
 
-Toda la lógica de agregación vive en `construirResumenCarrera()` ([carrera.js:1355-1394](js/carrera.js:1355)).
+Toda la lógica de agregación (incluida la serie de OVR para el gráfico) vive en `construirResumenCarrera()` ([carrera.js:1441-1489](js/carrera.js:1441)).
 
 ---
 
@@ -580,7 +594,11 @@ El número pedido en sí no influye en nada — lo que pesa es tu peso dentro de
 | `porEdad.veterano` | 34 | 33+ años |
 | `altoImpacto` | 22 | Cualquier edad, máx. 1 por temporada |
 
-**Selección de un evento normal** (`elegirEventoPorTipo`, [carrera.js:330-347](js/carrera.js:330)): para cada pausa, 50/50 si sale del banco `generales` o del banco correspondiente a la edad actual; dentro de ese banco se filtra por tipo (`"personal"` o `"deportivo"` — cada pausa siempre muestra exactamente 1 de cada). **Ningún evento se repite en la misma carrera**: se recuerda cada id ya usado (`eventosUsados`, compartido entre bancos) y se excluye de futuros sorteos; si un banco se queda sin eventos sin usar de ese tipo (carrera muy larga), se libera el filtro para ese banco puntual antes que forzar una repetición.
+**Selección de un evento normal** (`elegirEventoPorTipo`, [carrera.js:397-414](js/carrera.js:397)): para cada pausa, 50/50 si sale del banco `generales` o del banco correspondiente a la edad actual; dentro de ese banco se filtra por tipo (`"personal"` o `"deportivo"` — cada pausa siempre muestra exactamente 1 de cada). **Ningún evento se repite en la misma carrera**: se recuerda cada id ya usado (`eventosUsados`, compartido entre bancos) y se excluye de futuros sorteos; si un banco se queda sin eventos sin usar de ese tipo (carrera muy larga), se libera el filtro para ese banco puntual antes que forzar una repetición.
+
+**Eventos de debut**: 2 eventos de `porEdad.novato` (`nov-08`, `nov-32`) están escritos sobre el debut profesional en sí ("un defensor te marca en tu debut", "debutás en un estadio gigante") — un momento que ocurre una única vez. Quedan marcados con `debut: true` y `esElegibleParaDebut(evento)` ([carrera.js:392-395](js/carrera.js:392)) los excluye del sorteo salvo que sea, literal, la primera pausa de decisión de toda la carrera (Temporada 1, antes de simular el primer tramo) — antes solo se filtraba por rango de edad, así que podían salir en la Temporada 3 con el jugador ya afianzado en el club.
+
+**Sin decisiones "gratis"**: cada opción de cada evento normal (no aplica a `altoImpacto`, ver el porqué debajo) está pensada para que la otra alternativa no sea un No-brainer — ninguna opción gana a la vez en rendimiento, forma y equipo sin ceder nada en ningún eje. Antes, el patrón típico era una opción "comprometida" que sumaba en las tres dimensiones a la vez contra una opción "pasiva" neutra o floja: no había nada en juego, el camino quedaba marcado de antemano. La única excepción a propósito es un evento de `altoImpacto` sobre aceptar un soborno para arreglar un partido (`ai-17`) — ahí rechazar la propuesta debe ser, sí, objetivamente mejor en todo: no es un dilema de números, es una cuestión de integridad.
 
 **Eventos de Alto Impacto**: sin restricción de edad, efectos mucho más fuertes (hasta ±6 de rendimiento, ±4 de equipo — contra ±3/±2 de los eventos normales), y algunos tienen **las dos opciones en negativo a propósito** (elegir el mal menor, no "ganar"). Se identifican con un ⚠️ en la tarjeta. Se sortea al crear la temporada si va a haber uno (30% de probabilidad) y en qué tramo; si sale, reemplaza al evento del tipo que corresponda en esa pausa.
 
@@ -625,22 +643,25 @@ Todos los números de partidos (mínimos garantizados + rondas extra) son una re
 - **Tokens de diseño** centralizados en `:root` de [css/style.css](css/style.css) (colores, radios) — compartidos por las 3 páginas.
 - **Escudos con fallback**: `crestHtml`/`ligaCrestHtml` ([config.js:283-310](js/config.js:283)) intentan cargar el PNG real; si falla (`onerror`), se reemplazan solas por un placeholder de iniciales + degradado de los colores del club (`crestFallback`). Los escudos de liga no llevan ese fondo — solo el logo (clase `team-crest--liga`).
 - **Banderas reales** vía [flagcdn.com](https://flagcdn.com) (los emoji de bandera no se dibujan en Windows), con el emoji como respaldo de texto si la imagen falla (`flagHtml`/`flagFallback`).
-- **Trofeos**: siluetas PNG en `assets/escudos/trofeos/`, pintadas del dorado del sistema vía `mask-image` — el color original del archivo no importa, solo su transparencia define la forma (`trofeoIconHtml`).
-- **Color del badge de OVR** (`ovrTierColor`, [carrera.js:42-49](js/carrera.js:42)) — 6 niveles fijos, de metal a gema, proporcionales al rango real de carrera (45–99):
+- **Trofeos**: siluetas PNG en `assets/escudos/trofeos/`, pintadas vía `mask-image` con un dorado **propio** (`--trophy-gold: #d4af37`, [css/style.css](css/style.css)) — el color original del archivo no importa, solo su transparencia define la forma (`trofeoIconHtml`). Este dorado es deliberadamente distinto del `--accent` ámbar que usan los botones y el nivel "oro" del OVR: si el trofeo reutilizara ese mismo color, se perdería entre el resto de la interfaz en vez de leerse como un logro aparte.
+  - **Historial en mobile**: el nombre del trofeo va apilado y bien chico debajo de su ícono (no en un listado aparte) — oculto por default, se revela al tocar la tarjeta entera de esa temporada (`.timeline-item--expandida`, delegado sobre `#timelineList` en [carrera.js](js/carrera.js)). En desktop el nombre completo ya está disponible al pasar el mouse (`title`).
+- **Color del badge de OVR** (`ovrTierColor`, [carrera.js:58-65](js/carrera.js:58)) — 6 niveles fijos, de metal a gema, proporcionales al rango real de carrera (45–99):
 
   | OVR | Color |
   |---|---|
   | 45–65 | Bronce |
   | 66–79 | Plata |
   | 80–89 | Oro |
-  | 90–92 | Rubí |
-  | 93–95 | Esmeralda |
+  | 90–92 | Zafiro |
+  | 93–95 | Rubí |
   | 96–99 | Amatista |
 
 - **Etiquetas de efecto en cada opción de decisión** (`efectoRendimientoHtml`/`efectoFormaHtml`/`efectoEquipoHtml`, [carrera.js:1021-1034](js/carrera.js:1021)): antes de elegir, cada botón muestra de forma explícita qué le va a pasar a tu rendimiento, tu forma y al equipo si lo tocás — no hay efectos ocultos en las decisiones de evento.
 - **Animaciones de tramo**: los números del spotlight (partidos, goles, OVR, anillo de progreso) no saltan de golpe — se animan con un *ease-out* cúbico durante 900ms (`animarNumero`/`animarAnilloProgreso`, [carrera.js:466-516](js/carrera.js:466)).
 - **Reacomodo de tarjetas (técnica FLIP)**: al resolver una decisión y quedar menos tarjetas, la que sigue no salta de golpe a su nueva posición — se captura su posición anterior y se anima el desplazamiento (`capturarPosicionesCards`/`animarReacomodoCards`, [carrera.js:1131-1158](js/carrera.js:1131)).
 - **Línea de diseño móvil independiente**: por debajo de los 640px, `carrera.css` no solo achica la versión de escritorio — el hero, el spotlight y el historial tienen su propio HTML más chato (generado aparte en `carrera.js`, oculto/mostrado por CSS), y el panel de decisiones pasa a un carrusel de una tarjeta a la vez con scroll-snap, sin JavaScript adicional para eso.
+- **Chips del hero** (edad, país, valor de mercado): los 3 comparten el mismo estilo neutro (texto blanco, borde translúcido) — el de valor de mercado (`.value-badge`) usaba antes el celeste `--accent-2`, distinto de los otros dos sin motivo aparente; ahora los 3 son visualmente el mismo tipo de dato.
+- **Altura real de viewport en mobile (`--vh-real`)**: el layout de `carrera.html` (hero fijo / centro scrolleable / footer de decisiones fijo) depende de conocer la altura visible real de la pantalla. `100dvh` la calcula bien en Safari/iOS, pero varios navegadores mobile (Chrome/Firefox en Android, algunos in-app browsers) la calculan mal al cargar la página y dejan una franja del footer tapada. `actualizarAlturaViewport()` ([carrera.js](js/carrera.js), tope del archivo) mide `window.innerHeight` por JS al cargar y en cada resize/orientationchange, y esa variable pisa a `100dvh` en `.body--career` como última palabra — `100vh` y `100dvh` quedan como respaldo en cascada para cuando el JS todavía no corrió.
 - **Toast** (`showToast`, definido igual en `carrera.js`/`equipo.js`/`script.js`): en `carrera.html` aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones.
 - **Pie de versión** (`GameConfig.VERSION`, `GameConfig.FECHA_PUBLICACION`, `GameConfig.footerHtml()` — [config.js:11-19](js/config.js:11)): un único punto de verdad para el número de versión y la fecha de publicación, mostrado en las 3 pantallas (`#appFooter`). En `index.html`/`equipo.html` es el último elemento de la página (scroll normal); en `carrera.html` va dentro de `.career`, después del historial, para no restarle alto fijo al hero/spotlight/decisiones.
 
@@ -677,6 +698,8 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `OFERTA_TOLERANCIA_OVR` | 13 | Ancho de la "ventana de OVR" de cada club (±) |
 | `PESO_DISTANCIA_LIGA` | 0.6 | Cuánto pesa desviarse en liga vs. en equipo al elegir ofertas |
 | `PESO_EXPONENTE` | 2.2 | Qué tan fuerte castiga la distancia al nivel objetivo |
+| `PESO_FACTOR_SOBRAR` | 0.05 | Factor que aplica la distancia (en vez del 100%) cuando un club/liga "sobra" de nivel en vez de quedar corto — ver [sección 16.6](#16-sistema-de-fichajes-y-ofertas) |
+| `PROB_OFERTA_NOSTALGICA` | 0.3 | Probabilidad, por ventana, de que aparezca 1 oferta de "vuelta a casa" para un veterano cuyo país de origen ya no es santo de su nivel |
 | `EDAD_RETIRO_OFERTA` | 36 | Desde cuándo podés elegir retiro voluntario |
 | `EDAD_RETIRO_FORZOSO_MIN` / `MAX` | 41 / 45 | Rango del que se sortea la edad de retiro forzoso (una vez por carrera) |
 | `EDAD_RETIRO_TRANSICION` | 2 | Temporadas antes del retiro forzoso en las que el cupo de ofertas ya se reduce a 1 |

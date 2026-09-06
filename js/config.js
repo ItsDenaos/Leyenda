@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.2.0-alpha",
-  FECHA_PUBLICACION: "5 de septiembre de 2026 · 22:41",
+  VERSION: "0.3.0-alpha",
+  FECHA_PUBLICACION: "6 de septiembre de 2026 · 13:44",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
@@ -384,10 +384,19 @@ const GameConfig = {
   // los mejores del rango elegible, van a ser esos los que aparezcan.
   OFERTA_TOP_ENCAJE_FRACCION: 0.4,
 
-  elegirMejorEncaje(candidatos, pesoFn, n) {
+  // `tamanioMinimo` garantiza que el grupo top tenga al menos ese tamaño
+  // (para que elegirMejorEncaje siempre tenga de dónde sortear n) — sin
+  // mínimo (0), da el grupo top "real", útil para preguntas como "¿este
+  // candidato puntual entra en la élite de lo que este jugador puede
+  // alcanzar?" (ver generarLoteOfertas, garantía de entorno).
+  gruposTierAlto(candidatos, pesoFn, tamanioMinimo = 0) {
     const ordenados = [...candidatos].sort((a, b) => pesoFn(b) - pesoFn(a));
-    const tamanioTop = Math.max(n, Math.ceil(ordenados.length * GameConfig.OFERTA_TOP_ENCAJE_FRACCION));
-    const grupoTop = ordenados.slice(0, tamanioTop);
+    const tamanioTop = Math.max(tamanioMinimo, Math.ceil(ordenados.length * GameConfig.OFERTA_TOP_ENCAJE_FRACCION));
+    return ordenados.slice(0, tamanioTop);
+  },
+
+  elegirMejorEncaje(candidatos, pesoFn, n) {
+    const grupoTop = GameConfig.gruposTierAlto(candidatos, pesoFn, n);
     return GameConfig.elegirPonderado(grupoTop, pesoFn, n);
   },
 
@@ -416,9 +425,23 @@ const GameConfig = {
   // Exponente > 1 para que el efecto se note fuerte (no un sesgo apenas perceptible).
   PESO_DISTANCIA_LIGA: 0.6, // cuánto pesa desviarse en liga vs. desviarse en equipo
   PESO_EXPONENTE: 2.2,
+  // Quedarte CORTO de tu objetivo (club/liga peor de lo que ese nivel de
+  // OVR "pide") penaliza normal — eso es lo que ya evita ofertas sin
+  // sentido para abajo. Pasarte de grande casi no penaliza: un club
+  // mejor que tu objetivo no debería competir en desventaja solo por
+  // "sobrar" — en la vida real los clubes grandes te quieren igual
+  // aunque técnicamente estés "por debajo de su nivel ideal". Sin este
+  // colchón, el objetivo actuaba como un techo invisible: a un OVR
+  // bueno-pero-no-élite (~80), Europa nunca competía con ligas más
+  // chicas pero más "cercanas" al objetivo exacto.
+  PESO_FACTOR_SOBRAR: 0.05,
   pesoPorCercaniaNivel(nivelEquipo, nivelLiga, nivelEquipoObjetivo, nivelLigaObjetivo) {
-    const distancia = Math.abs(nivelEquipo - nivelEquipoObjetivo)
-      + Math.abs(nivelLiga - nivelLigaObjetivo) * GameConfig.PESO_DISTANCIA_LIGA;
+    const deltaEquipo = nivelEquipo - nivelEquipoObjetivo;
+    const deltaLiga = nivelLiga - nivelLigaObjetivo;
+    const factorEquipo = deltaEquipo > 0 ? 1 : GameConfig.PESO_FACTOR_SOBRAR;
+    const factorLiga = deltaLiga > 0 ? 1 : GameConfig.PESO_FACTOR_SOBRAR;
+    const distancia = Math.abs(deltaEquipo) * factorEquipo
+      + Math.abs(deltaLiga) * factorLiga * GameConfig.PESO_DISTANCIA_LIGA;
     return 1 / Math.pow(1 + distancia, GameConfig.PESO_EXPONENTE);
   },
 
@@ -536,23 +559,36 @@ const GameConfig = {
   // Desde esta edad, el cupo garantizado de "tu entorno" (2 de 3 ofertas,
   // ver generarLoteOfertas) deja de priorizar tu liga actual y pasa a
   // priorizar clubes de tu país de origen — volver a cerrar la carrera
-  // en casa, aunque la hayas jugado toda afuera.
+  // en casa, aunque la hayas jugado toda afuera. Pero esa garantía solo
+  // aplica mientras los clubes de tu país sigan siendo un encaje de
+  // verdad para tu nivel (ver gruposTierAlto en generarLoteOfertas) — si
+  // ya los superaste, la vuelta a casa deja de estar garantizada y pasa
+  // a aparecer solo de vez en cuando, como el gesto sentimental que
+  // sería en la realidad, no la norma.
   EDAD_OCASO_RETORNO_PAIS: 33,
+  PROB_OFERTA_NOSTALGICA: 0.3,
 
   // ============================================================
   // CALENDARIO DE TEMPORADA
-  // 3 pausas de eventos (personal/deportivo) + 2 ventanas de fichajes
-  // (ofertas). Las pausas de eventos ya no van en bandas fijas y
-  // ordenadas: una cae en algún punto antes de la mitad de temporada,
+  // 3 pausas de eventos (personal/deportivo) + 1 sola ventana de
+  // fichajes, siempre en pretemporada (progreso 0) — no hay una segunda
+  // ventana a mitad de año. Las pausas de eventos no van en bandas fijas
+  // ni ordenadas: una cae en algún punto antes de la mitad de temporada,
   // otra en cualquier punto de toda la temporada, y la última bien al
   // final — se generan así y recién después se ordenan por progreso
-  // para que el calendario quede cronológico. La oferta de
-  // pretemporada no aplica a la Temporada 1 (el jugador ya eligió
-  // equipo en la pantalla de creación).
+  // para que el calendario quede cronológico. La ventana de pretemporada
+  // no aplica a la Temporada 1 (el jugador ya eligió equipo en la
+  // pantalla de creación) — arranca recién en la Temporada 2, antes de
+  // que se juegue el primer tramo.
+  //
+  // Como esa ventana cae siempre en progreso 0 (antes de cualquier
+  // tramo simulado), un traspaso solo puede pasar con la temporada
+  // todavía sin partidos jugados — nunca "a mitad de año" — por eso
+  // resolveOferta ya no necesita partir el historial en dos filas por
+  // temporada (ver comentario ahí).
   // ============================================================
   TOTAL_TRAMOS_TEMPORADA: 3, // un bloque de partidos simulado por cada pausa de evento
   CALENDARIO_PAUSA_ANTES_MITAD_MIN: 5, CALENDARIO_PAUSA_ANTES_MITAD_MAX: 45,
-  CALENDARIO_OFERTA_MITAD: 50,
   CALENDARIO_PAUSA_ULTIMO_MOMENTO_MIN: 92, CALENDARIO_PAUSA_ULTIMO_MOMENTO_MAX: 99,
 
   crearCalendarioTemporada(numeroTemporada) {
@@ -561,7 +597,6 @@ const GameConfig = {
       calendario.push({ tipo: "oferta", progreso: 0 });
     }
     calendario.push({ tipo: "decision", progreso: GameConfig.randomInt(GameConfig.CALENDARIO_PAUSA_ANTES_MITAD_MIN, GameConfig.CALENDARIO_PAUSA_ANTES_MITAD_MAX) });
-    calendario.push({ tipo: "oferta", progreso: GameConfig.CALENDARIO_OFERTA_MITAD });
     calendario.push({ tipo: "decision", progreso: GameConfig.randomInt(0, 100) });
     calendario.push({ tipo: "decision", progreso: GameConfig.randomInt(GameConfig.CALENDARIO_PAUSA_ULTIMO_MOMENTO_MIN, GameConfig.CALENDARIO_PAUSA_ULTIMO_MOMENTO_MAX) });
     calendario.sort((a, b) => a.progreso - b.progreso);

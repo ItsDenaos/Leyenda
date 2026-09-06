@@ -8,6 +8,13 @@
   --accent: #ffb703;
   --accent-soft: #ffb70333;
   --accent-2: #22d3ee;
+  /* Dorado propio de los trofeos, distinto del `--accent` (ese mismo
+     ámbar se repite en botones, nivel "oro" del OVR, etc. — si el trofeo
+     usara el mismo color, se perdería entre el resto de la interfaz en
+     vez de leerse como un logro aparte). Más profundo y menos anaranjado
+     que --accent, para que se sienta a "metal" y no compita con él. */
+  --trophy-gold: #d4af37;
+  --trophy-gold-soft: #d4af3733;
   --pitch: #1b2a4a;
   --pitch-line: #3a4d7a;
   --danger: #ef4444;

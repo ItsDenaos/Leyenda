@@ -1,3 +1,19 @@
+// ---------- ALTURA REAL DE VIEWPORT (fix cross-browser en móvil) ----------
+// `100dvh` da la altura visible correcta en Safari/iOS, pero varios
+// navegadores mobile (Chrome/Firefox en Android, y algunos in-app
+// browsers) calculan mal ese valor apenas cargan la página — suele
+// quedar "pegado" a la altura de pantalla completa (barra de navegación
+// escondida) aunque esa barra siga visible, tapando el footer de
+// decisiones. `window.innerHeight` sí refleja siempre el viewport real
+// en el momento en que se mide, así que se usa como variable CSS con
+// prioridad sobre el dvh (ver `.body--career` en carrera.css).
+function actualizarAlturaViewport() {
+  document.documentElement.style.setProperty("--vh-real", `${window.innerHeight}px`);
+}
+actualizarAlturaViewport();
+window.addEventListener("resize", actualizarAlturaViewport);
+window.addEventListener("orientationchange", actualizarAlturaViewport);
+
 // ---------- HELPERS DE BASE DE DATOS ----------
 function equipoDe(temporada) {
   return GameDatabase.equipos.find((e) => e.id === temporada.equipoId);
@@ -35,14 +51,14 @@ const POSITION_NAMES = {
   ED: "Extremo Derecho", DC: "Delantero Centro",
 };
 
-// Niveles de OVR, de metal a gema (bronce → plata → oro → rubí →
-// esmeralda → amatista), proporcionales al rango real de la carrera
+// Niveles de OVR, de metal a gema (bronce → plata → oro → zafiro →
+// rubí → amatista), proporcionales al rango real de la carrera
 // (OVR_CARRERA_MIN..MAX = 45..99). Las gemas quedan reservadas al tramo
 // de élite (90+); "oro" reutiliza el dorado que ya usa el resto de la UI.
 function ovrTierColor(ovr) {
   if (ovr >= 96) return "#a855f7"; // amatista
-  if (ovr >= 93) return "#2ecc71"; // esmeralda
-  if (ovr >= 90) return "#e0245e"; // rubí
+  if (ovr >= 93) return "#e0245e"; // rubí
+  if (ovr >= 90) return "#0f52ba"; // zafiro
   if (ovr >= 80) return "#ffb703"; // oro
   if (ovr >= 66) return "#c0c6d1"; // plata
   return "#cd7f32"; // bronce
@@ -254,9 +270,32 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
     // tu liga actual y pasa a priorizar tu país de origen — volver a
     // cerrar la carrera en casa, aunque la hayas jugado toda afuera.
     const enOcaso = edad >= GameConfig.EDAD_OCASO_RETORNO_PAIS;
-    const locales = elegibles.filter((c) => enOcaso ? c.liga.pais === player.pais : c.liga.id === ligaActual.id);
-    const cantidadLocales = Math.min(2, locales.length);
-    elegidos = GameConfig.elegirMejorEncaje(locales, pesoFn, cantidadLocales);
+    const filtroLocal = (c) => enOcaso ? c.liga.pais === player.pais : c.liga.id === ligaActual.id;
+    const locales = elegibles.filter(filtroLocal);
+
+    // La garantía de "tu entorno" solo cuenta si esos clubes locales
+    // siguen entre los mejores a los que de verdad podés aspirar (mismo
+    // grupo top del que sale el resto de las ofertas) — no cualquier
+    // club local que technically entre en la ventana de OVR. Si ya los
+    // superaste: en tu liga actual, la garantía se cae del todo (le
+    // quedó chica); si es la vuelta a tu país en el ocaso, en cambio,
+    // aparece solo de vez en cuando — el gesto sentimental, no la norma.
+    const tierAlto = GameConfig.gruposTierAlto(elegibles, pesoFn);
+    const localesEnTierAlto = tierAlto.filter(filtroLocal);
+
+    let cantidadLocales;
+    let poolLocal;
+    if (localesEnTierAlto.length > 0) {
+      cantidadLocales = Math.min(2, localesEnTierAlto.length);
+      poolLocal = localesEnTierAlto;
+    } else if (enOcaso && locales.length > 0 && Math.random() < GameConfig.PROB_OFERTA_NOSTALGICA) {
+      cantidadLocales = 1;
+      poolLocal = locales;
+    } else {
+      cantidadLocales = 0;
+      poolLocal = [];
+    }
+    elegidos = cantidadLocales > 0 ? GameConfig.elegirMejorEncaje(poolLocal, pesoFn, cantidadLocales) : [];
 
     const usados = new Set(elegidos.map((c) => c.equipo.id));
     const restantes = cantidadOfertasClub - elegidos.length;
@@ -287,8 +326,11 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
   }));
 
   // La carta que representa tu vínculo con el club actual (renovar o,
-  // si no te renuevan, retirarte) siempre va última — no se mezcla con
-  // las demás para que el jugador la encuentre siempre en el mismo lugar.
+  // si no te renuevan, retirarte) siempre va en un lugar fijo para que el
+  // jugador la encuentre siempre en el mismo sitio: "seguir en el club"
+  // va primera; si en cambio el club no te renueva, esa carta pasa a ser
+  // un retiro forzoso y se ubica segunda (ver más abajo el mismo criterio
+  // para el retiro voluntario).
   const cartaClubActual = contratoTerminado
     ? {
         id: `retiro-${Math.random().toString(36).slice(2, 8)}`,
@@ -305,20 +347,31 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
         desc: `Seguir en ${equipoActual.nombre} y pelear tu lugar en ${ligaActual.nombre}.`,
       };
 
-  const otrasCartas = [...ofertasClub];
+  const cartaRetiroVoluntario = puedeElegirRetiro
+    ? {
+        id: `retiro-${Math.random().toString(36).slice(2, 8)}`,
+        tipoOferta: "retiro",
+        equipo: equipoActual,
+        liga: ligaActual,
+        desc: `Con ${edad} años, también puedes colgar los botines y cerrar tu carrera en lo más alto.`,
+      }
+    : null;
 
-  if (puedeElegirRetiro) {
-    otrasCartas.push({
-      id: `retiro-${Math.random().toString(36).slice(2, 8)}`,
-      tipoOferta: "retiro",
-      equipo: equipoActual,
-      liga: ligaActual,
-      desc: `Con ${edad} años, también puedes colgar los botines y cerrar tu carrera en lo más alto.`,
-    });
+  const ofertasBarajadas = GameConfig.muestraAleatoria(ofertasClub, ofertasClub.length);
+
+  // "Seguir en el club" (o el retiro forzoso, si no hay renovación) va
+  // primera. La opción de retirarte, cuando aparece, va segunda: retiro
+  // forzoso ya es la carta del club actual (ahí no hay nada más que
+  // anteponerle); el retiro voluntario, en cambio, se intercala después
+  // de "seguir en el club".
+  if (contratoTerminado) {
+    return ofertasBarajadas.length > 0
+      ? [ofertasBarajadas[0], cartaClubActual, ...ofertasBarajadas.slice(1)]
+      : [cartaClubActual];
   }
-
-  const ordenAleatorio = GameConfig.muestraAleatoria(otrasCartas, otrasCartas.length);
-  return [...ordenAleatorio, cartaClubActual];
+  return cartaRetiroVoluntario
+    ? [cartaClubActual, cartaRetiroVoluntario, ...ofertasBarajadas]
+    : [cartaClubActual, ...ofertasBarajadas];
 }
 
 // Elige un solo evento del `tipo` pedido ("personal" | "deportivo"): para
@@ -332,14 +385,23 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
 // sin candidatos — nunca se prioriza forzar la repetición.
 const eventosUsados = new Set();
 
+// Algunos eventos de "nov-*" están escritos sobre el debut profesional en sí
+// (un momento que solo ocurre una vez): quedan marcados con `debut: true` y
+// solo son elegibles en la primera pausa de decisión de toda la carrera —
+// si no, podrían salir en la 2da o 3ra temporada con el jugador ya afianzado.
+function esElegibleParaDebut(evento) {
+  if (!evento.debut) return true;
+  return temporadasFinalizadas.length === 0 && temporadaActual.tramoIndex === 0;
+}
+
 function elegirEventoPorTipo(edadActual, tipo) {
   const rango = GameConfig.rangoEdadDe(edadActual);
   const bancoPorEdad = GameEvents.porEdad[rango];
   const bancoElegido = Math.random() < 0.5 ? GameEvents.generales : bancoPorEdad;
   const bancoAlterno = bancoElegido === GameEvents.generales ? bancoPorEdad : GameEvents.generales;
 
-  const sinUsar = (banco) => banco.filter((e) => e.tipo === tipo && !eventosUsados.has(e.id));
-  const cualquiera = (banco) => banco.filter((e) => e.tipo === tipo);
+  const sinUsar = (banco) => banco.filter((e) => e.tipo === tipo && !eventosUsados.has(e.id) && esElegibleParaDebut(e));
+  const cualquiera = (banco) => banco.filter((e) => e.tipo === tipo && esElegibleParaDebut(e));
 
   let candidatos = sinUsar(bancoElegido);
   if (candidatos.length === 0) candidatos = sinUsar(bancoAlterno);
@@ -653,9 +715,12 @@ function simularTramoYAvanzar() {
     }
   }
 
-  let mensaje = `Tramo completado: ${partidosJugador} partidos jugados · ${resultado.goles} goles · ${resultado.asistencias} asistencias.`;
-  [resCopaNacional.mensaje, resCopaInternacional.mensaje, mensajeLesion].forEach((m) => { if (m) mensaje += ` ${m}`; });
-  showToast(mensaje);
+  // El toast solo avisa cosas que ameritan una notificación puntual —
+  // avanzar/quedar eliminado de una copa, recuperarte de una lesión —
+  // no un resumen de estadísticas del tramo (eso ya se ve, animado, en
+  // el spotlight).
+  const mensajesTramo = [resCopaNacional.mensaje, resCopaInternacional.mensaje, mensajeLesion].filter(Boolean);
+  if (mensajesTramo.length > 0) showToast(mensajesTramo.join(" "));
 
   temporadaActual.bufferRendimiento = 0;
   temporadaActual.bufferEquipo = 0;
@@ -738,8 +803,10 @@ function finalizarTemporada() {
   puedeSolicitarNumero = true;
   contextoSolicitudNumero = { ovr: ovrHeredado, rendimiento: equipoAcumuladoCerrado };
 
-  const mensaje = [`¡Temporada ${numeroCerrada} finalizada!`, ...mensajesFinales, `Arranca la Temporada ${temporadaActual.numero}.`].join(" ");
-  showToast(mensaje);
+  // Igual que en simularTramoYAvanzar: sin relleno de "temporada
+  // finalizada/arranca la siguiente" — solo lo que de verdad importa
+  // (títulos ganados o perdidos), si es que hubo alguno.
+  if (mensajesFinales.length > 0) showToast(mensajesFinales.join(" "));
 
   renderHero();
   renderSpotlight();
@@ -834,14 +901,17 @@ function renderHero() {
 // `soloIcono`: en el historial no hace falta el nombre al lado (ver
 // renderTimeline) — el título completo queda igual accesible al pasar
 // el mouse por el `title` de la tarjeta.
-function trophiesHtml(trofeos, soloIcono = false) {
+// `nombreDebajo`: variante para el historial en móvil — apila el nombre,
+// bien chico, debajo de cada ícono; queda oculto hasta que la fila se
+// toca (`.timeline-item--expandida`, ver el listener en #timelineList).
+function trophiesHtml(trofeos, soloIcono = false, nombreDebajo = false) {
   if (!trofeos || trofeos.length === 0) return "";
   return `
     <div class="trophies">
       ${trofeos.map((t) => `
-        <span class="trophy-card${soloIcono ? " trophy-card--icon-only" : ""}" title="${t.nombre}">
+        <span class="trophy-card${soloIcono ? " trophy-card--icon-only" : ""}${nombreDebajo ? " trophy-card--stacked" : ""}" title="${t.nombre}">
           ${GameConfig.trofeoIconHtml(t)}
-          ${soloIcono ? "" : `<span class="trophy-card__name">${t.nombre}</span>`}
+          ${soloIcono && !nombreDebajo ? "" : `<span class="trophy-card__name${nombreDebajo ? "-under" : ""}">${t.nombre}</span>`}
         </span>
       `).join("")}
     </div>
@@ -938,12 +1008,21 @@ function renderTimeline() {
     const color = ovrTierColor(s.ovr);
     const edadEsaTemporada = Number(player.edad) + (s.numero - 1);
 
-    const trofeosHtml = s.trofeos && s.trofeos.length > 0
+    const tieneTrofeos = Boolean(s.trofeos && s.trofeos.length > 0);
+    // Desktop: solo íconos, el nombre completo queda en el `title` (hover).
+    const trofeosHtml = tieneTrofeos
       ? trophiesHtml(s.trofeos, true)
+      : `<span class="timeline-item__notrophy">Sin trofeos</span>`;
+    // Mobile: el nombre va apilado y en chico debajo de cada ícono, oculto
+    // hasta que se toca la tarjeta (ver el listener delegado en
+    // #timelineList) — los íconos solos no alcanzan para distinguir una
+    // copa de otra de un vistazo, y en móvil no hay hover para el `title`.
+    const trofeosMobileHtml = tieneTrofeos
+      ? trophiesHtml(s.trofeos, true, true)
       : `<span class="timeline-item__notrophy">Sin trofeos</span>`;
 
     const row = document.createElement("div");
-    row.className = "timeline-item";
+    row.className = `timeline-item${tieneTrofeos ? " timeline-item--con-trofeos" : ""}`;
     row.innerHTML = `
       <div class="timeline-item__desktop">
         <span class="timeline-item__season">Temporada ${s.numero}<span>${s.anio} · ${edadEsaTemporada} años</span></span>
@@ -963,7 +1042,7 @@ function renderTimeline() {
           </div>
           <span class="ovr-badge ovr-badge--sm" style="--ovr-color:${color}">${s.ovr}</span>
         </div>
-        ${s.trofeos && s.trofeos.length > 0 ? `<div class="timeline-item__mtrophies">${trofeosHtml}</div>` : ""}
+        ${tieneTrofeos ? `<div class="timeline-item__mtrophies">${trofeosMobileHtml}</div>` : ""}
       </div>
     `;
     list.appendChild(row);
@@ -985,11 +1064,6 @@ function cambiarContenidoDecisiones(actualizar) {
 }
 
 // ---------- RENDER DECISIONES / OFERTAS (pausa activa) ----------
-// Cuánto queda visible el parte médico antes de avanzar solo — no hay
-// nada que decidir, así que no tiene sentido pedir un clic extra, pero
-// sí darle tiempo a leerlo antes de que la temporada siga.
-const LESION_INFORME_MS = 3200;
-
 function renderDecisions() {
   const checkpoint = temporadaActual.calendario[temporadaActual.checkpointIndex];
   const esOferta = checkpoint.tipo === "oferta";
@@ -1002,13 +1076,13 @@ function renderDecisions() {
   track.innerHTML = "";
 
   // Parte médico: pausa entera reemplazada por el informe de la lesión
-  // recién diagnosticada — no hay nada que decidir, se lee y se avanza
-  // solo (ver intentarGenerarLesion / iniciarCheckpoint).
+  // recién diagnosticada — no hay nada que decidir, pero el jugador
+  // tiene que confirmar que lo leyó (botón "Continuar") en vez de que
+  // la temporada avance sola.
   if (lote.length === 1 && lote[0].esInformeLesion) {
     title.textContent = "Parte médico";
     count.textContent = "Estás lesionado";
     track.appendChild(crearLesionCard(lote[0]));
-    setTimeout(() => simularTramoYAvanzar(), LESION_INFORME_MS);
     return;
   }
 
@@ -1132,7 +1206,16 @@ function crearLesionCard(lesion) {
     <span class="decision-card__tag">${LESION_NIVEL_ETIQUETA[lesion.nivel]}</span>
     <p class="decision-card__desc"><strong>${lesion.nombre}.</strong> ${lesion.descripcion}</p>
     <p class="decision-card__lesion-detalle">${detalle.join(" · ")}</p>
+    <div class="decision-card__actions">
+      <button type="button" class="btn">Continuar</button>
+    </div>
   `;
+
+  card.querySelector("button").addEventListener("click", (e) => {
+    e.target.disabled = true;
+    card.classList.add("decision-card--resolved");
+    setTimeout(() => simularTramoYAvanzar(), 250);
+  });
 
   return card;
 }
@@ -1224,44 +1307,22 @@ function resolveOferta(item) {
   }
 
   if (item.tipoOferta === "club") {
-    // Fichaje a mitad de temporada (ya jugaste algún tramo con el club
-    // actual): esa parte de la temporada cierra como su propia fila en
-    // el historial, con sus propias estadísticas — no se mezclan dos
-    // clubes bajo una sola fila. El historial puede así mostrar dos
-    // filas para el mismo año si hubo un traspaso a mitad de camino.
-    if (temporadaActual.partidos > 0) {
-      const comp = temporadaActual.competiciones;
-      temporadasFinalizadas.push({
-        ...temporadaActual,
-        trofeos: [...temporadaActual.trofeos],
-        enCurso: false,
-        competiciones: {
-          liga: { ...comp.liga },
-          copaNacional: comp.copaNacional ? { ...comp.copaNacional, rondasExtra: [...comp.copaNacional.rondasExtra] } : null,
-          copaInternacional: comp.copaInternacional ? { ...comp.copaInternacional, rondasExtra: [...comp.copaInternacional.rondasExtra] } : null,
-        },
-      });
-
-      temporadaActual.partidos = 0;
-      temporadaActual.goles = 0;
-      temporadaActual.asistencias = 0;
-      temporadaActual.mvp = 0;
-      temporadaActual.sumaRating = 0;
-      temporadaActual.promedio = 0;
-      temporadaActual.trofeos = [];
-      temporadaActual.equipoAcumuladoTemporada = 0;
-    }
-
+    // La única ventana de fichajes cae siempre en pretemporada (progreso
+    // 0, antes de que se simule un solo tramo — ver crearCalendarioTemporada),
+    // así que un traspaso ya nunca parte una temporada en dos: el jugador
+    // arranca la temporada entera con el club nuevo, con las estadísticas
+    // en cero como cualquier inicio de año (crearTemporada ya las dejó así).
+    //
+    // Por el mismo motivo, las competiciones de la temporada se
+    // reinician del todo para el club nuevo (liga + copa nacional) — la
+    // clasificación a torneo internacional NO se hereda del club
+    // anterior: ese cupo es del club, no del jugador, y no hay forma de
+    // saber si el club nuevo lo tiene.
     temporadaActual.equipoId = item.equipo.id;
+    temporadaActual.competiciones = inicializarCompeticionesTemporada(item.equipo.id, null);
     // Nuevo club, nuevo período de gracia de contrato (ver
     // TEMPORADAS_GRACIA_CONTRATO en generarLoteOfertas).
     temporadasEnClubActual = 0;
-    // La liga se actualiza al nuevo club siempre (haya habido split o no):
-    // sin esto, la temporada seguía mostrando la liga del club anterior
-    // hasta el próximo cierre de temporada. La copa nacional/internacional
-    // no se reinicia acá — sigue atada a los tramos ya jugados esta
-    // temporada, igual que antes de este cambio.
-    temporadaActual.competiciones.liga = { competicion: buscarCompeticionDomestica(item.liga.id, "liga"), partidosJugados: 0 };
     temporadaActual.titular = false;
     temporadaActual.forma = "regular";
     temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, item.equipo.nivel, item.liga.nivel);
@@ -1373,8 +1434,7 @@ function finalizarCarrera() {
 }
 
 // ---------- RESUMEN DE CARRERA (modal al retirarte) ----------
-// Recorre todo temporadasFinalizadas (incluye las filas partidas por
-// traspasos a mitad de temporada) para armar un panorama completo:
+// Recorre todo temporadasFinalizadas para armar un panorama completo:
 // clubes distintos en el orden en que se ficharon, estadísticas sumadas
 // de punta a punta, picos de OVR/valor de mercado, y los trofeos
 // agrupados por nombre (uno solo por tipo, con cuántas veces se ganó).
@@ -1394,6 +1454,9 @@ function construirResumenCarrera() {
   let mayorOvr = 0, mayorValor = 0;
   const trofeosPorNombre = new Map();
   const numerosTemporada = new Set();
+  // `filas` está en orden cronológico (ver renderTimeline, que la invierte
+  // recién al mostrarla) — sirve tal cual para graficar la evolución.
+  const serieOvr = filas.map((s) => ({ numero: s.numero, ovr: s.ovr }));
 
   filas.forEach((s) => {
     partidos += s.partidos;
@@ -1417,10 +1480,44 @@ function construirResumenCarrera() {
     promedio: partidos > 0 ? sumaRating / partidos : 0,
     mayorOvr,
     mayorValor,
+    ovrDebut: serieOvr.length > 0 ? serieOvr[0].ovr : 0,
+    serieOvr,
     trofeos: [...trofeosPorNombre.values()],
     temporadasJugadas: numerosTemporada.size,
     edadRetiro: getEdadActual(),
   };
+}
+
+// Gráfico de área + línea con la evolución de OVR temporada a temporada:
+// coordenadas en un viewBox de 0-100 de ancho para que escale con
+// preserveAspectRatio="none" al ancho real del contenedor (ver CSS).
+function ovrArcoSvg(serie, color) {
+  if (!serie || serie.length === 0) return "";
+  const w = 100, h = 34, padX = 3, padY = 6;
+  const ovrs = serie.map((s) => s.ovr);
+  const min = Math.min(...ovrs), max = Math.max(...ovrs);
+  const rango = Math.max(1, max - min);
+  const n = serie.length;
+  const x = (i) => (n === 1 ? w / 2 : padX + (i * (w - padX * 2)) / (n - 1));
+  const y = (ovr) => h - padY - ((ovr - min) / rango) * (h - padY * 2);
+
+  const puntos = serie.map((s, i) => `${x(i).toFixed(1)},${y(s.ovr).toFixed(1)}`);
+  const linea = `M ${puntos.join(" L ")}`;
+  const base = h - padY;
+  const area = `M ${x(0).toFixed(1)},${base} L ${puntos.join(" L ")} L ${x(n - 1).toFixed(1)},${base} Z`;
+  const puntosDom = serie.map((s, i) => `
+    <circle cx="${x(i).toFixed(1)}" cy="${y(s.ovr).toFixed(1)}" r="1.7" fill="${color}">
+      <title>Temporada ${s.numero}: ${s.ovr} OVR</title>
+    </circle>
+  `).join("");
+
+  return `
+    <svg class="resumen__arco" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="Evolución de OVR por temporada">
+      <path d="${area}" fill="${color}" opacity="0.16" stroke="none"></path>
+      <path d="${linea}" fill="none" stroke="${color}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></path>
+      ${puntosDom}
+    </svg>
+  `;
 }
 
 function trofeosResumenHtml(trofeos) {
@@ -1444,36 +1541,51 @@ function renderResumenCarrera() {
   const r = construirResumenCarrera();
   const ultimoClub = r.clubes[r.clubes.length - 1];
   const totalTrofeos = r.trofeos.reduce((suma, t) => suma + t.cantidad, 0);
+  const colorPico = ovrTierColor(r.mayorOvr);
+
+  const journeyHtml = r.clubes.map((e, i) => `
+    ${i > 0 ? `<span class="resumen__club-arrow">›</span>` : ""}
+    <div class="resumen__club" title="${e.nombre}">
+      ${GameConfig.crestHtml(e, "team-crest team-crest--md")}
+      <span class="resumen__club-name">${e.nombre}</span>
+    </div>
+  `).join("");
 
   document.getElementById("resumenModalBody").innerHTML = `
-    <div class="resumen__header">
-      ${GameConfig.crestHtml(ultimoClub, "team-crest team-crest--avatar")}
-      <div>
-        <h4 class="resumen__name">${player.apellido}</h4>
-        <p class="resumen__subtitle">${POSITION_NAMES[player.posicion] ?? player.posicion} · ${r.temporadasJugadas} temporada${r.temporadasJugadas === 1 ? "" : "s"} · Retirado a los ${r.edadRetiro} años</p>
+    <div class="resumen__banner" style="--rb-a:${ultimoClub.a};--rb-b:${ultimoClub.b}">
+      <div class="resumen__header">
+        ${GameConfig.crestHtml(ultimoClub, "team-crest team-crest--avatar")}
+        <div>
+          <h4 class="resumen__name">${player.apellido}</h4>
+          <p class="resumen__subtitle">${POSITION_NAMES[player.posicion] ?? player.posicion} · ${r.temporadasJugadas} temporada${r.temporadasJugadas === 1 ? "" : "s"} · Retirado a los ${r.edadRetiro} años</p>
+        </div>
+      </div>
+      <div class="ovr-badge ovr-badge--hero resumen__peak-ovr" style="--ovr-color:${colorPico}">
+        <span>${r.mayorOvr}</span>
+        <span class="ovr-badge__label">Pico OVR</span>
       </div>
     </div>
 
+    <div class="resumen__section">
+      <div class="resumen__arco-head">
+        <h5 class="resumen__section-title">Evolución de OVR</h5>
+        <span class="resumen__arco-caption">De ${r.ovrDebut} a ${r.mayorOvr}</span>
+      </div>
+      <div class="resumen__arco-wrap">${ovrArcoSvg(r.serieOvr, colorPico)}</div>
+    </div>
+
     <div class="resumen__stats">
-      <div class="stat"><span class="stat__value">${r.partidos}</span><span class="stat__label">Partidos</span></div>
-      <div class="stat"><span class="stat__value">${r.goles}</span><span class="stat__label">Goles</span></div>
-      <div class="stat"><span class="stat__value">${r.asistencias}</span><span class="stat__label">Asistencias</span></div>
-      <div class="stat"><span class="stat__value">${r.mvp}</span><span class="stat__label">MVP</span></div>
-      <div class="stat"><span class="stat__value">${r.promedio.toFixed(1)}</span><span class="stat__label">Promedio</span></div>
-      <div class="stat"><span class="stat__value">${r.mayorOvr}</span><span class="stat__label">Mayor OVR</span></div>
-      <div class="stat"><span class="stat__value">${formatMarketValue(r.mayorValor)}</span><span class="stat__label">Mayor valor</span></div>
+      <div class="stat"><span class="stat__icon">🏟️</span><span class="stat__value">${r.partidos}</span><span class="stat__label">Partidos</span></div>
+      <div class="stat"><span class="stat__icon">⚽</span><span class="stat__value">${r.goles}</span><span class="stat__label">Goles</span></div>
+      <div class="stat"><span class="stat__icon">🅰️</span><span class="stat__value">${r.asistencias}</span><span class="stat__label">Asistencias</span></div>
+      <div class="stat"><span class="stat__icon">⭐</span><span class="stat__value">${r.mvp}</span><span class="stat__label">MVP</span></div>
+      <div class="stat"><span class="stat__icon">📊</span><span class="stat__value">${r.promedio.toFixed(1)}</span><span class="stat__label">Promedio</span></div>
+      <div class="stat"><span class="stat__icon">💰</span><span class="stat__value">${formatMarketValue(r.mayorValor)}</span><span class="stat__label">Mayor valor</span></div>
     </div>
 
     <div class="resumen__section">
       <h5 class="resumen__section-title">Clubes (${r.clubes.length})</h5>
-      <div class="resumen__clubs">
-        ${r.clubes.map((e) => `
-          <div class="resumen__club" title="${e.nombre}">
-            ${GameConfig.crestHtml(e, "team-crest team-crest--md")}
-            <span class="resumen__club-name">${e.nombre}</span>
-          </div>
-        `).join("")}
-      </div>
+      <div class="resumen__clubs">${journeyHtml}</div>
     </div>
 
     <div class="resumen__section">
@@ -1510,16 +1622,15 @@ document.getElementById("resumenModal").addEventListener("click", (e) => {
   if (e.target.id === "resumenModal") cerrarResumenModal();
 });
 
-// Los trofeos en icono-solo (spotlight e historial) llevan el nombre en
-// el atributo title, que el hover de escritorio ya muestra solo — pero
-// en móvil no hay hover, así que un tap ahí no hacía nada. Delegado en
-// document porque spotlight/historial se re-renderizan de cero en cada
-// tramo/temporada.
-document.addEventListener("click", (e) => {
-  const trofeo = e.target.closest(".trophy-card");
-  if (!trofeo) return;
-  const nombre = trofeo.getAttribute("title");
-  if (nombre) showToast(`🏆 ${nombre}`);
+// Las tarjetas del historial con trofeos en icono-solo no muestran el
+// nombre a simple vista (ni hover en móvil) — tocar la tarjeta entera
+// despliega los nombres debajo, en vez de tener que adivinar qué copa es
+// cada ícono. Delegado en el contenedor porque el historial se
+// re-renderiza de cero en cada tramo/temporada.
+document.getElementById("timelineList").addEventListener("click", (e) => {
+  const fila = e.target.closest(".timeline-item--con-trofeos");
+  if (!fila) return;
+  fila.classList.toggle("timeline-item--expandida");
 });
 
 renderHero();

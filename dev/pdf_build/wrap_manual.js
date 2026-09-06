@@ -97,7 +97,7 @@ const html = `<!DOCTYPE html>
   <div class="cover__badge">🏆</div>
   <h1>LEYENDA</h1>
   <p class="cover__sub">Manual de Juego</p>
-  <div class="cover__badge2">Beta 2 · primera versión pública</div>
+  <div class="cover__badge2">Versión 0.3.0-alpha</div>
   <br>
   <div class="cover__meta">
     <div>Cómo se comporta el juego, explicado desde el lado del jugador</div>

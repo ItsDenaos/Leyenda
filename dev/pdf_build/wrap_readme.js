@@ -113,7 +113,7 @@ const html = `<!DOCTYPE html>
   <h1>LEYENDA</h1>
   <p class="cover__sub">Documentación técnica completa del proyecto</p>
   <div class="cover__meta">
-    <div><strong>Versión:</strong> Beta 2 — primera versión abierta al público</div>
+    <div><strong>Versión:</strong> 0.3.0-alpha — publicada el 6 de septiembre de 2026</div>
     <div><strong>Alcance:</strong> Cada fórmula, cada constante y dónde vive cada pieza en el código</div>
     <div><strong>Motor:</strong> HTML / CSS / JavaScript vanilla, sin dependencias ni build</div>
   </div>

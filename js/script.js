@@ -72,8 +72,9 @@ inputApellido.addEventListener("input", () => {
   const value = inputApellido.value.toUpperCase();
   state.apellido = value.trim();
   jerseyName.textContent = state.apellido || "APELLIDO";
-  refresh();
+  refresh(false);
 });
+inputApellido.addEventListener("blur", () => refresh());
 
 const cardAge = document.getElementById("cardAge");
 const agePicker = document.getElementById("agePicker");
@@ -218,7 +219,13 @@ const summaryText = document.getElementById("summaryText");
 const startBtn = document.getElementById("startBtn");
 const toast = document.getElementById("toast");
 
-function refresh() {
+// `permitirAvance = false` actualiza toda la validación/UI pero no deja
+// que el paso se auto-colapse — se usa mientras se está escribiendo el
+// apellido: si no, con la edad y el dorsal ya completos por defecto, la
+// PRIMERA letra tipeada ya deja "identidad" válida y el acordeón se
+// cerraba de golpe a mitad de la palabra. El avance real se dispara en
+// el blur del campo (ver más abajo), cuando el usuario ya terminó.
+function refresh(permitirAvance = true) {
   const identidadOk = state.apellido.length > 0 && state.numero !== "" && state.numero >= 1
     && state.edad !== "" && state.edad >= GameConfig.EDAD_MIN && state.edad <= GameConfig.EDAD_MAX;
   const paisOk = !!state.pais;
@@ -228,13 +235,15 @@ function refresh() {
   setStepState("nacionalidad", paisOk);
   setStepState("posicion", posOk);
 
-  const pasoAntesDeAvanzar = pasoAbierto;
-  avanzarSiCorresponde("identidad", identidadOk);
-  avanzarSiCorresponde("nacionalidad", paisOk);
-  avanzarSiCorresponde("posicion", posOk);
-  actualizarAcordeon();
+  if (permitirAvance) {
+    const pasoAntesDeAvanzar = pasoAbierto;
+    avanzarSiCorresponde("identidad", identidadOk);
+    avanzarSiCorresponde("nacionalidad", paisOk);
+    avanzarSiCorresponde("posicion", posOk);
+    actualizarAcordeon();
+    if (pasoAbierto !== pasoAntesDeAvanzar) enfocarPasoSiMovil(pasoAbierto);
+  }
   actualizarResumenesPasos(identidadOk, paisOk, posOk);
-  if (pasoAbierto !== pasoAntesDeAvanzar) enfocarPasoSiMovil(pasoAbierto);
 
   const allOk = identidadOk && paisOk && posOk;
   startBtn.disabled = !allOk;
