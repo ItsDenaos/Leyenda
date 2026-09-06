@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Leyenda — Mi carrera</title>
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/carrera.css">
@@ -11,8 +11,6 @@
 
 <!-- HERO: identidad del jugador, con degradado en los colores del club actual -->
 <header class="hero" id="hero">
-  <a href="index.html" class="hero__back" title="Volver al inicio">←</a>
-
   <div class="hero__main">
     <div class="hero__avatar" id="pbAvatarWrap"></div>
 
@@ -60,6 +58,8 @@
     <div class="timeline__list" id="timelineList"></div>
   </section>
 
+  <footer class="app-footer" id="appFooter"></footer>
+
 </main>
 
 <!-- BARRA INFERIOR: decisiones / ofertas de la pausa activa -->
@@ -69,7 +69,6 @@
     <span class="decisions__count" id="decisionsCount">-- pendientes</span>
   </div>
   <div class="decisions__track" id="decisionsTrack"></div>
-  <button type="button" class="continue-btn" id="continueBtn" hidden>Continuar temporada →</button>
 </footer>
 
 <div class="toast" id="toast"></div>
@@ -87,6 +86,17 @@
       <button type="button" class="btn btn--ghost" id="numeroModalCancelar">Ahora no</button>
       <button type="button" class="btn" id="numeroModalConfirmar">Solicitar</button>
     </div>
+  </div>
+</div>
+
+<!-- Modal: resumen de carrera (al retirarte) -->
+<div class="modal-overlay" id="resumenModal" hidden>
+  <div class="modal-card modal-card--resumen">
+    <div class="modal-card__head">
+      <h3 class="modal-card__title">Resumen de tu carrera</h3>
+      <button type="button" class="modal-card__close" id="resumenModalCerrar" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="modal-card__scroll" id="resumenModalBody"></div>
   </div>
 </div>
 

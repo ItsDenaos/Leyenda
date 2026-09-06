@@ -9,6 +9,17 @@
 // ============================================================
 
 const GameConfig = {
+  // ---------------- VERSIÓN ----------------
+  // Se muestra en el pie de página de cada pantalla (ver footerHtml).
+  // Actualizar acá al publicar una versión nueva — no repetir el
+  // número/fecha sueltos en cada HTML.
+  VERSION: "0.2.0-alpha",
+  FECHA_PUBLICACION: "5 de septiembre de 2026 · 22:41",
+
+  footerHtml() {
+    return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
+  },
+
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
   EDAD_MAX: 19,
@@ -175,7 +186,7 @@ const GameConfig = {
   // multiplicada por el prestigio del club/liga actual — el mismo OVR
   // vale mucho más en un club/liga grande que en uno chico.
   // ============================================================
-  VALOR_MERCADO_BASE: 15000, // valor en el piso absoluto de OVR (OVR_CARRERA_MIN)
+  VALOR_MERCADO_BASE: 18000, // valor en el piso absoluto de OVR (OVR_CARRERA_MIN)
   VALOR_MERCADO_CRECIMIENTO: 1.185, // multiplicador de valor por cada punto de OVR extra
 
   VALOR_MULTIPLICADOR_CLUB_MIN: 0.5, // club/liga más floja posible
@@ -194,6 +205,31 @@ const GameConfig = {
     const multiplicadorClub = GameConfig.calcularMultiplicadorClub(nivelEquipo, nivelLiga);
     const valor = valorPorOvr * multiplicadorClub;
     return Math.round(valor / 1000) * 1000;
+  },
+
+  // Solo hay 18 combinaciones posibles de nivel de equipo/liga, así que
+  // dos clubes del mismo nivel dan EXACTAMENTE el mismo valor de mercado
+  // — lógico puertas adentro, pero en una tarjeta de oferta se ve raro
+  // que dos clubes distintos "valoren" tu pase por el mismo número exacto
+  // al centavo. Esta variación es solo cosmética, para las ofertas: no
+  // toca el valor de mercado real del jugador (ver calcularValorMercado).
+  OFERTA_VARIACION_VALOR: 0.08,
+  valorOfrecidoPorClub(ovr, nivelEquipo, nivelLiga) {
+    const base = GameConfig.calcularValorMercado(ovr, nivelEquipo, nivelLiga);
+    const jitter = 1 + (Math.random() * 2 - 1) * GameConfig.OFERTA_VARIACION_VALOR;
+    return Math.round((base * jitter) / 1000) * 1000;
+  },
+
+  // Filtro de sentido común para ofertas de fichaje: además de la ventana
+  // de OVR (ver más abajo), un club no debería ofertarte si ficharte
+  // implicara un desplome de tu valor de mercado — señal clara de que,
+  // aunque el OVR dé "elegible" en el margen, ese club no está realmente
+  // a tu altura. `valorEnClub` es el valor que tendrías vos en ESE club
+  // en particular (mismo OVR, distinto nivel de equipo/liga).
+  OFERTA_UMBRAL_CAIDA_VALOR: 0.4, // mínimo: no menos del 40% de tu valor actual
+  ofertaTieneValorRazonable(valorActual, valorEnClub) {
+    if (valorActual <= 0) return true;
+    return valorEnClub >= valorActual * GameConfig.OFERTA_UMBRAL_CAIDA_VALOR;
   },
 
   // ============================================================
@@ -280,7 +316,7 @@ const GameConfig = {
   },
   ligaCrestHtml(liga, claseCss) {
     const ruta = GameConfig.rutaEscudoLiga(liga);
-    return `<img src="${ruta}" alt="${liga.nombre}" class="${claseCss}"
+    return `<img src="${ruta}" alt="${liga.nombre}" class="${claseCss} team-crest--liga"
       data-initials="${GameConfig.inicialesLiga(liga)}" onerror="GameConfig.crestFallback(this)">`;
   },
 
@@ -339,6 +375,22 @@ const GameConfig = {
     return resultado;
   },
 
+  // Fracción del pool ya elegible que se considera "el mejor encaje": se
+  // ordena por peso descendente y solo se sortea (ponderado, para que
+  // siga habiendo variedad) dentro de ese grupo de arriba. Antes se
+  // sorteaba entre TODOS los elegibles por igual — un jugador a la
+  // altura de los grandes clubes podía perfectamente no verlos nunca,
+  // porque el peso pesaba pero no mandaba. Ahora, si tu nivel da para
+  // los mejores del rango elegible, van a ser esos los que aparezcan.
+  OFERTA_TOP_ENCAJE_FRACCION: 0.4,
+
+  elegirMejorEncaje(candidatos, pesoFn, n) {
+    const ordenados = [...candidatos].sort((a, b) => pesoFn(b) - pesoFn(a));
+    const tamanioTop = Math.max(n, Math.ceil(ordenados.length * GameConfig.OFERTA_TOP_ENCAJE_FRACCION));
+    const grupoTop = ordenados.slice(0, tamanioTop);
+    return GameConfig.elegirPonderado(grupoTop, pesoFn, n);
+  },
+
   // ============================================================
   // PRESTIGIO DEL JUGADOR → a qué nivel de equipo/liga "apunta"
   // Cuanto más OVR, más cerca de nivel 1 (mejor) apuntan sus ofertas.
@@ -378,8 +430,13 @@ const GameConfig = {
   // rango de carrera (45-99): el punto donde ese club es "justo tu
   // nivel", más/menos una tolerancia. Al recortarse solo en 45/99,
   // los clubes top no tienen techo y los chicos no tienen piso.
+  // Tolerancia ampliada de 10 a 13: con 10, un club top (nivel 1 liga +
+  // nivel 1 equipo, centro en el 99 absoluto) recién se volvía elegible
+  // a partir de 89 OVR — con el rango real de picos de carrera (~85-90),
+  // los grandes del mundo eran prácticamente inalcanzables. Con 13, ya
+  // entran en juego desde los 86, un nivel de "muy bueno" real.
   // ============================================================
-  OFERTA_TOLERANCIA_OVR: 10,
+  OFERTA_TOLERANCIA_OVR: 13,
 
   calcularCentroOvr(nivelEquipo, nivelLiga) {
     const calidadEquipo = GameConfig.normalizarNivel(nivelEquipo, GameConfig.NIVEL_EQUIPO_MIN, GameConfig.NIVEL_EQUIPO_MAX);
@@ -417,9 +474,30 @@ const GameConfig = {
   // se anima a ofertarte. A partir de ahí, esa ventana de traspasos
   // solo trae la opción de retirarte, sin ofertas ni "quedarme".
   // ============================================================
-  EDAD_RETIRO_OFERTA: 38,
-  EDAD_RETIRO_FORZOSO_MIN: 44,
-  EDAD_RETIRO_FORZOSO_MAX: 48,
+  // Acortado frente a los valores originales (38 / 44-48): con el pico
+  // terminando ~26-31, esa ventana dejaba hasta 16 años de declive lento
+  // antes del cierre — se siente como relleno. Ahora son como mucho ~13.
+  EDAD_RETIRO_OFERTA: 36,
+  EDAD_RETIRO_FORZOSO_MIN: 41,
+  EDAD_RETIRO_FORZOSO_MAX: 45,
+
+  // Los últimos años antes del retiro forzoso ya no cortan de golpe: en
+  // vez de pasar de "ofertas normales" a "solo retirarte" de una
+  // temporada a la otra, en esta ventana previa el cupo de ofertas de
+  // club se reduce a 1 — se siente una carrera que se apaga de a poco,
+  // no un cierre seco. Solo aplica si el contrato actual sigue en pie
+  // (ver enGraciaDeContrato/contratoTerminado en generarLoteOfertas).
+  EDAD_RETIRO_TRANSICION: 2,
+
+  // Todo novato arranca con un OVR bajo la escala de un jugador maduro
+  // (ver OVR_INICIAL_MIN/MAX vs. OVR_CARRERA_MIN/MAX más abajo) — a un
+  // club de nivel medio/alto para arriba, ningún debutante llega al piso
+  // que ventanaOvrOferta le exige a un jugador hecho. Sin este colchón,
+  // el propio club que te fichó te "no renovaría" en la primera ventana
+  // de traspasos, antes de que hayas tenido una sola temporada para
+  // demostrar algo. Se cuenta en carrera.js (temporadasEnClubActual) y
+  // se resetea cada vez que cambiás de club, sea el inicial o no.
+  TEMPORADAS_GRACIA_CONTRATO: 2,
 
   contratoDebeTerminar(nivelEquipo, nivelLiga, ovr) {
     const ventana = GameConfig.ventanaOvrOferta(nivelEquipo, nivelLiga);
@@ -427,28 +505,66 @@ const GameConfig = {
   },
 
   // ============================================================
-  // CALENDARIO DE TEMPORADA
-  // 4 pausas de decisión + 2 ventanas de fichajes (ofertas).
-  // La pausa 1 y la oferta de pretemporada caen en 0%; las demás
-  // se sortean dentro de bandas para que no queden pegadas.
-  // La oferta de pretemporada no aplica a la Temporada 1 (el
-  // jugador ya eligió equipo en la pantalla de creación).
+  // POTENCIAL POR EDAD
+  // A igual OVR, un jugador joven tiene más recorrido/valor de reventa
+  // que uno grande, así que entre dos elegibles para los mismos clubes
+  // el joven apunta más arriba. Esto NO toca la elegibilidad real
+  // (equipoElegibleParaOvr sigue siendo puro OVR, así que "no ofertas
+  // sin sentido" se mantiene) — solo ajusta a cuáles clubes, dentro del
+  // pool ya elegible, se los prioriza vía nivelEquipoObjetivo/
+  // nivelLigaObjetivo.
   // ============================================================
-  CALENDARIO_PAUSA2_MIN: 10, CALENDARIO_PAUSA2_MAX: 35,
+  EDAD_POTENCIAL_BONUS_MAX: 8,
+  EDAD_POTENCIAL_BONUS_HASTA: 24, // desde acá, sin bono: ya está en su prime
+  EDAD_POTENCIAL_PENALIZACION_DESDE: 30,
+  EDAD_POTENCIAL_PENALIZACION_TASA: 0.7, // por año, desde EDAD_POTENCIAL_PENALIZACION_DESDE
+
+  potencialAjustadoPorEdad(ovr, edad) {
+    let ajuste = 0;
+    if (edad < GameConfig.EDAD_POTENCIAL_BONUS_HASTA) {
+      const progreso = GameConfig.clamp(
+        (GameConfig.EDAD_POTENCIAL_BONUS_HASTA - edad) / (GameConfig.EDAD_POTENCIAL_BONUS_HASTA - 17),
+        0, 1
+      );
+      ajuste = progreso * GameConfig.EDAD_POTENCIAL_BONUS_MAX;
+    } else if (edad > GameConfig.EDAD_POTENCIAL_PENALIZACION_DESDE) {
+      ajuste = -(edad - GameConfig.EDAD_POTENCIAL_PENALIZACION_DESDE) * GameConfig.EDAD_POTENCIAL_PENALIZACION_TASA;
+    }
+    return GameConfig.clamp(ovr + ajuste, GameConfig.OVR_CARRERA_MIN, GameConfig.OVR_CARRERA_MAX);
+  },
+
+  // Desde esta edad, el cupo garantizado de "tu entorno" (2 de 3 ofertas,
+  // ver generarLoteOfertas) deja de priorizar tu liga actual y pasa a
+  // priorizar clubes de tu país de origen — volver a cerrar la carrera
+  // en casa, aunque la hayas jugado toda afuera.
+  EDAD_OCASO_RETORNO_PAIS: 33,
+
+  // ============================================================
+  // CALENDARIO DE TEMPORADA
+  // 3 pausas de eventos (personal/deportivo) + 2 ventanas de fichajes
+  // (ofertas). Las pausas de eventos ya no van en bandas fijas y
+  // ordenadas: una cae en algún punto antes de la mitad de temporada,
+  // otra en cualquier punto de toda la temporada, y la última bien al
+  // final — se generan así y recién después se ordenan por progreso
+  // para que el calendario quede cronológico. La oferta de
+  // pretemporada no aplica a la Temporada 1 (el jugador ya eligió
+  // equipo en la pantalla de creación).
+  // ============================================================
+  TOTAL_TRAMOS_TEMPORADA: 3, // un bloque de partidos simulado por cada pausa de evento
+  CALENDARIO_PAUSA_ANTES_MITAD_MIN: 5, CALENDARIO_PAUSA_ANTES_MITAD_MAX: 45,
   CALENDARIO_OFERTA_MITAD: 50,
-  CALENDARIO_PAUSA3_MIN: 55, CALENDARIO_PAUSA3_MAX: 75,
-  CALENDARIO_PAUSA4_MIN: 80, CALENDARIO_PAUSA4_MAX: 95,
+  CALENDARIO_PAUSA_ULTIMO_MOMENTO_MIN: 92, CALENDARIO_PAUSA_ULTIMO_MOMENTO_MAX: 99,
 
   crearCalendarioTemporada(numeroTemporada) {
     const calendario = [];
     if (numeroTemporada > 1) {
       calendario.push({ tipo: "oferta", progreso: 0 });
     }
-    calendario.push({ tipo: "decision", progreso: 0 });
-    calendario.push({ tipo: "decision", progreso: GameConfig.randomInt(GameConfig.CALENDARIO_PAUSA2_MIN, GameConfig.CALENDARIO_PAUSA2_MAX) });
+    calendario.push({ tipo: "decision", progreso: GameConfig.randomInt(GameConfig.CALENDARIO_PAUSA_ANTES_MITAD_MIN, GameConfig.CALENDARIO_PAUSA_ANTES_MITAD_MAX) });
     calendario.push({ tipo: "oferta", progreso: GameConfig.CALENDARIO_OFERTA_MITAD });
-    calendario.push({ tipo: "decision", progreso: GameConfig.randomInt(GameConfig.CALENDARIO_PAUSA3_MIN, GameConfig.CALENDARIO_PAUSA3_MAX) });
-    calendario.push({ tipo: "decision", progreso: GameConfig.randomInt(GameConfig.CALENDARIO_PAUSA4_MIN, GameConfig.CALENDARIO_PAUSA4_MAX) });
+    calendario.push({ tipo: "decision", progreso: GameConfig.randomInt(0, 100) });
+    calendario.push({ tipo: "decision", progreso: GameConfig.randomInt(GameConfig.CALENDARIO_PAUSA_ULTIMO_MOMENTO_MIN, GameConfig.CALENDARIO_PAUSA_ULTIMO_MOMENTO_MAX) });
+    calendario.sort((a, b) => a.progreso - b.progreso);
     return calendario;
   },
 
@@ -471,6 +587,18 @@ const GameConfig = {
   PROPENSION_ASISTENCIA: { arquero: 0.01, defensa: 0.14, medio: 0.34, ataque: 0.28 },
   PROBABILIDAD_MVP_BASE: 0.09,
 
+  // Cuánto suma un gol/asistencia a la chance de MVP y al rating de ESE
+  // partido puntual (antes eran tiradas 100% independientes: un delantero
+  // podía meter muchos goles en la temporada y aun así terminar con pocos
+  // MVP y un promedio mediocre, porque nada conectaba una cosa con la
+  // otra). Ahora el partido en el que participás en un gol tiene, en ese
+  // mismo partido, más chance de MVP y mejor rating — las estadísticas
+  // quedan coherentes entre sí en vez de ser tres sorteos que no se hablan.
+  BONUS_MVP_POR_GOL: 0.14,
+  BONUS_MVP_POR_ASISTENCIA: 0.08,
+  BONUS_RATING_POR_GOL: 0.7,
+  BONUS_RATING_POR_ASISTENCIA: 0.4,
+
   simularTramo({ partidos, grupo, ovr, rendimientoAcumulado }) {
     const factorOvr = 0.85 + (ovr - 50) / 50; // ~neutral en el debut (OVR 50-65), crece fuerte después
     const factorForma = 1 + GameConfig.clamp(rendimientoAcumulado, -12, 12) * 0.05;
@@ -478,10 +606,16 @@ const GameConfig = {
 
     let goles = 0, asistencias = 0, mvp = 0, sumaRating = 0;
     for (let i = 0; i < partidos; i++) {
-      if (Math.random() < GameConfig.PROPENSION_GOL[grupo] * factor) goles++;
-      if (Math.random() < GameConfig.PROPENSION_ASISTENCIA[grupo] * factor) asistencias++;
-      if (Math.random() < GameConfig.PROBABILIDAD_MVP_BASE * factor) mvp++;
-      const ratingPartido = GameConfig.clamp(6.5 + (factor - 1) * 2.5 + GameConfig.randomInt(-4, 4) / 10, 5, 10);
+      const hizoGol = Math.random() < GameConfig.PROPENSION_GOL[grupo] * factor;
+      const hizoAsistencia = Math.random() < GameConfig.PROPENSION_ASISTENCIA[grupo] * factor;
+      if (hizoGol) goles++;
+      if (hizoAsistencia) asistencias++;
+
+      const bonusActuacion = (hizoGol ? GameConfig.BONUS_MVP_POR_GOL : 0) + (hizoAsistencia ? GameConfig.BONUS_MVP_POR_ASISTENCIA : 0);
+      if (Math.random() < GameConfig.PROBABILIDAD_MVP_BASE * factor + bonusActuacion) mvp++;
+
+      const bonusRating = (hizoGol ? GameConfig.BONUS_RATING_POR_GOL : 0) + (hizoAsistencia ? GameConfig.BONUS_RATING_POR_ASISTENCIA : 0);
+      const ratingPartido = GameConfig.clamp(6.5 + (factor - 1) * 2.5 + bonusRating + GameConfig.randomInt(-4, 4) / 10, 5, 10);
       sumaRating += ratingPartido;
     }
     return { goles, asistencias, mvp, sumaRating };
@@ -498,19 +632,20 @@ const GameConfig = {
   // ~40% de chance de dar +1 — así los cambios chicos siguen siendo
   // posibles de vez en cuando, en vez de quedar completamente fijos.
   // ============================================================
-  OVR_TRAMO_BASE: 0.08,
-  OVR_TRAMO_RENDIMIENTO_DIVISOR: 10,
+  OVR_TRAMO_BASE: 0.7,
+  OVR_TRAMO_RENDIMIENTO_DIVISOR: 6,
   OVR_TRAMO_VARIACION_MIN: -1,
-  OVR_TRAMO_VARIACION_MAX: 2,
+  OVR_TRAMO_VARIACION_MAX: 3,
   OVR_CARRERA_MIN: 45,
   OVR_CARRERA_MAX: 99,
 
-  // Freno por edad: crecimiento pleno hasta los 23, cada vez más difícil
-  // entre 24 y 27, y prácticamente congelado (aunque no imposible) desde
-  // los 28 — igual que una carrera futbolística real.
-  OVR_EDAD_PRIME_MAX: 23,
-  OVR_EDAD_DECLIVE_MAX: 27,
-  OVR_EDAD_FACTOR_MIN: 0.15,
+  // Freno por edad: crecimiento pleno hasta los 26, cada vez más difícil
+  // entre 27 y 31, y a partir de los 32 se estabiliza en un tercio del
+  // ritmo pleno (sigue habiendo progreso, solo que más lento) — antes caía
+  // casi a cero y volvía carreras muy largas para llegar a un buen nivel.
+  OVR_EDAD_PRIME_MAX: 26,
+  OVR_EDAD_DECLIVE_MAX: 31,
+  OVR_EDAD_FACTOR_MIN: 0.35,
 
   factorCrecimientoPorEdad(edad) {
     if (edad <= GameConfig.OVR_EDAD_PRIME_MAX) return 1;
@@ -525,9 +660,9 @@ const GameConfig = {
   // OVR de a poco (aunque el jugador rinda bien), y desde OVR_EDAD_ACELERA_DECLIVE
   // la caída se vuelve mucho más pronunciada — nadie se mantiene en su pico
   // para siempre. Es independiente del freno de crecimiento de arriba.
-  OVR_EDAD_DECLIVE_INICIO: 30,
-  OVR_EDAD_ACELERA_DECLIVE: 38,
-  OVR_EDAD_DECLIVE_TASA_BASE: 0.06, // caída por tramo, por año, entre INICIO y ACELERA
+  OVR_EDAD_DECLIVE_INICIO: 32,
+  OVR_EDAD_ACELERA_DECLIVE: 39,
+  OVR_EDAD_DECLIVE_TASA_BASE: 0.08, // caída por tramo, por año, entre INICIO y ACELERA
   OVR_EDAD_DECLIVE_TASA_ACELERADA: 0.35, // caída por tramo, por año, desde ACELERA en adelante
 
   factorDeclivePorEdad(edad) {
@@ -551,9 +686,18 @@ const GameConfig = {
   // más permisivo que OVR_TRAMO_VARIACION_MIN, que es para variación normal.
   OVR_TRAMO_DECLIVE_VARIACION_MIN: -10,
 
-  ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad) {
+  // Talento oculto: un multiplicador sorteado una sola vez por carrera
+  // (ver carrera.js) sobre el ritmo de crecimiento de OVR — no sobre el
+  // declive, que es puro desgaste físico por edad, igual para todos. Con
+  // las mismas decisiones de punta a punta, dos carreras ya no crecen
+  // exactamente igual: a veces te toca un desarrollo más lento, a veces
+  // un talento precoz. No se expone en ningún número visible.
+  TALENTO_MIN: 0.85,
+  TALENTO_MAX: 1.2,
+
+  ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad, factorTalento = 1) {
     const factorEdad = GameConfig.factorCrecimientoPorEdad(edad);
-    const deltaBase = (GameConfig.OVR_TRAMO_BASE + rendimientoAcumulado / GameConfig.OVR_TRAMO_RENDIMIENTO_DIVISOR) * factorEdad;
+    const deltaBase = (GameConfig.OVR_TRAMO_BASE + rendimientoAcumulado / GameConfig.OVR_TRAMO_RENDIMIENTO_DIVISOR) * factorEdad * factorTalento;
     const declive = GameConfig.factorDeclivePorEdad(edad);
     const deltaCrudo = deltaBase - declive;
     const minPermitido = declive > 0 ? GameConfig.OVR_TRAMO_DECLIVE_VARIACION_MIN : GameConfig.OVR_TRAMO_VARIACION_MIN;
@@ -640,8 +784,12 @@ const GameConfig = {
   // PARTICIPACIÓN DEL JUGADOR
   // Los partidos calculados arriba son los del CLUB — cuántos de esos
   // juegas tú depende de tu OVR relativo, cómo vienen tus decisiones
-  // (rendimientoAcumulado) y tu forma (una lesión, por ejemplo, te deja
-  // afuera de bastantes partidos aunque el equipo los juegue igual).
+  // (rendimientoAcumulado), tu forma (una lesión, por ejemplo, te deja
+  // afuera de bastantes partidos aunque el equipo los juegue igual) y de
+  // si sos titular ese tramo (ver calcularTitular): antes ese dato era
+  // solo decorativo (se mostraba el badge, pero no cambiaba en nada
+  // cuántos minutos te tocaban) — ahora si el club te para de arranque
+  // efectivamente jugás más.
   // ============================================================
   FORMA_BONUS_PARTICIPACION: {
     inspirado: 0.15, plenitud: 0.12, animado: 0.06, regular: 0,
@@ -649,11 +797,18 @@ const GameConfig = {
   },
   PARTICIPACION_OVR_REFERENCIA: 55,
   PARTICIPACION_MIN: 0.15,
+  // Base subida de 0.5 a 0.65: un jugador ya asentado en el plantel
+  // (OVR/forma/rendimiento neutros) debería jugar bastante de entrada,
+  // no la mitad de los partidos por defecto — así bajar de ahí (mala
+  // forma, lesión, ser suplente) se siente como el verdadero castigo.
+  PARTICIPACION_BASE: 0.65,
+  PARTICIPACION_BONUS_TITULAR: 0.2,
 
-  probabilidadJugar(ovr, rendimientoAcumulado, forma) {
+  probabilidadJugar(ovr, rendimientoAcumulado, forma, esTitular) {
     const bonusForma = GameConfig.FORMA_BONUS_PARTICIPACION[forma] ?? 0;
-    const prob = 0.5 + (ovr - GameConfig.PARTICIPACION_OVR_REFERENCIA) * 0.01
-      + rendimientoAcumulado * 0.03 + bonusForma;
+    const bonusTitular = esTitular ? GameConfig.PARTICIPACION_BONUS_TITULAR : 0;
+    const prob = GameConfig.PARTICIPACION_BASE + (ovr - GameConfig.PARTICIPACION_OVR_REFERENCIA) * 0.01
+      + rendimientoAcumulado * 0.03 + bonusForma + bonusTitular;
     return GameConfig.clamp(prob, GameConfig.PARTICIPACION_MIN, 1);
   },
 
@@ -684,13 +839,15 @@ const GameConfig = {
   // Niveles (ver GameEvents.lesiones para el contenido de cada uno):
   //   nivel3 (leve, más común): solo deja sin partidos 1 pausa.
   //   nivel2 (moderada): + forma "lesionado" durante la baja + OVR leve.
-  //   nivel1 (grave, más rara): + OVR fuerte, baja de hasta toda la
-  //     temporada restante.
+  //   nivel1 (grave, más rara): + OVR fuerte, baja de varios tramos.
+  // Probabilidades escaladas ~33% arriba de las originales: al bajar de
+  // 4 a 3 pausas por temporada, con los mismos números de antes salían
+  // menos lesiones por temporada de las que se sentían pensadas.
   // ============================================================
-  PROB_LESION_BASE: 0.05,
+  PROB_LESION_BASE: 0.065,
   PROB_LESION_EDAD_INICIO: 30,
-  PROB_LESION_EDAD_INCREMENTO: 0.002,
-  PROB_LESION_MAX: 0.14,
+  PROB_LESION_EDAD_INCREMENTO: 0.0027,
+  PROB_LESION_MAX: 0.18,
 
   probabilidadLesion(edad) {
     const extra = Math.max(0, edad - GameConfig.PROB_LESION_EDAD_INICIO) * GameConfig.PROB_LESION_EDAD_INCREMENTO;
@@ -709,10 +866,13 @@ const GameConfig = {
     return "nivel3";
   },
 
+  // Duraciones acortadas frente a las originales: con solo 3 tramos por
+  // temporada (antes 4), los mismos números de antes se comían la
+  // temporada casi entera de forma desproporcionada.
   LESION_NIVEL3_DURACION: 1,
-  LESION_NIVEL2_DURACION_MIN: 2,
-  LESION_NIVEL2_DURACION_MAX: 3,
-  LESION_NIVEL1_DURACION_MIN: 3,
+  LESION_NIVEL2_DURACION_MIN: 1,
+  LESION_NIVEL2_DURACION_MAX: 2,
+  LESION_NIVEL1_DURACION_MIN: 2,
 
   LESION_NIVEL2_OVR_MIN: 1,
   LESION_NIVEL2_OVR_MAX: 3,
@@ -740,4 +900,9 @@ const GameConfig = {
     if (nivel === "nivel1") return GameConfig.randomInt(GameConfig.LESION_NIVEL1_OVR_MIN, GameConfig.LESION_NIVEL1_OVR_MAX);
     return 0;
   },
+
+  // Al recuperarte, una parte del OVR perdido por la lesión vuelve —
+  // era un golpe físico puntual, no una pérdida de nivel definitiva.
+  // Se aplica una sola vez, al darte de alta (ver simularTramoYAvanzar).
+  LESION_RECUPERACION_OVR: 0.5,
 };

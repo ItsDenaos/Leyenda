@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Leyenda — Manual de Juego</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm 20mm; }
+  * { box-sizing: border-box; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: "Segoe UI", -apple-system, Helvetica, Arial, sans-serif;
+    background: #0d1120;
+    color: #eef1fb;
+    font-size: 10.5pt;
+    line-height: 1.6;
+  }
+  .cover {
+    background: radial-gradient(circle at 30% 20%, #24304f 0%, #0d1120 60%);
+    padding: 60mm 10mm 30mm;
+    text-align: center;
+    page-break-after: always;
+    border-radius: 4mm;
+  }
+  .cover__badge { font-size: 60pt; margin-bottom: 10mm; }
+  .cover h1 {
+    font-size: 46pt;
+    margin: 0 0 4mm;
+    letter-spacing: 0.03em;
+    color: #ffb703;
+    font-weight: 900;
+  }
+  .cover__sub { font-size: 15pt; color: #c8cfe6; margin: 0 0 6mm; }
+  .cover__badge2 {
+    display: inline-block;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #1a1300;
+    background: #ffb703;
+    padding: 2mm 6mm;
+    border-radius: 999px;
+    margin-bottom: 30mm;
+  }
+  .cover__meta {
+    display: inline-block;
+    text-align: left;
+    border-top: 2px solid #22d3ee;
+    padding-top: 6mm;
+    font-size: 10.5pt;
+    color: #c8cfe6;
+  }
+  .cover__meta div { margin-bottom: 2mm; }
+  h1 { font-size: 20pt; color: #ffb703; }
+  h2 {
+    font-size: 15pt;
+    color: #ffb703;
+    margin-top: 12mm;
+    padding: 4mm 0 3mm;
+    border-bottom: 2px solid #2a3355;
+    page-break-before: always;
+  }
+  h2:first-of-type { page-break-before: avoid; }
+  h3 { font-size: 12pt; color: #22d3ee; margin-top: 8mm; }
+  p { color: #dbe0f2; }
+  a { color: #22d3ee; text-decoration: none; }
+  strong { color: #ffb703; }
+  code {
+    font-family: "Cascadia Code", "Consolas", monospace;
+    background: #1c2440;
+    color: #ffd166;
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  blockquote {
+    border-left: 4px solid #22d3ee;
+    background: #131a2e;
+    margin: 5mm 0;
+    padding: 3mm 5mm;
+    color: #c8cfe6;
+    font-size: 9.8pt;
+  }
+  blockquote p { margin: 0; color: #c8cfe6; }
+  ul, ol { padding-left: 6mm; }
+  li { margin-bottom: 1.6mm; color: #dbe0f2; }
+  li::marker { color: #ffb703; }
+  hr { border: none; border-top: 1px solid #2a3355; margin: 8mm 0; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover__badge">🏆</div>
+  <h1>LEYENDA</h1>
+  <p class="cover__sub">Manual de Juego</p>
+  <div class="cover__badge2">Beta 2 · primera versión pública</div>
+  <br>
+  <div class="cover__meta">
+    <div>Cómo se comporta el juego, explicado desde el lado del jugador</div>
+    <div>Sin fórmulas, sin números ocultos — lo que necesitás saber para jugar</div>
+  </div>
+</div>
+
+<h1>Leyenda — Manual de Juego</h1>
+<p><strong>Versión 0.2.0-alpha — publicada el 5 de septiembre de 2026 · 22:41</strong></p>
+<p>Bienvenido a <em>Leyenda</em>. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.</p>
+<hr>
+<h2>Índice</h2>
+<ol>
+<li><a href="#1-antes-de-arrancar-qué-es-leyenda">Antes de arrancar: qué es Leyenda</a></li>
+<li><a href="#2-paso-1-crea-tu-jugador">Paso 1: crea tu jugador</a></li>
+<li><a href="#3-paso-2-elige-tu-primer-club">Paso 2: elige tu primer club</a></li>
+<li><a href="#4-la-pantalla-de-carrera-de-un-vistazo">La pantalla de carrera, de un vistazo</a></li>
+<li><a href="#5-cómo-avanza-una-temporada">Cómo avanza una temporada</a></li>
+<li><a href="#6-las-decisiones-personales-y-deportivas">Las decisiones: personales y deportivas</a></li>
+<li><a href="#7-eventos-de-alto-impacto">Eventos de Alto Impacto</a></li>
+<li><a href="#8-tu-forma-y-tu-rendimiento">Tu forma y tu rendimiento</a></li>
+<li><a href="#9-lesiones">Lesiones</a></li>
+<li><a href="#10-cómo-crece-y-decae-tu-nivel">Cómo crece (y decae) tu nivel</a></li>
+<li><a href="#11-trofeos-y-competiciones">Trofeos y competiciones</a></li>
+<li><a href="#12-tu-valor-de-mercado">Tu valor de mercado</a></li>
+<li><a href="#13-el-mercado-de-fichajes">El mercado de fichajes</a></li>
+<li><a href="#14-pedir-un-cambio-de-dorsal">Pedir un cambio de dorsal</a></li>
+<li><a href="#15-el-retiro-y-el-resumen-de-tu-carrera">El retiro y el resumen de tu carrera</a></li>
+<li><a href="#16-consejos-para-tu-primera-carrera">Consejos para tu primera carrera</a></li>
+<li><a href="#17-preguntas-frecuentes">Preguntas frecuentes</a></li>
+</ol>
+<hr>
+<h2 id="1-antes-de-arrancar-qué-es-leyenda">1. Antes de arrancar: qué es Leyenda</h2>
+<p><em>Leyenda</em> es un simulador de carrera: creás un jugador, elegís tu primer club, y después vivís temporada tras temporada tomando decisiones — algunas personales, algunas deportivas, y siempre la más importante, dónde vas a jugar. No controlás los partidos en sí; el juego los resuelve solo y te muestra el resultado. Lo que sí controlás es <em>cómo llegás</em> a cada partido: tus decisiones, tu club, tu momento.</p>
+<p>Es un juego de una sola sesión: <strong>no hay botón de guardar</strong>. Mientras la pestaña esté abierta tu carrera sigue viva; si la cerrás o recargás la página, arrancás de nuevo desde la Temporada 1 (con el mismo nombre, país y posición que ya habías elegido, pero el progreso de la carrera en sí se pierde). Pensalo como una partida de mesa: se juega de una sentada.</p>
+<hr>
+<h2 id="2-paso-1-crea-tu-jugador">2. Paso 1: crea tu jugador</h2>
+<p>La primera pantalla te pide 3 cosas, en 3 pasos:</p>
+<ul>
+<li><strong>¿Quién eres?</strong> — tu apellido (va impreso en tu camiseta), tu edad de debut (entre 16 y 19 años) y tu pierna hábil.</li>
+<li><strong>¿De dónde eres?</strong> — tu país. Esto importa: si tu país tiene una liga real cargada en el juego (por ahora: Argentina, Brasil, México, Estados Unidos o Colombia), vas a arrancar tu carrera ahí. Si tu país no tiene liga propia, vas a debutar &quot;de extranjero&quot; en una de las 5 grandes ligas de Europa (Premier League, La Liga, Serie A, Bundesliga o Ligue 1), sorteada al azar.</li>
+<li><strong>¿Dónde juegas?</strong> — tu posición en la cancha, entre las 12 clásicas (arquero, defensores, mediocampistas y delanteros).</li>
+</ul>
+<p>A medida que completás los pasos, tu ficha (a la izquierda en escritorio, al final en el celular) se va llenando en vivo, con tu camiseta y tus datos. Tu número de camiseta te lo asigna el club al debutar — no se elige acá.</p>
+<hr>
+<h2 id="3-paso-2-elige-tu-primer-club">3. Paso 2: elige tu primer club</h2>
+<p>Te van a ofrecer <strong>4 clubes</strong> para arrancar. Cada oferta te muestra el nombre del club, su liga, la bandera del país de esa liga, y una etiqueta de qué tan grande es cada uno (&quot;Club grande&quot; / &quot;consolidado&quot; / &quot;humilde&quot;, &quot;Liga de élite&quot; / &quot;competitiva&quot; / &quot;regional&quot;) — sin números, para que decidas por sensación, no por matemática.</p>
+<p>Elegí con cabeza: cuanto más grande el club y más competitiva la liga, <strong>más alto vas a arrancar de nivel</strong>, pero también vas a tener más competencia por un lugar en el equipo titular y menos margen para errores al principio. Un club chico te da un arranque más tranquilo; uno grande, un desafío mayor desde el día uno. No hay una respuesta correcta — depende de qué carrera querés vivir.</p>
+<p>Una vez que elegís, arranca tu Temporada 1.</p>
+<hr>
+<h2 id="4-la-pantalla-de-carrera-de-un-vistazo">4. La pantalla de carrera, de un vistazo</h2>
+<p>La pantalla principal tiene 3 partes fijas:</p>
+<ul>
+<li><strong>Arriba (el header):</strong> tu nombre, posición, dorsal, club actual y tu <strong>OVR</strong> (tu nivel general, el número más importante del juego — cuanto más alto, mejor sos). El color del círculo de tu OVR cambia según tu nivel: bronce, plata, oro, rubí, esmeralda y, en la cima absoluta, amatista. Debajo, tu edad, tu país y tu valor de mercado actual.</li>
+<li><strong>En el medio (scrolleable):</strong> la temporada en curso — tu progreso (%), tus estadísticas de esta temporada (partidos, goles, asistencias, MVP y promedio de rating) y tu estado de forma — y, debajo, el <strong>historial</strong> de todas tus temporadas anteriores, con sus estadísticas y los trofeos que ganaste en cada una.</li>
+<li><strong>Abajo (fijo):</strong> el panel de <strong>decisiones</strong> — acá es donde interactuás. Cada tanto se abre una pausa con algo para resolver: dos decisiones para tomar, o un lote de ofertas de fichaje.</li>
+</ul>
+<hr>
+<h2 id="5-cómo-avanza-una-temporada">5. Cómo avanza una temporada</h2>
+<p>Una temporada se divide en bloques de partidos (&quot;tramos&quot;) separados por pausas. En total vas a ver <strong>5 pausas por temporada</strong> (4 en tu primera temporada):</p>
+<ol>
+<li>Una ventana de fichajes al arrancar la temporada (a partir de la 2ª temporada — en la primera ya elegiste club en la creación).</li>
+<li>Una pausa de decisiones, en algún punto de la primera mitad.</li>
+<li>Otra ventana de fichajes, siempre a mitad de temporada.</li>
+<li>Otra pausa de decisiones, en cualquier punto del año.</li>
+<li>Una última pausa de decisiones, ya sobre el cierre.</li>
+</ol>
+<p>Cada vez que resolvés todo lo que había en una pausa, el juego simula automáticamente el bloque de partidos siguiente: vas a ver tus estadísticas subir con una animación, tu OVR ajustarse, y tu progreso de temporada avanzar — todo eso pasa solo, no hace falta ningún clic extra.</p>
+<p>Al cerrar la temporada (después de la última pausa) vas a ver si ganaste la liga y, si llegaste a la final, la copa nacional — con un mensaje resumiendo cómo te fue — y arranca la siguiente.</p>
+<hr>
+<h2 id="6-las-decisiones-personales-y-deportivas">6. Las decisiones: personales y deportivas</h2>
+<p>En cada pausa de decisiones vas a ver <strong>2 tarjetas</strong>: una &quot;Personal&quot; (familia, pareja, prensa, agente, hinchada) y una &quot;Deportiva&quot; (entrenador, compañeros, rivales). Cada una te presenta una situación con <strong>2 opciones</strong> para elegir.</p>
+<p>Antes de elegir, cada botón te muestra claramente qué va a pasar si lo tocás:</p>
+<ul>
+<li><strong>Rendimiento</strong> — sube o baja tu desempeño de cara al próximo bloque de partidos (más goles/asistencias, mejor chance de ser figura).</li>
+<li><strong>Forma</strong> — tu estado de ánimo/físico cambia a uno nuevo (inspirado, en plenitud, animado, regular, desanimado, bajo de forma...). Tu forma afecta cuánto jugás y cómo rinde el equipo.</li>
+<li><strong>Equipo</strong> — cómo le sienta tu decisión al plantel colectivamente, algo que suma (o resta) a las chances de tu club de pelear títulos esa temporada.</li>
+</ul>
+<p>No hay una opción &quot;correcta&quot; siempre — a veces conviene arriesgar por rendimiento propio, a veces conviene cuidar el grupo. Un evento nunca se va a repetir dos veces en la misma carrera, así que vas a ir viendo situaciones distintas todo el tiempo.</p>
+<hr>
+<h2 id="7-eventos-de-alto-impacto">7. Eventos de Alto Impacto</h2>
+<p>De vez en cuando (no en todas las temporadas) una de las 2 tarjetas va a estar marcada con un <strong>⚠️</strong> — es un evento de Alto Impacto: una situación más seria (un escándalo, una crisis personal, una decisión que te puede marcar) con consecuencias mucho más fuertes que un evento normal, para bien o para mal. Algunos de estos eventos no tienen una opción &quot;buena&quot; — ahí se trata de elegir el mal menor, no de ganar. Como mucho vas a ver uno por temporada.</p>
+<hr>
+<h2 id="8-tu-forma-y-tu-rendimiento">8. Tu forma y tu rendimiento</h2>
+<p>Tu <strong>forma</strong> (visible como una píldora de color en el panel de temporada) va desde &quot;Inspirado&quot; 🔥 en el mejor de los casos hasta &quot;Tocado físicamente&quot; 🤕 en el peor — pasando por &quot;En plenitud&quot;, &quot;Animado&quot;, &quot;Regular&quot;, &quot;Desanimado&quot; y &quot;Bajo de forma&quot;. Se actualiza con cada decisión que tomás, y afecta directamente cuántos minutos vas a tener: en buena forma jugás más partidos y rendís mejor; en mala forma, te quedás afuera más seguido.</p>
+<p>Ser <strong>titular</strong> en un bloque de partidos también suma minutos reales — no es solo una etiqueta, un titular efectivamente juega más que un suplente.</p>
+<hr>
+<h2 id="9-lesiones">9. Lesiones</h2>
+<p>Cada tanto, en una pausa de decisiones, en vez de las 2 tarjetas de siempre vas a ver un <strong>parte médico</strong>: te lesionaste. No hay nada que decidir ahí — se lee y la temporada sigue sola a los pocos segundos. Hay 3 niveles:</p>
+<ul>
+<li><strong>Leve</strong> — te perdés el próximo bloque de partidos, nada más.</li>
+<li><strong>Moderada</strong> — te perdés 1 o 2 bloques, tu forma queda &quot;Tocado físicamente&quot; mientras dura, y tu OVR baja un poquito.</li>
+<li><strong>Grave</strong> — puede dejarte afuera el resto de la temporada, con una baja más importante de OVR.</li>
+</ul>
+<p>El riesgo de lesionarte sube un poco con la edad. No hay forma de evitarlo del todo (las decisiones que tomás no lo previenen), es parte del riesgo de cualquier carrera — pero las graves son mucho menos frecuentes que las leves.</p>
+<p>La buena noticia: el OVR que perdés por una lesión <strong>no es para siempre</strong>. Cuando te dan de alta, recuperás una parte de ese OVR — fue un golpe físico puntual, no que te volviste peor jugador de la nada. El mensaje de &quot;te recuperaste&quot; te va a avisar cuánto recuperaste.</p>
+<hr>
+<h2 id="10-cómo-crece-y-decae-tu-nivel">10. Cómo crece (y decae) tu nivel</h2>
+<p>Tu <strong>OVR</strong> es tu nivel general — el número que decide qué tan bien rendís y qué clubes se pueden interesar en vos. Sube solo, de a poco, en cada bloque de partidos, más rápido cuanto mejor te vaya (buen rendimiento en tus decisiones = crecimiento más fuerte).</p>
+<ul>
+<li><strong>Hasta los 26 años</strong>, crecés a tu ritmo pleno.</li>
+<li><strong>De 27 a 31</strong>, seguís creciendo pero cada vez más despacio.</li>
+<li><strong>De 32 en adelante</strong>, el crecimiento se vuelve lento — y además empieza el <strong>declive natural</strong>: aunque te vaya bien, vas a perder algo de nivel con el tiempo, cada vez más marcado a partir de los 39.</li>
+</ul>
+<p>No hay techo fijo ni piso fijo salvo los extremos absolutos del juego — un jugador con una gran carrera puede llegar a niveles de leyenda real; uno que se estanca puede quedarse relegado a clubes chicos para siempre.</p>
+<p>Además, cada jugador que creás tiene un <strong>ritmo de desarrollo propio</strong>, que nunca vas a ver expuesto en ningún número: con exactamente las mismas decisiones, dos carreras no van a crecer igual — alguna vez te va a tocar un jugador de desarrollo más lento, y otras veces un verdadero talento precoz. Es parte de la sorpresa de cada carrera nueva.</p>
+<hr>
+<h2 id="11-trofeos-y-competiciones">11. Trofeos y competiciones</h2>
+<p>Cada temporada jugás, según tu club: tu <strong>liga doméstica</strong> siempre, tu <strong>copa nacional</strong> siempre, y una <strong>competición internacional</strong> (Champions/Libertadores o su segundo nivel) <strong>solo si clasificaste</strong> la temporada anterior por haber tenido una gran campaña.</p>
+<p>Al cierre de cada temporada te enterás si saliste campeón — cuanto mejor le haya ido a tu club (tu nivel, tu forma, y cómo vinieron tus decisiones &quot;de equipo&quot; en el año), más chances tenés. Ganar la liga es difícil y reservado casi siempre a los grandes; la copa nacional es bastante más pareja, con chances reales incluso para un club chico en un buen año.</p>
+<p>Todos los trofeos que ganás quedan guardados en tu historial, con su escudo real.</p>
+<hr>
+<h2 id="12-tu-valor-de-mercado">12. Tu valor de mercado</h2>
+<p>Es cuánto &quot;valés&quot; en el mercado de fichajes — sube con tu OVR (cada punto extra vale cada vez más, sobre todo cerca de la cima) y con el prestigio de tu club/liga actual. Lo vas a ver siempre en tu header, y es lo que determina si un club puede ofrecerte sin que la oferta se sienta un despropósito.</p>
+<hr>
+<h2 id="13-el-mercado-de-fichajes">13. El mercado de fichajes</h2>
+<p>En cada ventana de fichajes (2 por temporada) vas a ver hasta 4 tarjetas: normalmente <strong>3 ofertas de otros clubes</strong> + la carta de tu club actual (<strong>&quot;Quedarme&quot;</strong>). Un solo clic resuelve toda la pausa.</p>
+<p>Cosas para tener en cuenta:</p>
+<ul>
+<li><strong>Las ofertas tienen sentido</strong>: no vas a recibir ofertas de clubes muy por debajo o muy por encima de tu nivel real — cada club solo aparece si de verdad estás a su altura.</li>
+<li><strong>Al menos 2 de cada 3 ofertas</strong> suelen ser de tu propia liga — con una excepción: <strong>a partir de los 33 años</strong>, ese cupo empieza a priorizar clubes <strong>de tu país de origen</strong>, para simular la vuelta a casa a cerrar la carrera, aunque la hayas jugado toda en el exterior.</li>
+<li><strong>Cuanto más joven seas, mejores clubes vas a ver</strong> a igual nivel — un jugador de 27 años con buen OVR va a recibir mejores ofertas que uno de 38 con el mismo OVR: los clubes apuestan más fuerte a quien todavía tiene recorrido.</li>
+<li>Vas a ver &quot;Te valoran en €X&quot; en cada oferta — es una referencia de cuánto te valora ESE club en particular, puede variar un poco de una oferta a otra aunque el nivel del club sea parecido.</li>
+<li><strong>Recién fichado a un club, tenés 2 temporadas de tranquilidad</strong>: por más que tu nivel no termine de convencer, ese club no te va a dejar ir hasta que hayas tenido esas 2 temporadas completas para demostrar algo.</li>
+<li><strong>Desde los 36 años</strong> podés elegir <strong>retirarte voluntariamente</strong> aunque tu club te siga queriendo — ocupa una de las 4 cartas.</li>
+<li>Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de &quot;Quedarme&quot; se reemplaza por una de retiro — todavía podés fichar por otro club en esa misma pausa, si hay ofertas.</li>
+</ul>
+<hr>
+<h2 id="14-pedir-un-cambio-de-dorsal">14. Pedir un cambio de dorsal</h2>
+<p>Al cerrar cada temporada, se habilita un botón (el lápiz ✎ al lado de tu número, en el header) para pedirle al club un dorsal nuevo. Podés pedirlo en el momento o guardarlo para más adelante — queda disponible hasta que lo uses. El club lo acepta o no según tu peso en el plantel (tu nivel y cómo le fue al equipo esa temporada) — no importa qué número pidas en sí, ni &quot;cuán codiciado&quot; sea.</p>
+<hr>
+<h2 id="15-el-retiro-y-el-resumen-de-tu-carrera">15. El retiro y el resumen de tu carrera</h2>
+<p>Tu carrera termina cuando aceptás una carta de retiro — sea porque vos lo elegiste, porque tu club ya no te renovó, o porque llegaste a una edad (entre 41 y 45 años, distinta en cada carrera) en la que ya nadie te oferta nada más. Ese final no llega de un día para el otro: en tus últimas 2 temporadas antes de esa edad vas a notar que cada vez menos clubes se interesan en vos, hasta quedarte con una sola oferta — una carrera que se apaga de a poco, no un corte de un año a otro.</p>
+<p>Al retirarte vas a ver 2 botones:</p>
+<ul>
+<li><strong>&quot;Ver resumen de mi carrera&quot;</strong> — abre una pantalla con todo lo que hiciste: tus estadísticas combinadas de punta a punta (partidos, goles, asistencias, MVP, promedio), el mayor OVR y el mayor valor de mercado que alcanzaste en toda tu carrera, cada club en el que jugaste (en orden), y todos los trofeos que ganaste — si repetiste alguno, vas a ver un &quot;×N&quot; al lado en vez de verlo repetido.</li>
+<li><strong>&quot;Aceptar&quot;</strong> — te lleva de vuelta al inicio, listo para empezar una carrera nueva.</li>
+</ul>
+<hr>
+<h2 id="16-consejos-para-tu-primera-carrera">16. Consejos para tu primera carrera</h2>
+<ul>
+<li><strong>No tengas miedo de arrancar en un club chico.</strong> Es más fácil ganarte un lugar, y las ofertas de mejores clubes van a ir llegando a medida que subís de nivel.</li>
+<li><strong>Prestá atención a tu forma.</strong> Una racha de malas decisiones te puede dejar afuera del equipo justo cuando más necesitás minutos para crecer.</li>
+<li><strong>No siempre conviene fichar por la primera oferta que llega.</strong> A veces &quot;Quedarme&quot; en un club donde ya sos importante rinde más, a largo plazo, que un club apenas mejor donde vas a tener que ganarte todo de nuevo.</li>
+<li><strong>Cuidado con las decisiones de Alto Impacto (⚠️)</strong> — sopesá bien: a veces ninguna opción es &quot;ganar&quot;, solo elegir qué perder menos.</li>
+<li><strong>Los años de tu pico (hasta los 26-31) son los más valiosos</strong> para construir el nivel que te va a sostener en el declive de después — no los desperdicies con decisiones descuidadas.</li>
+<li><strong>Ya pasados los 30, prestá atención a tu club actual</strong>: si tu nivel empieza a quedarse corto para donde estás, es cuestión de tiempo hasta que te toque bajar de categoría o buscar un lugar donde encajes mejor.</li>
+</ul>
+<hr>
+<h2 id="17-preguntas-frecuentes">17. Preguntas frecuentes</h2>
+<p><strong>¿Puedo guardar mi carrera y seguir otro día?</strong>
+No — es un juego de una sola sesión. Cerrar la pestaña o recargar la página reinicia la carrera desde la Temporada 1.</p>
+<p><strong>¿Por qué mi club no me deja quedarme?</strong>
+Si ya pasaron 2 temporadas completas en ese club y tu nivel se quedó muy por debajo de lo que ese club necesita, no te renuevan — buscá una de las ofertas de otros clubes en esa misma pausa, o considerá el retiro si ya estás grande.</p>
+<p><strong>¿Por qué no me llegan ofertas de clubes gigantes aunque mi OVR sea alto?</strong>
+Los clubes top del mundo solo entran en juego con un nivel muy alto — si tu carrera todavía no llegó ahí, vas a seguir viendo ofertas acordes a tu momento actual. Seguí subiendo de nivel y van a empezar a aparecer.</p>
+<p><strong>Mi jugador se lesionó justo antes de una ventana de fichajes — ¿me afecta las ofertas?</strong>
+Sí, una lesión resta OVR de una y puede achicar por un tiempo el nivel de club al que podés aspirar — pero no es un golpe para siempre: al darte de alta recuperás una parte de ese OVR, y el resto se recupera con el tiempo si seguís rindiendo bien.</p>
+<p><strong>¿La pierna hábil que elegí en la creación afecta algo?</strong>
+No — es puramente parte de tu ficha de jugador, no cambia ningún resultado dentro del juego.</p>
+
+
+</body>
+</html>

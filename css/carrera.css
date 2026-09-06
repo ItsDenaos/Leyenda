@@ -1,6 +1,10 @@
-/* Layout base: hero fijo / centro scrollable / footer fijo */
+/* Layout base: hero fijo / centro scrollable / footer fijo.
+   100dvh (con 100vh como respaldo en navegadores que no lo soportan)
+   para que en iOS el body ocupe la altura real visible y no deje una
+   franja en blanco abajo cuando la barra de Safari se retrae/expande. */
 .body--career {
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   padding-bottom: 0;
@@ -11,7 +15,11 @@
 .hero {
   flex: 0 0 auto;
   position: relative;
-  padding: 1.1rem 1.5rem 1.25rem;
+  /* safe-area-inset-top: en iPhones con notch/isla dinámica, empuja el
+     contenido para que no quede tapado — el degradado de fondo del hero
+     sigue llegando hasta el borde real de la pantalla igual, solo el
+     padding mueve el contenido de adentro. */
+  padding: calc(1.1rem + env(safe-area-inset-top)) 1.5rem 1.25rem;
   background:
     linear-gradient(120deg, rgba(13, 17, 32, 0.6), rgba(13, 17, 32, 0.88)),
     linear-gradient(135deg, var(--team-a, #24304f), var(--team-b, #0f1428));
@@ -20,29 +28,10 @@
   transition: background 0.4s ease;
 }
 
-.hero__back {
-  position: absolute;
-  top: 1.1rem;
-  left: 1.5rem;
-  color: rgba(255, 255, 255, 0.85);
-  text-decoration: none;
-  font-size: 1.1rem;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(0, 0, 0, 0.15);
-  transition: all 0.15s ease;
-}
-.hero__back:hover { color: var(--accent); border-color: var(--accent); }
-
 .hero__main {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding-left: 2.75rem;
 }
 
 .hero__avatar {
@@ -166,12 +155,121 @@
 .modal-card__actions { display: flex; gap: 0.6rem; margin-top: 0.2rem; }
 .modal-card__actions .btn { flex: 1; }
 
+/* ============ MODAL: resumen de carrera ============ */
+/* Mismo overlay/tarjeta que el de dorsal, pero bien más grande y con su
+   propio scroll interno — el contenido (clubes, trofeos) puede ser
+   largo en una carrera extensa y no tiene que empujar el alto de toda
+   la tarjeta más allá de la pantalla. */
+.modal-card--resumen {
+  max-width: 640px;
+  max-height: min(85vh, 720px);
+  padding: 1.25rem 1.25rem 0.5rem;
+  gap: 0.75rem;
+}
+.modal-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+.modal-card__head .modal-card__title { flex: 1; }
+.modal-card__close {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.modal-card__close:hover { color: var(--accent); border-color: var(--accent); }
+
+.modal-card__scroll {
+  overflow-y: auto;
+  padding-bottom: 1.25rem;
+  margin-right: -0.4rem;
+  padding-right: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.modal-card__scroll::-webkit-scrollbar { width: 8px; }
+.modal-card__scroll::-webkit-scrollbar-track { background: transparent; }
+.modal-card__scroll::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 4px; }
+.modal-card__scroll { scrollbar-width: thin; scrollbar-color: var(--card-border) transparent; }
+
+.resumen__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.resumen__name { margin: 0; font-size: 1.2rem; font-weight: 900; }
+.resumen__subtitle { margin: 0.25rem 0 0; font-size: 0.82rem; color: var(--text-dim); }
+
+.resumen__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 0.6rem;
+}
+
+.resumen__section { display: flex; flex-direction: column; gap: 0.7rem; }
+.resumen__section-title {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.resumen__empty { margin: 0; font-size: 0.85rem; color: var(--text-dim); }
+
+.resumen__clubs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+.resumen__club {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 76px;
+  text-align: center;
+}
+.resumen__club-name {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Cuántas veces se ganó ese mismo trofeo — un solo ícono por tipo. */
+.trophy-card__count {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--bg);
+  background: var(--accent);
+  border-radius: 999px;
+  padding: 0.05rem 0.4rem;
+}
+
+/* ============ RETIRO: acciones al cerrar la carrera ============ */
+.retiro { display: flex; flex-direction: column; gap: 1rem; align-items: center; text-align: center; }
+.retiro__actions { display: flex; gap: 0.75rem; width: 100%; max-width: 420px; }
+.retiro__actions .btn { flex: 1; }
+
 .hero__chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-top: 1rem;
-  padding-left: 2.75rem;
 }
 
 .chip {
@@ -223,6 +321,11 @@
 .team-crest--md { width: 40px; height: 40px; font-size: 0.8rem; border-radius: 10px; }
 .team-crest--avatar { width: 54px; height: 54px; font-size: 1.2rem; border-radius: 50%; }
 
+/* Escudos de liga: solo el logo, sin el fondo degradado que llevan los
+   de equipo (las ligas no tienen colores propios, así que ese fondo
+   solo se justifica como respaldo de iniciales si la imagen falla). */
+.team-crest--liga { background: none; text-shadow: none; border-radius: 0; }
+
 .ovr-badge {
   display: flex;
   flex-direction: column;
@@ -269,6 +372,10 @@
 .career { scrollbar-width: thin; scrollbar-color: var(--card-border) transparent; }
 
 /* ============ SPOTLIGHT (temporada actual) ============ */
+/* `.spotlight-mobile` es un diseño alternativo, minimalista, que solo se
+   muestra en la media query de móvil de más abajo — acá queda oculto por
+   default para no afectar en nada al desktop. */
+.spotlight-mobile { display: none; }
 .spotlight-card {
   background: linear-gradient(160deg, #1c2444 0%, #171f38 60%);
   border: 1px solid var(--accent);
@@ -399,10 +506,6 @@
 .stat__value { font-weight: 800; font-size: 1.1rem; }
 .stat__label { font-size: 0.64rem; color: var(--text-dim); text-align: center; }
 
-@media (max-width: 640px) {
-  .spotlight-card__stats { grid-template-columns: repeat(3, 1fr); }
-}
-
 .trophies {
   display: flex;
   align-items: center;
@@ -472,7 +575,9 @@
   border-radius: 12px;
   padding: 0.75rem 1rem;
   flex-wrap: wrap;
+  transition: border-color 0.15s ease, transform 0.15s ease;
 }
+.timeline-item:hover { border-color: var(--accent-2); transform: translateY(-1px); }
 /* El contenido de escritorio vive en una sola fila plana (ver más abajo);
    `display: contents` hace que este wrapper sea invisible para el layout,
    así sus hijos se comportan como si fueran hijos directos de
@@ -482,15 +587,21 @@
 .timeline-item__desktop { display: contents; }
 .timeline-item__mobile { display: none; }
 .timeline-item__season {
-  min-width: 70px;
-  font-weight: 700;
-  font-size: 0.85rem;
+  min-width: 78px;
+  font-weight: 800;
+  font-size: 0.66rem;
+  color: var(--accent-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 .timeline-item__season span {
   display: block;
-  font-size: 0.7rem;
-  color: var(--text-dim);
-  font-weight: 500;
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  color: var(--text);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: normal;
 }
 .timeline-item__team {
   flex: 1;
@@ -505,11 +616,49 @@
   font-size: 0.78rem;
   color: var(--text-dim);
   white-space: nowrap;
+  /* Ancho fijo (no según el largo del texto) para que el OVR de al lado
+     quede siempre a la misma altura en todas las filas del historial. */
+  flex: 0 0 190px;
+  text-align: right;
 }
+.timeline-item__notrophy { font-size: 0.78rem; color: var(--text-dim); }
+/* Mismo motivo: el bloque de trofeos (o "Sin trofeos") va justo antes
+   del OVR, así que si su ancho varía según cuántos trofeos haya, el OVR
+   se corre de lugar entre una fila y otra. Ancho fijo, alcanza para las
+   3 copas posibles en una temporada (liga + copa nacional + internacional)
+   sin que necesiten pasar a una segunda línea — siempre una al lado de
+   la otra, sea cual sea la cantidad. */
+.timeline-item__desktop .trophies,
+.timeline-item__desktop .timeline-item__notrophy {
+  flex: 0 0 145px;
+}
+.timeline-item__desktop .trophies { flex-wrap: nowrap; }
 .timeline-item .trophy-card:not(.trophy-card--icon-only) {
   padding: 0.15rem 0.5rem 0.15rem 0.35rem;
 }
 .timeline-item .trophy-card__name { font-size: 0.66rem; }
+
+/* ============ TOAST (override del genérico de style.css) ============ */
+/* En el resto del sitio el toast sale desde abajo porque ahí no hay nada
+   compitiendo por ese espacio — pero acá abajo siempre está el panel de
+   decisiones, así que un toast centrado abajo tapaba justo las tarjetas
+   y sus botones (mucho más grave en móvil, con menos alto de pantalla).
+   Se reubica arriba, debajo del hero, deslizándose hacia abajo en vez de
+   hacia arriba — nunca se superpone con lo que hay que leer/tocar. */
+.body--career .toast {
+  /* Oculto bien arriba de la pantalla, con un valor fijo en vez del
+     translateY(-130%) que usa el toast genérico: ese porcentaje es
+     relativo al alto del propio toast, así que con un mensaje largo
+     (más alto) no alcanzaba a sacarlo del todo — quedaba un pedazo
+     visible incluso "escondido". Acá se anima `top` directamente, así
+     que el alto del mensaje no cambia nada. */
+  top: -60vh;
+  bottom: auto;
+  transform: translateX(-50%);
+  transition: top 0.3s ease;
+  max-width: calc(100vw - 2rem);
+}
+.body--career .toast--visible { top: 10.5rem; }
 
 /* ============ DECISIONS FOOTER ============ */
 .decisions {
@@ -517,7 +666,10 @@
   background: rgba(13, 17, 32, 0.95);
   border-top: 1px solid var(--card-border);
   backdrop-filter: blur(6px);
-  padding: 0.85rem 1.5rem 1rem;
+  /* safe-area-inset-bottom: en iPhones, el indicador de inicio (o la
+     barra de Safari) queda flotando sobre el borde inferior real de la
+     pantalla — sin este aire extra, tapa justo los botones de decisión. */
+  padding: 0.85rem 1.5rem calc(1rem + env(safe-area-inset-bottom));
   transition: opacity 0.18s ease;
 }
 /* Cambio de "escena" completo (ofertas ↔ eventos, eventos → continuar):
@@ -640,17 +792,23 @@
   color: var(--text);
 }
 
-/* Las 4 tarjetas de oferta (o retiro) siempre entran en una sola fila,
-   sin necesitar scroll: el ancho es un cuarto de la pista, así que se
-   achican junto con la pantalla en vez de desbordarla. Diseño más
-   compacto que el de las tarjetas de evento para que el contenido
-   siga siendo legible a ese ancho. */
-.decision-card--oferta-club {
-  flex: 0 0 calc(25% - 0.6375rem);
-  max-width: calc(25% - 0.6375rem);
-  min-width: 0;
-  padding: 0.65rem 0.7rem;
-  gap: 0.45rem;
+/* Ofertas en escritorio: misma lógica de tarjeta que un evento normal
+   (2 por fila, mismo padding/tipografía) en vez de las 4 comprimidas en
+   una sola fila — con el escudo y el texto a tamaño legible se lee y se
+   compara mucho mejor. La pista pasa a wrap solo cuando lleva tarjetas
+   de oferta (:has), así que las de evento (siempre exactamente 2, ya
+   ajustan al 100% de ancho) no cambian en nada. Encerrado en min-width
+   para no pisar el carrusel de una tarjeta a la vez de móvil, que abajo
+   necesita que la pista siga en una sola fila con scroll horizontal. */
+@media (min-width: 641px) {
+  .decisions__track:has(.decision-card--oferta-club) {
+    flex-wrap: wrap;
+  }
+  .decision-card--oferta-club {
+    flex: 0 0 calc(50% - 0.425rem);
+    max-width: calc(50% - 0.425rem);
+    min-width: 0;
+  }
 }
 
 .decision-card__tag {
@@ -691,8 +849,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.decision-card--oferta-club .decision-card__teamname { font-size: 0.76rem; }
-.decision-card--oferta-club .decision-card__league { font-size: 0.62rem; }
+.decision-card__flag { flex-shrink: 0; margin-left: 0.1rem; }
 
 .decision-card__desc {
   margin: 0;
@@ -700,32 +857,12 @@
   color: var(--text-dim);
   line-height: 1.4;
 }
-.decision-card--oferta-club .decision-card__desc {
-  font-size: 0.68rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.decision-card__valor {
+  margin: -0.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
 }
-.decision-card--oferta-club .btn {
-  font-size: 0.7rem;
-  padding: 0.5rem 0.35rem;
-}
-
-/* En pantallas angostas, 4 en una fila queda ilegible: se pasa a
-   una grilla 2x2 (sigue sin hacer falta scroll, solo ocupa más alto). */
-@media (max-width: 640px) {
-  .decisions__track { flex-wrap: wrap; }
-  .decision-card--oferta-club {
-    flex: 0 0 calc(50% - 0.425rem);
-    max-width: calc(50% - 0.425rem);
-  }
-  .decision-card--personal,
-  .decision-card--deportivo {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-}
+.decision-card__valor strong { color: var(--accent-2); font-weight: 800; }
 
 .decision-card__actions {
   display: flex;
@@ -774,55 +911,33 @@
   color: var(--text);
 }
 
-.continue-btn {
-  margin-top: 0.85rem;
-  width: 100%;
-  background: linear-gradient(90deg, var(--accent), #ffd166);
-  color: #1a1300;
-  border: none;
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
-  font-weight: 800;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: transform 0.15s ease;
-}
-.continue-btn:hover { transform: translateY(-1px); }
-.continue-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
 /* ============ RESPONSIVE (móvil) ============ */
-/* El header y el footer de decisiones son fijos y le "roban" alto a la
-   temporada en curso, que es lo que más importa ver: en vez de dejarlos
-   crecer con su contenido (como en desktop), acá se los compacta al
-   máximo y el de decisiones pasa a scrollear internamente con un tope
-   de alto, para que siempre quede lugar visible para el resto. */
+/* Línea de diseño móvil: minimalista, sin ruido visual. En vez de
+   achicar la versión de escritorio, cada sección tiene su propia
+   versión mobile (header replanteado por CSS, spotlight e historial con
+   markup propio — ver renderSpotlight/renderTimeline en carrera.js) más
+   chata, sin iconos decorativos, con menos bordes/sombras y con la
+   pausa de eventos convertida en un slot de una tarjeta a la vez en vez
+   de una lista. */
 @media (max-width: 640px) {
-  /* --- Header compacto: todo en una fila, sin que el OVR ni las chips
-     se vayan a su propia línea --- */
-  .hero { padding: 0.6rem 0.85rem 0.65rem; }
-  .hero__back {
-    top: 0.6rem; left: 0.7rem;
-    width: 1.6rem; height: 1.6rem;
-    font-size: 0.9rem;
-  }
+  /* El hero móvil es bastante más bajo que el de escritorio — el toast
+     se acerca para no dejar un hueco vacío enorme antes de él. */
+  .body--career .toast--visible { top: 6.75rem; }
+
+  /* --- Header: una fila compacta, solo lo esencial --- */
+  .hero { padding: calc(0.65rem + env(safe-area-inset-top)) 0.85rem 0.65rem; }
   .hero__main {
     flex-wrap: nowrap;
-    padding-left: 2.15rem;
-    gap: 0.6rem;
+    gap: 0.55rem;
   }
-  .hero__avatar { width: 36px; height: 36px; }
+  .hero__avatar { width: 34px; height: 34px; }
   /* El escudo es una <img> con esta clase adentro de .hero__avatar — sin
-     este ajuste queda fijo en 54px y se sale del contenedor achicado,
-     tapando el nombre y la fila de chips de abajo. */
-  .hero__avatar .team-crest--avatar { width: 36px; height: 36px; font-size: 0.85rem; }
+     este ajuste queda fijo en 54px y se sale del contenedor achicado. */
+  .hero__avatar .team-crest--avatar { width: 34px; height: 34px; font-size: 0.8rem; }
   .hero__id { flex-basis: auto; }
-  .hero__name { font-size: 1rem; }
+  .hero__name { font-size: 0.95rem; }
   .hero__meta {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     white-space: nowrap;
     flex-wrap: nowrap;
   }
@@ -833,113 +948,218 @@
   .hero__pos-abbr { display: inline; }
   #pbTeamName { flex: 1; min-width: 0; }
   .ovr-badge--hero {
-    width: 38px; height: 38px;
-    font-size: 0.78rem;
-    margin-left: 0.4rem;
+    width: 36px; height: 36px;
+    font-size: 0.74rem;
+    margin-left: 0.35rem;
   }
-  .ovr-badge--hero .ovr-badge__label { font-size: 0.42rem; }
+  .ovr-badge--hero .ovr-badge__label { display: none; }
 
+  /* Los chips de edad/valor eran ruido decorativo (el emoji líder de
+     cada uno) — al sacar el botón de volver queda ancho de sobra para
+     mostrar los 3 (edad, país y valor de mercado) sin ese emoji. */
   .hero__chips {
-    margin-top: 0.55rem;
-    padding-left: 2.15rem;
-    gap: 0.4rem;
+    margin-top: 0.5rem;
+    gap: 0.35rem;
   }
-  .chip, .value-badge {
-    padding: 0.28rem 0.55rem;
-    font-size: 0.7rem;
-    gap: 0.3rem;
-  }
+  .chip, .value-badge { padding: 0.25rem 0.5rem; font-size: 0.68rem; gap: 0.3rem; }
+  #pbAge > span:first-child { display: none; }
+  #pbValue > span:first-child { display: none; }
 
-  /* --- Contenido central: menos aire, para que entre más en pantalla --- */
-  .career { padding: 1rem 1rem 0.75rem; gap: 1.1rem; }
-  .spotlight-card { padding: 1rem; gap: 0.85rem; border-radius: 14px; }
-  .spotlight-card__season { font-size: 1rem; }
-  .spotlight-card__body { justify-content: center; gap: 1rem; }
-  .spotlight-card__stats { min-width: 0; width: 100%; }
-  .progress-ring { width: 84px; height: 84px; }
-  .progress-ring::before { inset: 7px; }
-  .progress-ring__value { font-size: 1.15rem; }
-  .stat { padding: 0.55rem 0.25rem; }
-  .stat__icon { display: none; }
-  .stat__value { font-size: 1rem; }
+  /* --- Contenido central: menos aire entre secciones --- */
+  .career { padding: 0.85rem 0.85rem 0.75rem; gap: 0.9rem; }
 
-  /* Historial: en vez de la fila única de desktop, 2 tarjetas al 50% —
-     una con escudo+OVR arriba y el club abajo, otra con los trofeos
-     arriba y las estadísticas abajo. */
-  .timeline-item {
+  /* Spotlight: se cae la tarjeta de escritorio (anillo animado, grilla
+     de 5 stats con iconos) por la versión chata de abajo — ver
+     renderSpotlight() en carrera.js, que genera ambas y deja que el CSS
+     decida cuál mostrar. */
+  .spotlight-card--desktop { display: none; }
+  .spotlight-mobile {
+    display: flex;
     flex-direction: column;
+    gap: 0.5rem;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 0.8rem 0.85rem;
+  }
+  .spotlight-mobile__top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .spotlight-mobile__season {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .forma-pill--sm { font-size: 0.6rem; padding: 0.14rem 0.5rem; }
+  .spotlight-mobile__club { display: flex; align-items: center; gap: 0.45rem; }
+  .spotlight-mobile__clubname {
+    flex: 1;
+    min-width: 0;
+    font-weight: 700;
+    font-size: 0.88rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .spotlight-mobile__bar {
+    height: 4px;
+    border-radius: 999px;
+    background: var(--bg-soft);
+    overflow: hidden;
+  }
+  .spotlight-mobile__bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: inherit;
+  }
+  .spotlight-mobile__stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.2rem;
+  }
+  .spotlight-mobile__stats span {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.05rem;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+  }
+  .spotlight-mobile__stats b {
+    font-size: 0.92rem;
+    color: var(--text);
+    font-weight: 800;
+  }
+  .spotlight-mobile__trophies {
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+    padding-top: 0.35rem;
+    border-top: 1px solid var(--card-border);
+  }
+  .spotlight-mobile__trophies .trophy-card--icon-only .trophy-card__icon-img { width: 1.3rem; height: 1.3rem; }
+  .spotlight-mobile__trophies .trophy-card--icon-only .trophy-card__icon { font-size: 1.15rem; }
+
+  /* Historial: una fila por temporada (escudo, club + resumen, OVR) en
+     vez de las 2 mini-tarjetas de antes — mismo espíritu chato que el
+     spotlight móvil. Los trofeos, si hay, van en una fila aparte abajo. */
+  .timeline__title { margin-bottom: 0.6rem; font-size: 0.85rem; }
+  .timeline__list { gap: 0.45rem; }
+  .timeline-item {
     align-items: stretch;
     gap: 0;
-    padding: 0.65rem 0.75rem;
+    padding: 0.6rem 0.7rem;
   }
   .timeline-item__desktop { display: none; }
   .timeline-item__mobile {
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.5rem;
     width: 100%;
-  }
-  .timeline-item__mobile > .timeline-item__season {
-    min-width: 0;
-  }
-  .timeline-item__mcards {
-    display: flex;
-    gap: 0.6rem;
-  }
-  .timeline-item__mcard {
-    flex: 1 1 50%;
-    min-width: 0;
-    background: var(--bg-soft);
-    border-radius: 10px;
-    padding: 0.55rem 0.6rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    text-align: center;
-    /* Las dos mcards ya quedan de igual alto (align-items:stretch por
-       defecto en .timeline-item__mcards) — esto reparte ese alto en vez
-       de dejar que el contenido de arriba (trofeos, que puede no estar)
-       corra la fila de abajo (club / estadísticas), que siempre debe
-       quedar pegada al fondo de la tarjeta. */
-    justify-content: space-between;
   }
   .timeline-item__mrow {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
+    justify-content: flex-start;
+    gap: 0.55rem;
   }
-  .timeline-item__mrow--trophies {
-    flex-wrap: wrap;
-    gap: 0.3rem;
+  .timeline-item__mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.05rem; }
+  .timeline-item__mteam {
+    font-weight: 700;
+    font-size: 0.82rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .timeline-item__mcard .timeline-item__team {
-    flex: none;
-    min-width: 0;
-    font-size: 0.78rem;
-  }
-  .timeline-item__mcard .timeline-item__stats {
-    font-size: 0.7rem;
-    white-space: normal;
-  }
-  .timeline-item__notrophy {
-    font-size: 0.7rem;
+  .timeline-item__mmeta {
+    font-size: 0.66rem;
     color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .timeline-item__mtrophies {
+    display: flex;
+    justify-content: center;
+    gap: 0.35rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--card-border);
   }
 
-  /* --- Footer de decisiones: alto acotado + scroll propio --- */
-  .decisions { padding: 0.6rem 0.85rem 0.75rem; }
-  .decisions__header { margin-bottom: 0.45rem; }
-  .decisions__header h2 { font-size: 0.9rem; }
+  /* --- Footer de decisiones: un slot, una tarjeta a la vez --- */
+  /* Cada tarjeta ocupa casi todo el ancho y queda centrada al hacer
+     snap; el padding lateral de la pista deja asomar apenas el borde de
+     la siguiente, como pista de que se puede deslizar (en las ofertas,
+     para ver las otras opciones; en los eventos, no hace falta deslizar:
+     al responder uno la pista se re-renderiza con el que queda como
+     única/primera tarjeta, así que "pasa solo" al siguiente). */
+  .decisions { padding: 0.6rem 0 calc(0.75rem + env(safe-area-inset-bottom)); }
+  .decisions__header { margin-bottom: 0.5rem; padding: 0 0.9rem; }
+  .decisions__header h2 { font-size: 0.86rem; }
   .decisions__track {
-    max-height: 38vh;
-    overflow-y: auto;
-    padding-right: 0.2rem;
+    scroll-snap-type: x mandatory;
+    padding: 0 6% 0.25rem;
+    gap: 0.6rem;
   }
-  .decisions__track::-webkit-scrollbar { width: 6px; }
-  .decision-card { padding: 0.65rem 0.75rem; gap: 0.45rem; }
-  .decision-card__desc { font-size: 0.74rem; }
+  .decisions__empty { padding: 0.75rem 0.9rem; }
+  .decision-card {
+    flex: 0 0 88%;
+    max-width: 88%;
+    scroll-snap-align: center;
+    padding: 0.8rem 0.9rem;
+    gap: 0.5rem;
+    border-radius: 14px;
+  }
+  .decision-card__desc { font-size: 0.78rem; }
   .decision-option__efectos { gap: 0.25rem; }
-  .efecto { font-size: 0.58rem; padding: 0.12rem 0.4rem; }
-  .continue-btn { margin-top: 0.55rem; padding: 0.65rem 1rem; font-size: 0.82rem; }
+  .efecto { font-size: 0.6rem; padding: 0.14rem 0.45rem; }
+  .btn { padding: 0.7rem 0.5rem; font-size: 0.82rem; }
+
+  /* Las 2 opciones de un evento, una debajo de la otra en vez de lado a
+     lado: en dos columnas dentro de una tarjeta angosta, el texto de la
+     opción se partía en 2-3 líneas en negrita y quedaba pesado/
+     desproporcionado frente al resto del diseño, chato y liviano.
+     Apiladas y alineadas a la izquierda se leen como una lista de
+     opciones, cada una cómoda en una sola línea. */
+  .decision-card__actions { flex-direction: column; gap: 0.55rem; }
+  .decision-option .btn {
+    width: 100%;
+    text-align: left;
+    font-weight: 600;
+    padding: 0.75rem 0.9rem;
+  }
+
+  /* Las cards de oferta estaban pensadas para 1/4 del ancho en desktop;
+     acá ocupan casi todo el ancho (ver .decision-card arriba), así que
+     vuelven a un tamaño de texto normal en vez del compactado. */
+  .decision-card--oferta-club { padding: 0.8rem 0.9rem; gap: 0.55rem; }
+  .decision-card--oferta-club .decision-card__teamname { font-size: 0.92rem; }
+  .decision-card--oferta-club .decision-card__league { font-size: 0.74rem; }
+  .decision-card--oferta-club .decision-card__desc {
+    font-size: 0.8rem;
+    -webkit-line-clamp: initial;
+  }
+  .decision-card--oferta-club .btn { font-size: 0.82rem; padding: 0.7rem 0.5rem; }
+
+  /* --- Retiro: botones apilados, mismo criterio que las decisiones --- */
+  .retiro__actions { flex-direction: column; }
+
+  /* --- Modal de resumen: casi a pantalla completa en vez de una
+     tarjeta flotando en el centro, para aprovechar todo el alto
+     disponible con tan poco ancho. --- */
+  .modal-card--resumen {
+    max-width: none;
+    width: 100%;
+    max-height: 92vh;
+    padding: 1rem 1rem 0.25rem;
+  }
+  .resumen__header { gap: 0.75rem; }
+  .resumen__name { font-size: 1.05rem; }
+  .resumen__club { width: 64px; }
 }

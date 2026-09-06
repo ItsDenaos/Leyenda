@@ -7,13 +7,18 @@
 // Cargar después de config.js.
 //
 // ---------------- FORMATO ----------------
-// ligas: [{ id, nombre, nivel, pais?, confederacion, escudo? }]
+// ligas: [{ id, nombre, nivel, pais?, paisCode?, paisFlag?, confederacion, escudo? }]
 //   - id: string único, kebab-case, sin espacios.
 //   - nivel: entero 1 (mejor) a 6 (peor). Oculto al jugador.
 //   - pais (opcional): nombre EXACTO de país tal como aparece en la
 //     lista de nacionalidades de script.js (ej. "México", "Inglaterra").
 //     Se usa para decidir las ofertas de primer equipo: si el país
 //     elegido por el jugador coincide con el de una liga, empieza ahí.
+//   - paisCode / paisFlag: código ISO 3166-1 alpha-2 (para pedir la
+//     bandera real a flagcdn.com, ver GameConfig.flagHtml) y su emoji de
+//     respaldo si la imagen no carga — mismo criterio que COUNTRIES en
+//     script.js. Se muestran junto al nombre de la liga en las cards de
+//     oferta/fichaje.
 //   - confederacion: "UEFA" | "CONMEBOL" | "CONCACAF" (por ahora, según
 //     las ligas cargadas). Define a qué competiciones internacionales
 //     (ver `competiciones` más abajo) puede clasificar un equipo de esa
@@ -53,16 +58,16 @@
 
 const GameDatabase = {
   ligas: [
-    { id: "premier-league", nombre: "Premier League", nivel: 1, pais: "Inglaterra", confederacion: "UEFA", escudo: "premier-league.png" },
-    { id: "la-liga", nombre: "La Liga", nivel: 1, pais: "España", confederacion: "UEFA", escudo: "la-liga.png" },
-    { id: "serie-a", nombre: "Serie A", nivel: 1, pais: "Italia", confederacion: "UEFA", escudo: "serie-a.png" },
-    { id: "bundesliga", nombre: "Bundesliga", nivel: 1, pais: "Alemania", confederacion: "UEFA", escudo: "bundesliga.png" },
-    { id: "ligue-1", nombre: "Ligue 1", nivel: 1, pais: "Francia", confederacion: "UEFA", escudo: "ligue-1.png" },
-    { id: "brasileirao", nombre: "Brasileirão Série A", nivel: 2, pais: "Brasil", confederacion: "CONMEBOL", escudo: "brasileirao.png" },
-    { id: "primera-division-argentina", nombre: "Primera División Argentina", nivel: 3, pais: "Argentina", confederacion: "CONMEBOL", escudo: "primera-division-argentina.png" },
-    { id: "liga-mx", nombre: "Liga MX", nivel: 3, pais: "México", confederacion: "CONCACAF", escudo: "liga-mx.png" },
-    { id: "mls", nombre: "MLS", nivel: 3, pais: "Estados Unidos", confederacion: "CONCACAF", escudo: "mls.png" },
-    { id: "primera-a-colombia", nombre: "Primera A (Colombia)", nivel: 4, pais: "Colombia", confederacion: "CONMEBOL", escudo: "primera-a-colombia.png" },
+    { id: "premier-league", nombre: "Premier League", nivel: 1, pais: "Inglaterra", paisCode: "gb-eng", paisFlag: "🏴", confederacion: "UEFA", escudo: "premier-league.png" },
+    { id: "la-liga", nombre: "La Liga", nivel: 1, pais: "España", paisCode: "es", paisFlag: "🇪🇸", confederacion: "UEFA", escudo: "la-liga.png" },
+    { id: "serie-a", nombre: "Serie A", nivel: 1, pais: "Italia", paisCode: "it", paisFlag: "🇮🇹", confederacion: "UEFA", escudo: "serie-a.png" },
+    { id: "bundesliga", nombre: "Bundesliga", nivel: 1, pais: "Alemania", paisCode: "de", paisFlag: "🇩🇪", confederacion: "UEFA", escudo: "bundesliga.png" },
+    { id: "ligue-1", nombre: "Ligue 1", nivel: 1, pais: "Francia", paisCode: "fr", paisFlag: "🇫🇷", confederacion: "UEFA", escudo: "ligue-1.png" },
+    { id: "brasileirao", nombre: "Brasileirão Série A", nivel: 2, pais: "Brasil", paisCode: "br", paisFlag: "🇧🇷", confederacion: "CONMEBOL", escudo: "brasileirao.png" },
+    { id: "primera-division-argentina", nombre: "Primera División Argentina", nivel: 3, pais: "Argentina", paisCode: "ar", paisFlag: "🇦🇷", confederacion: "CONMEBOL", escudo: "primera-division-argentina.png" },
+    { id: "liga-mx", nombre: "Liga MX", nivel: 3, pais: "México", paisCode: "mx", paisFlag: "🇲🇽", confederacion: "CONCACAF", escudo: "liga-mx.png" },
+    { id: "mls", nombre: "MLS", nivel: 3, pais: "Estados Unidos", paisCode: "us", paisFlag: "🇺🇸", confederacion: "CONCACAF", escudo: "mls.png" },
+    { id: "primera-a-colombia", nombre: "Primera A (Colombia)", nivel: 4, pais: "Colombia", paisCode: "co", paisFlag: "🇨🇴", confederacion: "CONMEBOL", escudo: "primera-a-colombia.png" },
   ],
 
   equipos: [

@@ -76,19 +76,14 @@
 }
 .team-crest--xs { width: 18px; height: 18px; font-size: 0.5rem; border-radius: 6px; }
 
-.offer-card__tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-}
+/* Escudos de liga: solo el logo, sin el fondo degradado que llevan los
+   de equipo (las ligas no tienen colores propios, así que ese fondo
+   solo se justifica como respaldo de iniciales si la imagen falla). */
+.team-crest--liga { background: none; text-shadow: none; border-radius: 0; }
 
-.offer-tag {
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  background: var(--bg-soft);
-  border: 1px solid var(--card-border);
+.offer-card__flag {
+  flex-shrink: 0;
+  margin-left: 0.15rem;
   color: var(--text-dim);
 }
 

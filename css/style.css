@@ -21,6 +21,7 @@
    se ve nunca, porque ahí el body queda con overflow:hidden y el scroll
    real pasa a `.career`, que ya tiene su propio estilo en carrera.css. */
 html {
+  background: var(--bg);
   scrollbar-width: thin;
   scrollbar-color: var(--card-border) transparent;
 }
@@ -45,7 +46,13 @@ body {
   gap: 1rem;
   padding: 1.25rem 2rem;
   border-bottom: 1px solid var(--card-border);
-  background: rgba(13, 17, 32, 0.85);
+  /* Mismo lenguaje que el hero de carrera.html: una capa de gradiente de
+     acento sobre el fondo oscuro — acá sin colores de equipo (todavía no
+     hay club elegido), pero con la misma sensación de "cabecera viva"
+     en vez del plano sólido de antes. */
+  background:
+    linear-gradient(120deg, rgba(255, 183, 3, 0.12), rgba(34, 211, 238, 0.05) 55%, transparent),
+    rgba(13, 17, 32, 0.85);
   backdrop-filter: blur(6px);
   position: sticky;
   top: 0;
@@ -311,6 +318,10 @@ body {
 .flow-step {
   background: var(--card);
   border: 1px solid var(--card-border);
+  /* Mismo lenguaje que las decision-card de carrera.html: un borde
+     izquierdo de color identifica cada paso, como el dorado/celeste/
+     violeta que ahí distingue deportivo, personal y ofertas. */
+  border-left: 3px solid var(--card-border);
   border-radius: var(--radius);
   padding: 1.5rem;
   display: flex;
@@ -321,8 +332,10 @@ body {
      tapado por el header sticky. */
   scroll-margin-top: 6rem;
 }
+#card-identidad { border-left-color: var(--accent-2); }
+#card-nacionalidad { border-left-color: #a78bfa; }
+#card-posicion { border-left-color: var(--accent); }
 .flow-step.card--done {
-  border-color: var(--accent);
   box-shadow: 0 0 0 1px var(--accent-soft);
 }
 .flow-step__header {
@@ -687,6 +700,31 @@ body {
 }
 .cta:not(:disabled):hover { transform: translateY(-2px); }
 
+/* ============ MÓVIL: menos carga visual ============ */
+/* Misma idea que la línea de diseño móvil de carrera.html: se cae el
+   brillo/sombra decorativos y se aprieta el espaciado, dejando solo lo
+   que ayuda a completar la ficha rápido y sin fricción. */
+@media (max-width: 640px) {
+  .topbar { padding: 1rem 1.25rem; gap: 0.75rem; }
+  .brand__logo { height: 2.5rem; }
+  .brand__tagline { font-size: 0.78rem; }
+
+  .creator { padding: 1.1rem; }
+  .creator__intro { margin-bottom: 1.25rem; }
+  .creator__intro h1 { font-size: 1.4rem; }
+  .creator__intro p { font-size: 0.88rem; }
+
+  .player-card {
+    padding: 1.15rem 1rem 1.35rem;
+    box-shadow: none;
+  }
+  .player-card::before { opacity: 0.5; }
+  .player-card__ribbon { display: none; }
+
+  .flow-step { padding: 1.15rem; gap: 0.9rem; }
+  .flow-step.card--done { box-shadow: none; }
+}
+
 /* TOAST */
 .toast {
   position: fixed;
@@ -704,3 +742,12 @@ body {
   z-index: 20;
 }
 .toast--visible { transform: translate(-50%, 0); }
+
+/* PIE DE VERSIÓN (ver GameConfig.footerHtml) */
+.app-footer {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  padding: 1.5rem 1rem;
+  opacity: 0.7;
+}

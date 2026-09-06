@@ -53,12 +53,12 @@ if (!player) {
           ${GameConfig.crestHtml(equipo, "offer-card__crest")}
           <div>
             <div class="offer-card__name">${equipo.nombre}</div>
-            <div class="offer-card__league">${GameConfig.ligaCrestHtml(liga, "team-crest team-crest--xs")}<span>${liga.nombre}</span></div>
+            <div class="offer-card__league">
+              ${GameConfig.ligaCrestHtml(liga, "team-crest team-crest--xs")}
+              <span>${liga.nombre}</span>
+              ${GameConfig.flagHtml(liga.paisCode, "offer-card__flag flag-img", liga.paisFlag)}
+            </div>
           </div>
-        </div>
-        <div class="offer-card__tags">
-          <span class="offer-tag">${GameConfig.descripcionNivelEquipo(equipo.nivel)}</span>
-          <span class="offer-tag">${GameConfig.descripcionNivelLiga(liga.nivel)}</span>
         </div>
         <button type="button" class="offer-card__cta" data-idx="${idx}">Elegir este club</button>
       `;
@@ -92,4 +92,5 @@ if (!player) {
   }
 
   renderOfertas();
+  document.getElementById("appFooter").textContent = GameConfig.footerHtml();
 }

@@ -289,3 +289,4 @@ function showToast(message) {
 }
 
 refresh();
+document.getElementById("appFooter").textContent = GameConfig.footerHtml();

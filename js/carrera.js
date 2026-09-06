@@ -102,14 +102,15 @@ function inicializarCompeticionesTemporada(equipoId, clasificacionInternacional)
     ? buscarCompeticionInternacional(liga.confederacion, clasificacionInternacional)
     : null;
 
+  const ultimoTramo = GameConfig.TOTAL_TRAMOS_TEMPORADA - 1;
   return {
     liga: { competicion: buscarCompeticionDomestica(liga.id, "liga"), partidosJugados: 0 },
-    // 3 checkpoints disponibles para rondas extra (tramos 1, 2 y 3 —
-    // la 1ra ronda, garantizada, se juega en el tramo 0).
-    copaNacional: estadoCompeticionEliminatoria(copaNacionalComp, 3),
-    // 2 checkpoints para las rondas de eliminación (tramos 2 y 3) — la
-    // fase de grupos/liga, garantizada, se juega en el tramo 1.
-    copaInternacional: estadoCompeticionEliminatoria(copaInternacionalComp, 2),
+    // Rondas extra disponibles después de la 1ra ronda garantizada (que se
+    // juega en el tramo 0): un checkpoint por cada tramo restante.
+    copaNacional: estadoCompeticionEliminatoria(copaNacionalComp, ultimoTramo),
+    // La fase de grupos/liga, garantizada, se juega en el tramo 1 — quedan
+    // los tramos siguientes para las rondas de eliminación.
+    copaInternacional: estadoCompeticionEliminatoria(copaInternacionalComp, ultimoTramo - 1),
   };
 }
 
@@ -138,10 +139,10 @@ function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionIntern
     enCurso: true,
     calendario: GameConfig.crearCalendarioTemporada(numero),
     checkpointIndex: 0,
-    tramoIndex: 0, // 0..3, cuál de los 4 tramos simulados de la temporada
+    tramoIndex: 0, // 0..(TOTAL_TRAMOS_TEMPORADA-1), cuál tramo de la temporada
     // Máximo 1 evento de Alto Impacto por temporada, con 30% de chance:
-    // se sortea acá mismo en qué pausa (0..3) caerá, si es que cae.
-    altoImpactoPausa: Math.random() < 0.3 ? GameConfig.randomInt(0, 3) : null,
+    // se sortea acá mismo en qué pausa de evento caerá, si es que cae.
+    altoImpactoPausa: Math.random() < 0.3 ? GameConfig.randomInt(0, GameConfig.TOTAL_TRAMOS_TEMPORADA - 1) : null,
     lesionActiva: null, // { nivel, nombre, descripcion, tramosRestantes, ovrPerdido, bloqueaForma } | null
     loteActual: [],
     bufferRendimiento: 0, // efecto acumulado del tramo actual (aún sin aplicar)
@@ -159,21 +160,31 @@ function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionIntern
 // Solo pueden ofertar los clubes cuya "ventana de OVR" incluye tu nivel
 // actual (exclusión dura, no solo menos probable) — un club chico deja
 // de aparecer una vez que eres demasiado bueno para él, y uno grande no
-// aparece hasta que estás a su altura. Dentro de los elegibles, sigue
-// pesando más el que mejor encaja con tu nivel exacto.
+// aparece hasta que estás a su altura. Además, el valor que tendrías en
+// ese club (misma fórmula que el valor de mercado real) tiene que ser
+// razonable frente a tu valor actual — si ficharte ahí implicara un
+// desplome, ese club no está realmente a tu altura aunque el margen de
+// OVR lo deje pasar. Dentro de los elegibles, ya no se sortea parejo
+// entre todos: se prioriza el grupo que mejor encaja con tu nivel real,
+// así que si tu nivel da para los grandes, van a ser los grandes los que
+// aparezcan. Al menos 2 de las 3 ofertas salen siempre de tu propia
+// liga (cuando hay candidatos ahí) — el resto queda libre, incluso para
+// apuntar al exterior.
 //
 // Retiro: si el club actual ya no puede sostenerte (tu OVR cayó por
 // debajo de lo que ese nivel de club/liga tolera), no renueva — la carta
 // de "quedarme" se reemplaza por la de retirarte. Además, desde
 // EDAD_RETIRO_OFERTA el propio jugador puede elegir retirarse aunque su
-// club lo siga queriendo, ocupando una de las cartas de oferta.
+// club lo siga queriendo, ocupando una de las cartas de oferta — en ese
+// caso solo quedan 2 cupos de club y ahí no hay garantía de liga local,
+// queda 100% libre.
 //
 // Retiro forzoso: a partir de `edadRetiroForzoso` (sorteada una sola vez
 // por carrera, ver más abajo) ya no hay ofertas de ningún tipo — no
 // importa el nivel del club actual ni el OVR, la única carta es
 // retirarte. Es la única parte de esto que no depende de qué tan bien
 // te haya ido.
-function generarLoteOfertas(equipoActualId, ovr, edad) {
+function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
   const equipoActual = GameDatabase.equipos.find((e) => e.id === equipoActualId);
   const ligaActual = ligaDe(equipoActual);
 
@@ -188,40 +199,90 @@ function generarLoteOfertas(equipoActualId, ovr, edad) {
     }];
   }
 
-  const contratoTerminado = GameConfig.contratoDebeTerminar(equipoActual.nivel, ligaActual.nivel, ovr);
+  // En gracia (recién llegado a este club, ver temporadasEnClubActual),
+  // el club nunca puede "no renovarte" — sin esto, cualquier club de
+  // nivel medio/alto para arriba te dejaría ir en tu primera ventana de
+  // traspasos, antes de tener una sola temporada para demostrar algo
+  // (un novato jamás arranca con el OVR de un jugador hecho).
+  const enGraciaDeContrato = temporadasEnClubActual < GameConfig.TEMPORADAS_GRACIA_CONTRATO;
+  const contratoTerminado = !enGraciaDeContrato && GameConfig.contratoDebeTerminar(equipoActual.nivel, ligaActual.nivel, ovr);
   const puedeElegirRetiro = !contratoTerminado && edad >= GameConfig.EDAD_RETIRO_OFERTA;
 
   const disponibles = GameDatabase.equipos.filter((e) => e.id !== equipoActualId);
   const pool = disponibles.length > 0 ? disponibles : GameDatabase.equipos;
 
-  const candidatos = pool.map((equipo) => ({ equipo, liga: ligaDe(equipo) }));
-  const nivelEquipoObjetivo = GameConfig.nivelEquipoObjetivo(ovr);
-  const nivelLigaObjetivo = GameConfig.nivelLigaObjetivo(ovr);
+  const candidatos = pool.map((equipo) => {
+    const liga = ligaDe(equipo);
+    return { equipo, liga, valorEnClub: GameConfig.valorOfrecidoPorClub(ovr, equipo.nivel, liga.nivel) };
+  });
+  // El potencial (no el OVR real) decide a qué clubes se apunta dentro
+  // del pool ya elegible: a igual OVR, un jugador joven tiene más
+  // recorrido que uno grande, así que apunta más arriba. La elegibilidad
+  // real (unas líneas abajo) sigue siendo puro OVR.
+  const potencialAjustado = GameConfig.potencialAjustadoPorEdad(ovr, edad);
+  const nivelEquipoObjetivo = GameConfig.nivelEquipoObjetivo(potencialAjustado);
+  const nivelLigaObjetivo = GameConfig.nivelLigaObjetivo(potencialAjustado);
   const pesoFn = (c) => GameConfig.pesoPorCercaniaNivel(c.equipo.nivel, c.liga.nivel, nivelEquipoObjetivo, nivelLigaObjetivo);
 
-  let elegibles = candidatos.filter((c) => GameConfig.equipoElegibleParaOvr(c.equipo.nivel, c.liga.nivel, ovr));
+  let elegibles = candidatos.filter((c) =>
+    GameConfig.equipoElegibleParaOvr(c.equipo.nivel, c.liga.nivel, ovr)
+    && GameConfig.ofertaTieneValorRazonable(valorActual, c.valorEnClub)
+  );
 
-  // Salvaguarda: si ningún club cae en la ventana exacta (dataset chico o
-  // un caso límite de OVR), se usan todos los candidatos igual antes que
-  // dejar al jugador sin ofertas.
+  // Salvaguarda en dos pasos: si el cruce OVR+valor deja el pool vacío
+  // (dataset chico o un caso límite), se relaja primero el filtro de
+  // valor y, si todavía no alcanza, se usan todos los candidatos antes
+  // que dejar al jugador sin ofertas.
+  if (elegibles.length === 0) {
+    elegibles = candidatos.filter((c) => GameConfig.equipoElegibleParaOvr(c.equipo.nivel, c.liga.nivel, ovr));
+  }
   if (elegibles.length === 0) elegibles = candidatos;
 
-  // Con retiro disponible, se ofrecen 2 clubes en vez de 3 (la carta
-  // restante la ocupa la opción de retirarse).
-  const cantidadOfertasClub = puedeElegirRetiro ? 2 : 3;
-  const elegidos = GameConfig.elegirPonderado(elegibles, pesoFn, cantidadOfertasClub);
+  // En los últimos años antes del retiro forzoso (ver EDAD_RETIRO_TRANSICION),
+  // el cupo de ofertas se achica a 1 — cada vez menos clubes se animan a
+  // día ofertarte, en vez de pasar de golpe de "ofertas normales" a "sin
+  // ninguna". Con retiro disponible pero fuera de esa ventana final, se
+  // ofrecen 2 clubes en vez de 3 (la carta restante la ocupa la opción de
+  // retirarse) — y ahí no aplica la garantía de liga local, ver comentario
+  // de arriba.
+  const enTransicionRetiro = !contratoTerminado && edad >= edadRetiroForzoso - GameConfig.EDAD_RETIRO_TRANSICION;
+  const cantidadOfertasClub = enTransicionRetiro ? 1 : (puedeElegirRetiro ? 2 : 3);
 
-  // Puede no haber suficientes elegibles distintos: se completa repitiendo,
-  // para no mostrar menos ofertas de las que corresponden.
-  while (elegidos.length < cantidadOfertasClub && elegibles.length > 0) {
-    elegidos.push(GameConfig.elegirPonderado(elegibles, pesoFn, 1)[0]);
+  let elegidos;
+  if (cantidadOfertasClub === 3) {
+    // En el ocaso de la carrera, el cupo garantizado deja de priorizar
+    // tu liga actual y pasa a priorizar tu país de origen — volver a
+    // cerrar la carrera en casa, aunque la hayas jugado toda afuera.
+    const enOcaso = edad >= GameConfig.EDAD_OCASO_RETORNO_PAIS;
+    const locales = elegibles.filter((c) => enOcaso ? c.liga.pais === player.pais : c.liga.id === ligaActual.id);
+    const cantidadLocales = Math.min(2, locales.length);
+    elegidos = GameConfig.elegirMejorEncaje(locales, pesoFn, cantidadLocales);
+
+    const usados = new Set(elegidos.map((c) => c.equipo.id));
+    const restantes = cantidadOfertasClub - elegidos.length;
+    if (restantes > 0) {
+      const poolRestante = elegibles.filter((c) => !usados.has(c.equipo.id));
+      elegidos.push(...GameConfig.elegirMejorEncaje(poolRestante, pesoFn, restantes));
+    }
+  } else {
+    elegidos = GameConfig.elegirMejorEncaje(elegibles, pesoFn, cantidadOfertasClub);
   }
 
-  const ofertasClub = elegidos.map(({ equipo, liga }) => ({
+  // Puede no haber suficientes elegibles distintos: se completa repitiendo
+  // (evitando duplicar el mismo club mientras haya otra opción), para no
+  // mostrar menos ofertas de las que corresponden.
+  while (elegidos.length < cantidadOfertasClub && elegibles.length > 0) {
+    const usadosFinal = new Set(elegidos.map((c) => c.equipo.id));
+    const restante = elegibles.filter((c) => !usadosFinal.has(c.equipo.id));
+    elegidos.push(GameConfig.elegirMejorEncaje(restante.length > 0 ? restante : elegibles, pesoFn, 1)[0]);
+  }
+
+  const ofertasClub = elegidos.map(({ equipo, liga, valorEnClub }) => ({
     id: `oferta-${equipo.id}-${Math.random().toString(36).slice(2, 8)}`,
     tipoOferta: "club",
     equipo,
     liga,
+    valorOfrecido: valorEnClub,
     desc: `${equipo.nombre} quiere ficharte para reforzar su plantel en ${liga.nombre}.`,
   }));
 
@@ -340,7 +401,7 @@ function buildDecisionBatch(edadActual) {
 // Cuántos tramos quedan en la temporada, contando el que se está por
 // jugar — pone el techo real a cuánto puede durar una lesión.
 function tramosRestantesEnTemporada() {
-  return 4 - temporadaActual.tramoIndex;
+  return GameConfig.TOTAL_TRAMOS_TEMPORADA - temporadaActual.tramoIndex;
 }
 
 // Se evalúa en cada pausa de decisión (nunca en una de ofertas). Si ya
@@ -383,7 +444,7 @@ function iniciarCheckpoint() {
   if (!checkpoint) return;
 
   if (checkpoint.tipo === "oferta") {
-    temporadaActual.loteActual = generarLoteOfertas(temporadaActual.equipoId, temporadaActual.ovr, getEdadActual());
+    temporadaActual.loteActual = generarLoteOfertas(temporadaActual.equipoId, temporadaActual.ovr, getEdadActual(), temporadaActual.valorMercado);
   } else {
     const lesion = intentarGenerarLesion(getEdadActual());
     temporadaActual.loteActual = lesion
@@ -461,13 +522,14 @@ function animarSpotlightDesde(antes) {
 
 // Partidos de LIGA que tocan en este tramo: el total de la temporada
 // (competiciones.liga.competicion.partidosMinimos) repartido entre los
-// 4 tramos — el último tramo se ajusta para que la suma cierre exacta.
+// TOTAL_TRAMOS_TEMPORADA tramos — el último tramo se ajusta para que la
+// suma cierre exacta.
 function partidosLigaParaTramo(temporada, tramoIndex) {
   const estado = temporada.competiciones.liga;
   if (!estado.competicion) return 0;
   const total = estado.competicion.partidosMinimos;
-  if (tramoIndex === 3) return Math.max(0, total - estado.partidosJugados);
-  return Math.round(total / 4);
+  if (tramoIndex === GameConfig.TOTAL_TRAMOS_TEMPORADA - 1) return Math.max(0, total - estado.partidosJugados);
+  return Math.round(total / GameConfig.TOTAL_TRAMOS_TEMPORADA);
 }
 
 // Motor genérico de una competición eliminatoria (copa nacional o
@@ -536,12 +598,16 @@ function simularTramoYAvanzar() {
   // ---- Cuántos de esos partidos del club juegas realmente tú ----
   // Lesionado (cualquier nivel): no juegas nada este tramo, sin importar
   // qué tan bueno seas — eso es lo único que garantiza incluso el nivel 3.
+  // Ser titular se decide antes (con el OVR/rendimiento con los que se
+  // entra al tramo) para que además de mostrarse como badge, sume de
+  // verdad a la participación — ver PARTICIPACION_BONUS_TITULAR.
   const estabaLesionado = Boolean(temporadaActual.lesionActiva);
+  const esTitularEsteTramo = estabaLesionado ? false : GameConfig.calcularTitular(temporadaActual.ovr, temporadaActual.bufferRendimiento);
   let partidosJugador;
   if (estabaLesionado) {
     partidosJugador = 0;
   } else {
-    const probJugar = GameConfig.probabilidadJugar(temporadaActual.ovr, temporadaActual.bufferRendimiento, temporadaActual.forma);
+    const probJugar = GameConfig.probabilidadJugar(temporadaActual.ovr, temporadaActual.bufferRendimiento, temporadaActual.forma, esTitularEsteTramo);
     partidosJugador = GameConfig.clamp(GameConfig.redondeoEstocastico(partidosClub * probJugar), 0, partidosClub);
   }
 
@@ -559,8 +625,8 @@ function simularTramoYAvanzar() {
   temporadaActual.sumaRating += resultado.sumaRating;
   temporadaActual.promedio = temporadaActual.partidos > 0 ? temporadaActual.sumaRating / temporadaActual.partidos : 0;
 
-  temporadaActual.ovr = GameConfig.ajustarOvrTramo(temporadaActual.ovr, temporadaActual.bufferRendimiento, getEdadActual());
-  temporadaActual.titular = estabaLesionado ? false : GameConfig.calcularTitular(temporadaActual.ovr, temporadaActual.bufferRendimiento);
+  temporadaActual.ovr = GameConfig.ajustarOvrTramo(temporadaActual.ovr, temporadaActual.bufferRendimiento, getEdadActual(), factorTalento);
+  temporadaActual.titular = esTitularEsteTramo;
   temporadaActual.equipoAcumuladoTemporada += temporadaActual.bufferEquipo;
   temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, equipo.nivel, liga.nivel);
   temporadaActual.tramoIndex++;
@@ -575,7 +641,13 @@ function simularTramoYAvanzar() {
   if (estabaLesionado) {
     temporadaActual.lesionActiva.tramosRestantes--;
     if (temporadaActual.lesionActiva.tramosRestantes <= 0) {
-      mensajeLesion = `Te recuperaste de tu lesión (${temporadaActual.lesionActiva.nombre}).`;
+      // Fue un golpe físico puntual, no una pérdida de nivel definitiva:
+      // al darte de alta recuperás una parte del OVR que te costó.
+      const ovrRecuperado = Math.round(temporadaActual.lesionActiva.ovrPerdido * GameConfig.LESION_RECUPERACION_OVR);
+      if (ovrRecuperado > 0) {
+        temporadaActual.ovr = GameConfig.clamp(temporadaActual.ovr + ovrRecuperado, GameConfig.OVR_CARRERA_MIN, GameConfig.OVR_CARRERA_MAX);
+      }
+      mensajeLesion = `Te recuperaste de tu lesión (${temporadaActual.lesionActiva.nombre})${ovrRecuperado > 0 ? ` — recuperás ${ovrRecuperado} OVR` : ""}.`;
       if (temporadaActual.lesionActiva.bloqueaForma) temporadaActual.forma = "regular";
       temporadaActual.lesionActiva = null;
     }
@@ -643,6 +715,8 @@ function finalizarTemporada() {
     clasificacionProxima = "segundoNivel";
   }
 
+  temporadasEnClubActual++;
+
   temporadaActual.enCurso = false;
   temporadaActual.progreso = 100;
   const numeroCerrada = temporadaActual.numero;
@@ -683,8 +757,18 @@ const usaProgresionReal = Boolean(player.equipoId && typeof player.ovrInicial ==
 // temporadas ni depende de OVR/rendimiento.
 const edadRetiroForzoso = GameConfig.randomInt(GameConfig.EDAD_RETIRO_FORZOSO_MIN, GameConfig.EDAD_RETIRO_FORZOSO_MAX);
 
+// Talento oculto de esta carrera (ver GameConfig.ajustarOvrTramo): sorteado
+// una única vez, nunca se muestra en ningún número visible.
+const factorTalento = GameConfig.TALENTO_MIN + Math.random() * (GameConfig.TALENTO_MAX - GameConfig.TALENTO_MIN);
+
 let temporadasFinalizadas = [];
 let temporadaActual;
+
+// Temporadas completadas sin cambiar de club (ver TEMPORADAS_GRACIA_CONTRATO
+// en generarLoteOfertas) — arranca en 0 con cada club nuevo, sea el
+// inicial o uno fichado a mitad de carrera, y sube +1 en cada cierre de
+// temporada en el mismo club (finalizarTemporada).
+let temporadasEnClubActual = 0;
 
 if (usaProgresionReal) {
   const equipoInicial = GameDatabase.equipos.find((e) => e.id === player.equipoId);
@@ -711,7 +795,7 @@ if (usaProgresionReal) {
   t2.progreso = 47;
   let idx = t2.calendario.findIndex((c) => c.progreso > 47);
   t2.checkpointIndex = idx === -1 ? t2.calendario.length - 1 : idx;
-  t2.tramoIndex = 2; // consistente con haber llegado a mitad de temporada
+  t2.tramoIndex = 1; // consistente con haber llegado a mitad de temporada
   temporadaActual = t2;
 }
 
@@ -773,8 +857,10 @@ function renderSpotlight() {
   const forma = GameConfig.FORM_STATES[s.forma];
   const progreso = Math.round(s.progreso);
 
+  const trofeosMobileHtml = s.trofeos && s.trofeos.length > 0 ? trophiesHtml(s.trofeos, true) : "";
+
   spotlight.innerHTML = `
-    <article class="spotlight-card">
+    <article class="spotlight-card spotlight-card--desktop">
       <div class="spotlight-card__head">
         <div>
           <span class="spotlight-card__season">Temporada ${s.numero} · ${s.anio}</span>
@@ -806,6 +892,32 @@ function renderSpotlight() {
 
       ${trophiesHtml(s.trofeos)}
     </article>
+
+    <!-- Versión móvil: tarjeta chica y plana, sin anillo animado ni
+         iconos decorativos — se redibuja entera en cada tramo con los
+         valores finales (sin la cuenta animada de la versión desktop). -->
+    <article class="spotlight-mobile">
+      <div class="spotlight-mobile__top">
+        <span class="spotlight-mobile__season">T${s.numero} · ${s.anio}</span>
+        <span class="forma-pill forma-pill--sm" style="background:${forma.color}22;color:${forma.color}">${forma.icon} ${forma.label}</span>
+      </div>
+      <div class="spotlight-mobile__club">
+        ${GameConfig.crestHtml(equipo, "team-crest team-crest--xs")}
+        <span class="spotlight-mobile__clubname">${equipo.nombre}</span>
+        <span class="lineup-tag lineup-tag--${s.titular ? "titular" : "suplente"}">${s.titular ? "Titular" : "Suplente"}</span>
+      </div>
+      <div class="spotlight-mobile__bar" title="${progreso}% de la temporada">
+        <div class="spotlight-mobile__bar-fill" style="width:${progreso}%"></div>
+      </div>
+      <div class="spotlight-mobile__stats">
+        <span><b>${s.partidos}</b>PJ</span>
+        <span><b>${s.goles}</b>Goles</span>
+        <span><b>${s.asistencias}</b>Asist.</span>
+        <span><b>${s.mvp}</b>MVP</span>
+        <span><b>${s.promedio.toFixed(1)}</b>Prom.</span>
+      </div>
+      ${trofeosMobileHtml ? `<div class="spotlight-mobile__trophies">${trofeosMobileHtml}</div>` : ""}
+    </article>
   `;
 }
 
@@ -824,6 +936,7 @@ function renderTimeline() {
   [...temporadasFinalizadas].reverse().forEach((s) => {
     const equipo = equipoDe(s);
     const color = ovrTierColor(s.ovr);
+    const edadEsaTemporada = Number(player.edad) + (s.numero - 1);
 
     const trofeosHtml = s.trofeos && s.trofeos.length > 0
       ? trophiesHtml(s.trofeos, true)
@@ -833,7 +946,7 @@ function renderTimeline() {
     row.className = "timeline-item";
     row.innerHTML = `
       <div class="timeline-item__desktop">
-        <span class="timeline-item__season">Temporada ${s.numero}<span>${s.anio}</span></span>
+        <span class="timeline-item__season">Temporada ${s.numero}<span>${s.anio} · ${edadEsaTemporada} años</span></span>
         ${GameConfig.crestHtml(equipo, "team-crest team-crest--sm")}
         <span class="timeline-item__team">${equipo.nombre}</span>
         ${trofeosHtml}
@@ -842,20 +955,15 @@ function renderTimeline() {
       </div>
 
       <div class="timeline-item__mobile">
-        <span class="timeline-item__season">Temporada ${s.numero}<span>${s.anio}</span></span>
-        <div class="timeline-item__mcards">
-          <div class="timeline-item__mcard">
-            <div class="timeline-item__mrow">
-              ${GameConfig.crestHtml(equipo, "team-crest team-crest--sm")}
-              <span class="ovr-badge ovr-badge--sm" style="--ovr-color:${color}"><span>${s.ovr}</span><span class="ovr-badge__label">OVR</span></span>
-            </div>
-            <span class="timeline-item__team">${equipo.nombre}</span>
+        <div class="timeline-item__mrow">
+          ${GameConfig.crestHtml(equipo, "team-crest team-crest--sm")}
+          <div class="timeline-item__mid">
+            <span class="timeline-item__mteam">${equipo.nombre}</span>
+            <span class="timeline-item__mmeta">T${s.numero} · ${s.anio} · ${edadEsaTemporada} años · ${s.partidos} PJ · ${s.goles} G</span>
           </div>
-          <div class="timeline-item__mcard">
-            <div class="timeline-item__mrow timeline-item__mrow--trophies">${trofeosHtml}</div>
-            <span class="timeline-item__stats">${s.partidos} PJ · ${s.goles} G · ${s.asistencias} A · ${s.promedio.toFixed(1)} prom</span>
-          </div>
+          <span class="ovr-badge ovr-badge--sm" style="--ovr-color:${color}">${s.ovr}</span>
         </div>
+        ${s.trofeos && s.trofeos.length > 0 ? `<div class="timeline-item__mtrophies">${trofeosHtml}</div>` : ""}
       </div>
     `;
     list.appendChild(row);
@@ -877,6 +985,11 @@ function cambiarContenidoDecisiones(actualizar) {
 }
 
 // ---------- RENDER DECISIONES / OFERTAS (pausa activa) ----------
+// Cuánto queda visible el parte médico antes de avanzar solo — no hay
+// nada que decidir, así que no tiene sentido pedir un clic extra, pero
+// sí darle tiempo a leerlo antes de que la temporada siga.
+const LESION_INFORME_MS = 3200;
+
 function renderDecisions() {
   const checkpoint = temporadaActual.calendario[temporadaActual.checkpointIndex];
   const esOferta = checkpoint.tipo === "oferta";
@@ -884,20 +997,18 @@ function renderDecisions() {
   const track = document.getElementById("decisionsTrack");
   const count = document.getElementById("decisionsCount");
   const title = document.getElementById("decisionsTitle");
-  const continueBtn = document.getElementById("continueBtn");
   const lote = temporadaActual.loteActual;
 
   track.innerHTML = "";
-  continueBtn.disabled = false;
 
   // Parte médico: pausa entera reemplazada por el informe de la lesión
-  // recién diagnosticada — no hay nada que decidir, se puede continuar
-  // directo (ver intentarGenerarLesion / iniciarCheckpoint).
+  // recién diagnosticada — no hay nada que decidir, se lee y se avanza
+  // solo (ver intentarGenerarLesion / iniciarCheckpoint).
   if (lote.length === 1 && lote[0].esInformeLesion) {
     title.textContent = "Parte médico";
     count.textContent = "Estás lesionado";
-    continueBtn.hidden = false;
     track.appendChild(crearLesionCard(lote[0]));
+    setTimeout(() => simularTramoYAvanzar(), LESION_INFORME_MS);
     return;
   }
 
@@ -905,17 +1016,13 @@ function renderDecisions() {
 
   if (lote.length === 0) {
     count.textContent = "Resuelto";
-    continueBtn.hidden = esOferta; // las ofertas ya avanzaron solas; las decisiones esperan al botón
     const empty = document.createElement("p");
     empty.className = "decisions__empty";
-    empty.textContent = esOferta
-      ? "No hay más ofertas por ahora."
-      : "Ya tomaste las decisiones de este momento de la temporada.";
+    empty.textContent = "No hay más ofertas por ahora.";
     track.appendChild(empty);
     return;
   }
 
-  continueBtn.hidden = true;
   count.textContent = esOferta ? "Elige una opción" : `${lote.length} pendiente${lote.length === 1 ? "" : "s"}`;
 
   lote.forEach((item) => {
@@ -992,10 +1099,15 @@ function crearOfertaCard(item) {
       ${GameConfig.crestHtml(item.equipo, "team-crest team-crest--sm")}
       <div>
         <div class="decision-card__teamname">${item.equipo.nombre}</div>
-        <div class="decision-card__league">${GameConfig.ligaCrestHtml(item.liga, "team-crest team-crest--xs")}<span>${item.liga.nombre}</span></div>
+        <div class="decision-card__league">
+          ${GameConfig.ligaCrestHtml(item.liga, "team-crest team-crest--xs")}
+          <span>${item.liga.nombre}</span>
+          ${GameConfig.flagHtml(item.liga.paisCode, "decision-card__flag flag-img", item.liga.paisFlag)}
+        </div>
       </div>
     </div>
-    <p class="decision-card__desc">${item.desc}</p>
+    ${item.tipoOferta === "club" ? "" : `<p class="decision-card__desc">${item.desc}</p>`}
+    ${typeof item.valorOfrecido === "number" ? `<p class="decision-card__valor">Te valoran en <strong>${formatMarketValue(item.valorOfrecido)}</strong></p>` : ""}
     <div class="decision-card__actions">
       <button type="button" class="btn">${boton}</button>
     </div>
@@ -1086,9 +1198,12 @@ function resolveDecisionEvento(id, optionIdx) {
     temporadaActual.loteActual = temporadaActual.loteActual.filter((d) => d.id !== id);
 
     if (temporadaActual.loteActual.length === 0) {
-      // No queda ninguna tarjeta para reacomodar con FLIP — pasa al
-      // estado "Resuelto" / botón de continuar con un fundido.
-      cambiarContenidoDecisiones(renderDecisions);
+      // Ya no queda nada por decidir en esta pausa: se avanza directo,
+      // sin esperar un clic extra en un botón de continuar.
+      const count = document.getElementById("decisionsCount");
+      track.innerHTML = `<p class="decisions__empty">Avanzando la temporada…</p>`;
+      count.textContent = "Resuelto";
+      simularTramoYAvanzar();
     } else {
       renderDecisions();
       animarReacomodoCards(track, posicionesPrevias);
@@ -1138,6 +1253,9 @@ function resolveOferta(item) {
     }
 
     temporadaActual.equipoId = item.equipo.id;
+    // Nuevo club, nuevo período de gracia de contrato (ver
+    // TEMPORADAS_GRACIA_CONTRATO en generarLoteOfertas).
+    temporadasEnClubActual = 0;
     // La liga se actualiza al nuevo club siempre (haya habido split o no):
     // sin esto, la temporada seguía mostrando la liga del club anterior
     // hasta el próximo cierre de temporada. La copa nacional/internacional
@@ -1234,15 +1352,143 @@ function finalizarCarrera() {
   const track = document.getElementById("decisionsTrack");
   const count = document.getElementById("decisionsCount");
   const title = document.getElementById("decisionsTitle");
-  const continueBtn = document.getElementById("continueBtn");
 
   title.textContent = "Carrera finalizada";
   count.textContent = "Retirado";
-  continueBtn.hidden = true;
-  continueBtn.disabled = true;
-  track.innerHTML = `<p class="decisions__empty">Te retiraste del fútbol profesional. ¡Gracias por una gran carrera, ${player.apellido}!</p>`;
+  track.innerHTML = `
+    <div class="retiro">
+      <p class="decisions__empty">Te retiraste del fútbol profesional. ¡Gracias por una gran carrera, ${player.apellido}!</p>
+      <div class="retiro__actions">
+        <button type="button" class="btn btn--ghost" id="verResumenBtn">Ver resumen de mi carrera</button>
+        <button type="button" class="btn" id="volverInicioBtn">Aceptar</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("verResumenBtn").addEventListener("click", abrirResumenModal);
+  document.getElementById("volverInicioBtn").addEventListener("click", () => {
+    window.location.href = "index.html";
+  });
 
   showToast(`${player.apellido} se retira del fútbol profesional.`);
+}
+
+// ---------- RESUMEN DE CARRERA (modal al retirarte) ----------
+// Recorre todo temporadasFinalizadas (incluye las filas partidas por
+// traspasos a mitad de temporada) para armar un panorama completo:
+// clubes distintos en el orden en que se ficharon, estadísticas sumadas
+// de punta a punta, picos de OVR/valor de mercado, y los trofeos
+// agrupados por nombre (uno solo por tipo, con cuántas veces se ganó).
+function construirResumenCarrera() {
+  const filas = temporadasFinalizadas;
+
+  const clubesVistos = new Set();
+  const clubes = [];
+  filas.forEach((s) => {
+    if (!clubesVistos.has(s.equipoId)) {
+      clubesVistos.add(s.equipoId);
+      clubes.push(equipoDe(s));
+    }
+  });
+
+  let partidos = 0, goles = 0, asistencias = 0, mvp = 0, sumaRating = 0;
+  let mayorOvr = 0, mayorValor = 0;
+  const trofeosPorNombre = new Map();
+  const numerosTemporada = new Set();
+
+  filas.forEach((s) => {
+    partidos += s.partidos;
+    goles += s.goles;
+    asistencias += s.asistencias;
+    mvp += s.mvp;
+    sumaRating += s.sumaRating;
+    if (s.ovr > mayorOvr) mayorOvr = s.ovr;
+    if (s.valorMercado > mayorValor) mayorValor = s.valorMercado;
+    numerosTemporada.add(s.numero);
+    (s.trofeos || []).forEach((t) => {
+      const existente = trofeosPorNombre.get(t.nombre);
+      if (existente) existente.cantidad++;
+      else trofeosPorNombre.set(t.nombre, { nombre: t.nombre, imagen: t.imagen, cantidad: 1 });
+    });
+  });
+
+  return {
+    clubes,
+    partidos, goles, asistencias, mvp,
+    promedio: partidos > 0 ? sumaRating / partidos : 0,
+    mayorOvr,
+    mayorValor,
+    trofeos: [...trofeosPorNombre.values()],
+    temporadasJugadas: numerosTemporada.size,
+    edadRetiro: getEdadActual(),
+  };
+}
+
+function trofeosResumenHtml(trofeos) {
+  if (!trofeos || trofeos.length === 0) {
+    return `<p class="resumen__empty">No ganaste trofeos en esta carrera — pero la viviste a fondo.</p>`;
+  }
+  return `
+    <div class="trophies">
+      ${trofeos.map((t) => `
+        <span class="trophy-card" title="${t.nombre}">
+          ${GameConfig.trofeoIconHtml(t)}
+          <span class="trophy-card__name">${t.nombre}</span>
+          ${t.cantidad > 1 ? `<span class="trophy-card__count">×${t.cantidad}</span>` : ""}
+        </span>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderResumenCarrera() {
+  const r = construirResumenCarrera();
+  const ultimoClub = r.clubes[r.clubes.length - 1];
+  const totalTrofeos = r.trofeos.reduce((suma, t) => suma + t.cantidad, 0);
+
+  document.getElementById("resumenModalBody").innerHTML = `
+    <div class="resumen__header">
+      ${GameConfig.crestHtml(ultimoClub, "team-crest team-crest--avatar")}
+      <div>
+        <h4 class="resumen__name">${player.apellido}</h4>
+        <p class="resumen__subtitle">${POSITION_NAMES[player.posicion] ?? player.posicion} · ${r.temporadasJugadas} temporada${r.temporadasJugadas === 1 ? "" : "s"} · Retirado a los ${r.edadRetiro} años</p>
+      </div>
+    </div>
+
+    <div class="resumen__stats">
+      <div class="stat"><span class="stat__value">${r.partidos}</span><span class="stat__label">Partidos</span></div>
+      <div class="stat"><span class="stat__value">${r.goles}</span><span class="stat__label">Goles</span></div>
+      <div class="stat"><span class="stat__value">${r.asistencias}</span><span class="stat__label">Asistencias</span></div>
+      <div class="stat"><span class="stat__value">${r.mvp}</span><span class="stat__label">MVP</span></div>
+      <div class="stat"><span class="stat__value">${r.promedio.toFixed(1)}</span><span class="stat__label">Promedio</span></div>
+      <div class="stat"><span class="stat__value">${r.mayorOvr}</span><span class="stat__label">Mayor OVR</span></div>
+      <div class="stat"><span class="stat__value">${formatMarketValue(r.mayorValor)}</span><span class="stat__label">Mayor valor</span></div>
+    </div>
+
+    <div class="resumen__section">
+      <h5 class="resumen__section-title">Clubes (${r.clubes.length})</h5>
+      <div class="resumen__clubs">
+        ${r.clubes.map((e) => `
+          <div class="resumen__club" title="${e.nombre}">
+            ${GameConfig.crestHtml(e, "team-crest team-crest--md")}
+            <span class="resumen__club-name">${e.nombre}</span>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+
+    <div class="resumen__section">
+      <h5 class="resumen__section-title">Trofeos (${totalTrofeos})</h5>
+      ${trofeosResumenHtml(r.trofeos)}
+    </div>
+  `;
+}
+
+function abrirResumenModal() {
+  renderResumenCarrera();
+  document.getElementById("resumenModal").hidden = false;
+}
+function cerrarResumenModal() {
+  document.getElementById("resumenModal").hidden = true;
 }
 
 // ---------- TOAST ----------
@@ -1255,17 +1501,30 @@ function showToast(message) {
 }
 
 // ---------- INIT ----------
-document.getElementById("continueBtn").addEventListener("click", (e) => {
-  e.target.disabled = true; // evita disparar dos tramos si hacen doble clic durante la animación
-  simularTramoYAvanzar();
-});
-
 numeroEditBtn.addEventListener("click", abrirModalNumero);
 document.getElementById("numeroModalCancelar").addEventListener("click", cerrarModalNumero);
 document.getElementById("numeroModalConfirmar").addEventListener("click", confirmarCambioNumero);
+
+document.getElementById("resumenModalCerrar").addEventListener("click", cerrarResumenModal);
+document.getElementById("resumenModal").addEventListener("click", (e) => {
+  if (e.target.id === "resumenModal") cerrarResumenModal();
+});
+
+// Los trofeos en icono-solo (spotlight e historial) llevan el nombre en
+// el atributo title, que el hover de escritorio ya muestra solo — pero
+// en móvil no hay hover, así que un tap ahí no hacía nada. Delegado en
+// document porque spotlight/historial se re-renderizan de cero en cada
+// tramo/temporada.
+document.addEventListener("click", (e) => {
+  const trofeo = e.target.closest(".trophy-card");
+  if (!trofeo) return;
+  const nombre = trofeo.getAttribute("title");
+  if (nombre) showToast(`🏆 ${nombre}`);
+});
 
 renderHero();
 renderSpotlight();
 renderTimeline();
 actualizarBotonNumero();
 iniciarCheckpoint();
+document.getElementById("appFooter").textContent = GameConfig.footerHtml();
