@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 0.3.0-alpha — publicada el 6 de septiembre de 2026 · 13:44**
+**Versión 0.4.0-alpha — publicada el 6 de septiembre de 2026 · 18:14**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -50,7 +50,7 @@ A medida que completás los pasos, tu ficha (a la izquierda en escritorio, al fi
 
 ## 3. Paso 2: elige tu primer club
 
-Te van a ofrecer **4 clubes** para arrancar. Cada oferta te muestra el nombre del club, su liga, la bandera del país de esa liga, y una etiqueta de qué tan grande es cada uno ("Club grande" / "consolidado" / "humilde", "Liga de élite" / "competitiva" / "regional") — sin números, para que decidas por sensación, no por matemática.
+Te van a ofrecer **4 clubes** para arrancar. Cada oferta te muestra el nombre del club, su liga, y la bandera del país de esa liga — sin ninguna etiqueta ni número que te diga qué tan grande es cada uno, para que decidas por sensación, no por matemática.
 
 Elegí con cabeza: cuanto más grande el club y más competitiva la liga, **más alto vas a arrancar de nivel**, pero también vas a tener más competencia por un lugar en el equipo titular y menos margen para errores al principio. Un club chico te da un arranque más tranquilo; uno grande, un desafío mayor desde el día uno. No hay una respuesta correcta — depende de qué carrera querés vivir.
 
@@ -151,7 +151,7 @@ Todos los trofeos que ganás quedan guardados en tu historial, con su escudo rea
 
 ## 12. Tu valor de mercado
 
-Es cuánto "valés" en el mercado de fichajes — sube con tu OVR (cada punto extra vale cada vez más, sobre todo cerca de la cima) y con el prestigio de tu club/liga actual. Lo vas a ver siempre en tu header, y es lo que determina si un club puede ofrecerte sin que la oferta se sienta un despropósito.
+Es cuánto "valés" en el mercado de fichajes — sube con tu OVR (cada punto extra vale cada vez más, sobre todo cerca de la cima) y con la plata y el prestigio de tu club/liga actual (no con qué tan bien le esté yendo en la cancha esa temporada — eso es otra cosa). Lo vas a ver siempre en tu header, y es lo que determina si un club puede ofrecerte sin que la oferta se sienta un despropósito.
 
 ---
 

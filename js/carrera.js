@@ -221,7 +221,7 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
   // traspasos, antes de tener una sola temporada para demostrar algo
   // (un novato jamás arranca con el OVR de un jugador hecho).
   const enGraciaDeContrato = temporadasEnClubActual < GameConfig.TEMPORADAS_GRACIA_CONTRATO;
-  const contratoTerminado = !enGraciaDeContrato && GameConfig.contratoDebeTerminar(equipoActual.nivel, ligaActual.nivel, ovr);
+  const contratoTerminado = !enGraciaDeContrato && GameConfig.contratoDebeTerminar(equipoActual, ligaActual, ovr);
   const puedeElegirRetiro = !contratoTerminado && edad >= GameConfig.EDAD_RETIRO_OFERTA;
 
   const disponibles = GameDatabase.equipos.filter((e) => e.id !== equipoActualId);
@@ -229,19 +229,20 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
 
   const candidatos = pool.map((equipo) => {
     const liga = ligaDe(equipo);
-    return { equipo, liga, valorEnClub: GameConfig.valorOfrecidoPorClub(ovr, equipo.nivel, liga.nivel) };
+    return { equipo, liga, valorEnClub: GameConfig.valorOfrecidoPorClub(ovr, equipo, liga) };
   });
   // El potencial (no el OVR real) decide a qué clubes se apunta dentro
   // del pool ya elegible: a igual OVR, un jugador joven tiene más
   // recorrido que uno grande, así que apunta más arriba. La elegibilidad
   // real (unas líneas abajo) sigue siendo puro OVR.
   const potencialAjustado = GameConfig.potencialAjustadoPorEdad(ovr, edad);
-  const nivelEquipoObjetivo = GameConfig.nivelEquipoObjetivo(potencialAjustado);
-  const nivelLigaObjetivo = GameConfig.nivelLigaObjetivo(potencialAjustado);
-  const pesoFn = (c) => GameConfig.pesoPorCercaniaNivel(c.equipo.nivel, c.liga.nivel, nivelEquipoObjetivo, nivelLigaObjetivo);
+  const poderObjetivo = GameConfig.poderObjetivo(potencialAjustado);
+  const pesoFn = (c) => GameConfig.pesoPorCercaniaNivel(
+    GameConfig.poderEquipo(c.equipo, c.liga), GameConfig.poderLiga(c.liga), poderObjetivo
+  );
 
   let elegibles = candidatos.filter((c) =>
-    GameConfig.equipoElegibleParaOvr(c.equipo.nivel, c.liga.nivel, ovr)
+    GameConfig.equipoElegibleParaOvr(c.equipo, c.liga, ovr)
     && GameConfig.ofertaTieneValorRazonable(valorActual, c.valorEnClub)
   );
 
@@ -250,7 +251,7 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
   // valor y, si todavía no alcanza, se usan todos los candidatos antes
   // que dejar al jugador sin ofertas.
   if (elegibles.length === 0) {
-    elegibles = candidatos.filter((c) => GameConfig.equipoElegibleParaOvr(c.equipo.nivel, c.liga.nivel, ovr));
+    elegibles = candidatos.filter((c) => GameConfig.equipoElegibleParaOvr(c.equipo, c.liga, ovr));
   }
   if (elegibles.length === 0) elegibles = candidatos;
 
@@ -646,7 +647,7 @@ function simularTramoYAvanzar() {
   const grupo = GameConfig.GRUPOS_POSICION[player.posicion] ?? "medio";
   const tramoIndex = temporadaActual.tramoIndex;
 
-  const fuerza = GameConfig.calcularFuerzaCampana(equipo.nivel, liga.nivel, temporadaActual.forma, temporadaActual.equipoAcumuladoTemporada);
+  const fuerza = GameConfig.calcularFuerzaCampana(equipo, liga, temporadaActual.forma, temporadaActual.equipoAcumuladoTemporada);
 
   // ---- Partidos del CLUB este tramo, en todas las competiciones activas ----
   const partidosLiga = partidosLigaParaTramo(temporadaActual, tramoIndex);
@@ -690,7 +691,7 @@ function simularTramoYAvanzar() {
   temporadaActual.ovr = GameConfig.ajustarOvrTramo(temporadaActual.ovr, temporadaActual.bufferRendimiento, getEdadActual(), factorTalento);
   temporadaActual.titular = esTitularEsteTramo;
   temporadaActual.equipoAcumuladoTemporada += temporadaActual.bufferEquipo;
-  temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, equipo.nivel, liga.nivel);
+  temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, equipo, liga);
   temporadaActual.tramoIndex++;
 
   const siguiente = temporadaActual.calendario[temporadaActual.checkpointIndex + 1];
@@ -737,7 +738,7 @@ function simularTramoYAvanzar() {
 function finalizarTemporada() {
   const equipo = equipoDe(temporadaActual);
   const liga = ligaDe(equipo);
-  const fuerza = GameConfig.calcularFuerzaCampana(equipo.nivel, liga.nivel, temporadaActual.forma, temporadaActual.equipoAcumuladoTemporada);
+  const fuerza = GameConfig.calcularFuerzaCampana(equipo, liga, temporadaActual.forma, temporadaActual.equipoAcumuladoTemporada);
   const mensajesFinales = [];
 
   const ganasteLiga = Math.random() < GameConfig.probGanarLiga(fuerza);
@@ -793,7 +794,7 @@ function finalizarTemporada() {
     numeroCerrada + 1,
     temporadaActual.equipoId,
     ovrHeredado,
-    GameConfig.calcularValorMercado(ovrHeredado, equipo.nivel, liga.nivel),
+    GameConfig.calcularValorMercado(ovrHeredado, equipo, liga),
     clasificacionProxima
   );
 
@@ -840,7 +841,7 @@ let temporadasEnClubActual = 0;
 if (usaProgresionReal) {
   const equipoInicial = GameDatabase.equipos.find((e) => e.id === player.equipoId);
   const ligaInicial = ligaDe(equipoInicial);
-  const valorMercadoInicial = GameConfig.calcularValorMercado(player.ovrInicial, equipoInicial.nivel, ligaInicial.nivel);
+  const valorMercadoInicial = GameConfig.calcularValorMercado(player.ovrInicial, equipoInicial, ligaInicial);
   temporadaActual = crearTemporada(1, player.equipoId, player.ovrInicial, valorMercadoInicial);
 } else {
   // Fallback si se abre esta pantalla sin pasar por la creación de personaje:
@@ -1272,7 +1273,6 @@ function resolveDecisionEvento(id, optionIdx) {
   const cardEl = document.querySelector(`.decision-card[data-id="${id}"]`);
   if (cardEl) cardEl.classList.add("decision-card--resolved");
 
-  showToast(option.outcome);
   renderSpotlight(); // refleja el cambio de forma al instante
 
   setTimeout(() => {
@@ -1325,7 +1325,7 @@ function resolveOferta(item) {
     temporadasEnClubActual = 0;
     temporadaActual.titular = false;
     temporadaActual.forma = "regular";
-    temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, item.equipo.nivel, item.liga.nivel);
+    temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, item.equipo, item.liga);
     showToast(`Fichaste por ${item.equipo.nombre}.`);
     renderHero();
     renderSpotlight();

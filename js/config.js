@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.3.0-alpha",
-  FECHA_PUBLICACION: "6 de septiembre de 2026 · 13:44",
+  VERSION: "0.4.0-alpha",
+  FECHA_PUBLICACION: "6 de septiembre de 2026 · 18:14",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
@@ -31,29 +31,83 @@ const GameConfig = {
   RANGO_EDAD_NOVATO_MAX: 21,
   RANGO_EDAD_PROMEDIO_MAX: 32,
 
-  // ---------------- NIVELES (ocultos al jugador) ----------------
-  // Cuanto más cerca de 1, mejor / más competitivo.
-  NIVEL_EQUIPO_MIN: 1,
-  NIVEL_EQUIPO_MAX: 3,
-  NIVEL_LIGA_MIN: 1,
-  NIVEL_LIGA_MAX: 6,
+  // ---------------- CLASIFICACIÓN DE CLUBES Y LIGAS (ocultos al jugador) ----------------
+  // Cada equipo y cada liga tiene 3 ejes de 0 a 100 (ver database.js):
+  //   - fuerza: nivel deportivo actual del plantel/competencia.
+  //   - prestigio: historia, títulos, marca — pesa aunque hoy no sea tu
+  //     mejor momento (un United en crisis deportiva sigue siendo un
+  //     United).
+  //   - economia: poder financiero (presupuesto, sueldos, TV).
+  // Reemplaza al viejo `nivel` entero (1-3 equipo, 1-6 liga): esa escala
+  // era demasiado corta para sostener todo lo que dependía de ella —
+  // ver `poder`/`poderLiga`/`calidadFuerzaClub`/`valorScoreClub` abajo,
+  // que separan qué eje alimenta cada mecánica en vez de mezclar todo
+  // en un solo número.
+  EJE_MIN: 0,
+  EJE_MAX: 100,
+
+  // Peso de cada eje al combinarlos en un "poder" único — para todo lo
+  // que en la vida real depende de una mezcla de las tres cosas a la vez
+  // (qué tan buena oferta es un club, a qué apunta el potencial de un
+  // jugador). La fuerza de campaña (quién gana títulos) y el valor de
+  // mercado, en cambio, NO usan poder — usan solo el eje que les
+  // corresponde (ver calidadFuerzaClub / valorScoreClub más abajo).
+  PODER_PESO_FUERZA: 0.4,
+  PODER_PESO_PRESTIGIO: 0.35,
+  PODER_PESO_ECONOMIA: 0.25,
+
+  // La economía de un club nunca cae por debajo de este % de la de su
+  // propia liga — un club chico de Premier League igual tiene más plata
+  // que casi cualquier gigante de una liga menor, por el reparto de TV.
+  // Así no hace falta acordarse de ajustar esto a mano club por club.
+  ECONOMIA_PISO_LIGA: 0.6,
+
+  economiaEfectiva(equipo, liga) {
+    return Math.max(equipo.economia, liga.economia * GameConfig.ECONOMIA_PISO_LIGA);
+  },
+
+  poderLiga(liga) {
+    return GameConfig.PODER_PESO_FUERZA * liga.fuerza
+      + GameConfig.PODER_PESO_PRESTIGIO * liga.prestigio
+      + GameConfig.PODER_PESO_ECONOMIA * liga.economia;
+  },
+
+  poderEquipo(equipo, liga) {
+    return GameConfig.PODER_PESO_FUERZA * equipo.fuerza
+      + GameConfig.PODER_PESO_PRESTIGIO * equipo.prestigio
+      + GameConfig.PODER_PESO_ECONOMIA * GameConfig.economiaEfectiva(equipo, liga);
+  },
 
   // ---------------- OVR INICIAL ----------------
   OVR_INICIAL_MIN: 50,
   OVR_INICIAL_MAX: 65,
 
-  // Peso relativo de cada factor en el cálculo del OVR inicial (deben sumar 1).
+  // Peso relativo de equipo vs. liga al combinar sus "poder" (deben sumar 1)
+  // — se reutiliza para OVR inicial, ventana de ofertas y valor de mercado.
   OVR_PESO_EQUIPO: 0.55,
   OVR_PESO_LIGA: 0.45,
 
   // Variación máxima (+/-) que puede aportar la suerte antes de recortar al rango permitido.
   OVR_SUERTE_VARIACION: 4,
 
+  // Combina el poder de equipo y liga en una sola calidad 0..1 — punto
+  // único de verdad que reutilizan calcularOvrInicial, calcularCentroOvr
+  // y calcularMultiplicadorClub (que le agrega su propio valorScore encima).
+  calidadPoderCombinada(equipo, liga) {
+    const calidadEquipo = GameConfig.poderEquipo(equipo, liga) / GameConfig.EJE_MAX;
+    const calidadLiga = GameConfig.poderLiga(liga) / GameConfig.EJE_MAX;
+    return calidadEquipo * GameConfig.OVR_PESO_EQUIPO + calidadLiga * GameConfig.OVR_PESO_LIGA;
+  },
+
   // ---------------- OFERTAS DE EQUIPO INICIAL ----------------
   // Las 4 opciones que se le presentan al jugador al empezar la carrera.
-  // Todavía no existe un OVR (se calcula recién al elegir), así que acá
-  // se usa nivel fijo, no la ventana de OVR que sí aplica a las ofertas
-  // durante la carrera.
+  // Todavía no existe un OVR (se calcula recién al elegir), así que en
+  // vez de la ventana de OVR que sí aplica a las ofertas durante la
+  // carrera, se elige por percentil de poder DENTRO de la liga elegida
+  // ("humilde" = mitad de abajo, "consolidado" = 50-85%, "grande" =
+  // el 15% de arriba) — sigue el mismo espíritu que antes (2-3 clubes
+  // chicos/medios y como mucho 1 grande), ya sin depender de un campo
+  // de nivel fijo por club.
   //
   // Si el país elegido tiene liga propia en la base de datos, las 4
   // ofertas salen de esa liga (banda normal). Si no, arranca en una de
@@ -61,19 +115,20 @@ const GameConfig = {
   // (sin favores: solo clubes chicos/medios).
   LIGAS_GRANDES_EUROPEAS: ["premier-league", "la-liga", "serie-a", "bundesliga", "ligue-1"],
 
-  // "aleatorio" se resuelve entre NIVEL_EQUIPO_MIN y NIVEL_EQUIPO_MAX al momento de generar.
+  CATEGORIA_EQUIPO_PERCENTIL: { humilde: [0, 0.5], consolidado: [0.5, 0.85], grande: [0.85, 1] },
+
   OFERTAS_INICIALES: [
-    { nivel: 3 },
-    { nivel: 3 },
-    { nivel: 2 },
-    { nivel: "aleatorio" },
+    { categoria: "humilde" },
+    { categoria: "humilde" },
+    { categoria: "consolidado" },
+    { categoria: "aleatorio" },
   ],
 
   OFERTAS_INICIALES_EXTRANJERO: [
-    { nivel: 3 },
-    { nivel: 3 },
-    { nivel: 3 },
-    { nivel: 2 },
+    { categoria: "humilde" },
+    { categoria: "humilde" },
+    { categoria: "humilde" },
+    { categoria: "consolidado" },
   ],
 
   // ============================================================
@@ -92,27 +147,13 @@ const GameConfig = {
     return array[GameConfig.randomInt(0, array.length - 1)];
   },
 
-  // Convierte un nivel (1 = mejor) a una escala 0..1 donde 1 = mejor.
-  normalizarNivel(nivel, min, max) {
-    return (max - nivel) / (max - min);
-  },
-
   // ============================================================
   // CÁLCULO DE OVR INICIAL
-  // Mezcla nivel de equipo + nivel de liga + suerte, siempre
+  // Mezcla el poder combinado de equipo + liga + suerte, siempre
   // acotado entre OVR_INICIAL_MIN y OVR_INICIAL_MAX.
   // ============================================================
-  calcularOvrInicial(nivelEquipo, nivelLiga) {
-    const calidadEquipo = GameConfig.normalizarNivel(
-      nivelEquipo, GameConfig.NIVEL_EQUIPO_MIN, GameConfig.NIVEL_EQUIPO_MAX
-    );
-    const calidadLiga = GameConfig.normalizarNivel(
-      nivelLiga, GameConfig.NIVEL_LIGA_MIN, GameConfig.NIVEL_LIGA_MAX
-    );
-
-    const calidadCombinada =
-      calidadEquipo * GameConfig.OVR_PESO_EQUIPO +
-      calidadLiga * GameConfig.OVR_PESO_LIGA;
+  calcularOvrInicial(equipo, liga) {
+    const calidadCombinada = GameConfig.calidadPoderCombinada(equipo, liga);
 
     const rango = GameConfig.OVR_INICIAL_MAX - GameConfig.OVR_INICIAL_MIN;
     const base = GameConfig.OVR_INICIAL_MIN + calidadCombinada * rango;
@@ -127,64 +168,63 @@ const GameConfig = {
 
   // ============================================================
   // OFERTAS DE EQUIPO INICIAL
-  // Elige un equipo al azar que cumpla el nivel pedido, evitando
-  // repetir (cuando el dataset lo permite).
+  // Elige un equipo al azar dentro de la categoría de percentil pedida,
+  // evitando repetir (cuando el dataset lo permite).
   // ============================================================
-  elegirEquipoPorNivel(equipos, nivel, excluirIds = []) {
-    const candidatos = equipos.filter((e) => e.nivel === nivel && !excluirIds.includes(e.id));
-    if (candidatos.length > 0) return GameConfig.randomFrom(candidatos);
+  // Ranking puramente RELATIVO dentro de la misma liga — no hace falta el
+  // piso económico de liga (economiaEfectiva) acá, porque ese piso afecta
+  // por igual a todos los equipos de una misma liga y no cambia el orden.
+  categoriaEquipoEnLiga(equipo, equiposLiga) {
+    const poderBruto = (e) => GameConfig.PODER_PESO_FUERZA * e.fuerza
+      + GameConfig.PODER_PESO_PRESTIGIO * e.prestigio
+      + GameConfig.PODER_PESO_ECONOMIA * e.economia;
+    const ordenados = [...equiposLiga].sort((a, b) => poderBruto(b) - poderBruto(a));
+    const idx = ordenados.findIndex((e) => e.id === equipo.id);
+    return 1 - idx / Math.max(1, ordenados.length - 1); // 1 = el mejor de la liga, 0 = el peor
+  },
 
-    // Fallback: dataset chico y ya no quedan equipos libres de ese nivel exacto.
+  elegirEquipoPorCategoria(equipos, categoria, excluirIds = []) {
     const disponibles = equipos.filter((e) => !excluirIds.includes(e.id));
-    return GameConfig.randomFrom(disponibles.length > 0 ? disponibles : equipos);
+    if (disponibles.length === 0) return GameConfig.randomFrom(equipos);
+
+    if (categoria === "aleatorio") return GameConfig.randomFrom(disponibles);
+
+    const [pMin, pMax] = GameConfig.CATEGORIA_EQUIPO_PERCENTIL[categoria];
+    const candidatos = disponibles.filter((e) => {
+      const percentil = GameConfig.categoriaEquipoEnLiga(e, equipos);
+      return percentil >= pMin && percentil <= pMax;
+    });
+    return GameConfig.randomFrom(candidatos.length > 0 ? candidatos : disponibles);
   },
 
   generarOfertasDesdeBanda(equipos, banda) {
     const usados = [];
     return banda.map((oferta) => {
-      const nivelBuscado = oferta.nivel === "aleatorio"
-        ? GameConfig.randomInt(GameConfig.NIVEL_EQUIPO_MIN, GameConfig.NIVEL_EQUIPO_MAX)
-        : oferta.nivel;
-      const equipo = GameConfig.elegirEquipoPorNivel(equipos, nivelBuscado, usados);
+      const equipo = GameConfig.elegirEquipoPorCategoria(equipos, oferta.categoria, usados);
       usados.push(equipo.id);
       return equipo;
     });
   },
 
-  // Ofertas de la liga del propio país del jugador (2 nivel3, 1 nivel2, 1 al azar).
+  // Ofertas de la liga del propio país del jugador (2 humildes, 1 consolidado, 1 al azar).
   generarOfertasIniciales(equipos) {
     return GameConfig.generarOfertasDesdeBanda(equipos, GameConfig.OFERTAS_INICIALES);
   },
 
   // Ofertas cuando el jugador arranca "de extranjero" en una liga grande
-  // (3 nivel3, 1 nivel2 — sin la chance de nivel1 ni la casilla al azar).
+  // (3 humildes, 1 consolidado — sin la chance de "grande" ni la casilla al azar).
   generarOfertasInicialesExtranjero(equipos) {
     return GameConfig.generarOfertasDesdeBanda(equipos, GameConfig.OFERTAS_INICIALES_EXTRANJERO);
-  },
-
-  // ============================================================
-  // ETIQUETAS DESCRIPTIVAS
-  // Traducen los niveles ocultos a texto que sí puede ver el
-  // jugador, sin exponer el número real.
-  // ============================================================
-  descripcionNivelEquipo(nivel) {
-    if (nivel <= 1) return "Club grande";
-    if (nivel === 2) return "Club consolidado";
-    return "Club humilde";
-  },
-
-  descripcionNivelLiga(nivel) {
-    if (nivel <= 2) return "Liga de élite";
-    if (nivel <= 4) return "Liga competitiva";
-    return "Liga regional";
   },
 
   // ============================================================
   // VALOR DE MERCADO
   // Curva exponencial sobre el OVR (como en la vida real: cada punto
   // extra de calidad cerca del techo vale desproporcionadamente más),
-  // multiplicada por el prestigio del club/liga actual — el mismo OVR
-  // vale mucho más en un club/liga grande que en uno chico.
+  // multiplicada por el prestigio Y la economía del club/liga actual —
+  // a propósito NO usa el eje fuerza: cuánto valés en el mercado
+  // depende de la plata y la marca del club que te tiene, no de si ese
+  // club está ganando títulos esta temporada.
   // ============================================================
   VALOR_MERCADO_BASE: 18000, // valor en el piso absoluto de OVR (OVR_CARRERA_MIN)
   VALOR_MERCADO_CRECIMIENTO: 1.185, // multiplicador de valor por cada punto de OVR extra
@@ -192,30 +232,40 @@ const GameConfig = {
   VALOR_MULTIPLICADOR_CLUB_MIN: 0.5, // club/liga más floja posible
   VALOR_MULTIPLICADOR_CLUB_MAX: 1.4, // club/liga más prestigiosa posible
 
-  calcularMultiplicadorClub(nivelEquipo, nivelLiga) {
-    const calidadEquipo = GameConfig.normalizarNivel(nivelEquipo, GameConfig.NIVEL_EQUIPO_MIN, GameConfig.NIVEL_EQUIPO_MAX);
-    const calidadLiga = GameConfig.normalizarNivel(nivelLiga, GameConfig.NIVEL_LIGA_MIN, GameConfig.NIVEL_LIGA_MAX);
+  VALOR_PESO_ECONOMIA: 0.6,
+  VALOR_PESO_PRESTIGIO: 0.4,
+
+  valorScoreLiga(liga) {
+    return GameConfig.VALOR_PESO_ECONOMIA * liga.economia + GameConfig.VALOR_PESO_PRESTIGIO * liga.prestigio;
+  },
+
+  valorScoreEquipo(equipo, liga) {
+    const economiaEfectiva = GameConfig.economiaEfectiva(equipo, liga);
+    return GameConfig.VALOR_PESO_ECONOMIA * economiaEfectiva + GameConfig.VALOR_PESO_PRESTIGIO * equipo.prestigio;
+  },
+
+  calcularMultiplicadorClub(equipo, liga) {
+    const calidadEquipo = GameConfig.valorScoreEquipo(equipo, liga) / GameConfig.EJE_MAX;
+    const calidadLiga = GameConfig.valorScoreLiga(liga) / GameConfig.EJE_MAX;
     const calidadCombinada = calidadEquipo * GameConfig.OVR_PESO_EQUIPO + calidadLiga * GameConfig.OVR_PESO_LIGA;
     const rango = GameConfig.VALOR_MULTIPLICADOR_CLUB_MAX - GameConfig.VALOR_MULTIPLICADOR_CLUB_MIN;
     return GameConfig.VALOR_MULTIPLICADOR_CLUB_MIN + calidadCombinada * rango;
   },
 
-  calcularValorMercado(ovr, nivelEquipo, nivelLiga) {
+  calcularValorMercado(ovr, equipo, liga) {
     const valorPorOvr = GameConfig.VALOR_MERCADO_BASE * Math.pow(GameConfig.VALOR_MERCADO_CRECIMIENTO, ovr - GameConfig.OVR_CARRERA_MIN);
-    const multiplicadorClub = GameConfig.calcularMultiplicadorClub(nivelEquipo, nivelLiga);
+    const multiplicadorClub = GameConfig.calcularMultiplicadorClub(equipo, liga);
     const valor = valorPorOvr * multiplicadorClub;
     return Math.round(valor / 1000) * 1000;
   },
 
-  // Solo hay 18 combinaciones posibles de nivel de equipo/liga, así que
-  // dos clubes del mismo nivel dan EXACTAMENTE el mismo valor de mercado
-  // — lógico puertas adentro, pero en una tarjeta de oferta se ve raro
-  // que dos clubes distintos "valoren" tu pase por el mismo número exacto
-  // al centavo. Esta variación es solo cosmética, para las ofertas: no
-  // toca el valor de mercado real del jugador (ver calcularValorMercado).
+  // La variación cosmética por oferta se mantiene igual que antes — ahora
+  // con puntajes continuos ya no hay combinaciones repetidas idénticas,
+  // pero sigue sumando textura para que dos clubes de poder parecido no
+  // valoren tu pase por el mismo número exacto al centavo.
   OFERTA_VARIACION_VALOR: 0.08,
-  valorOfrecidoPorClub(ovr, nivelEquipo, nivelLiga) {
-    const base = GameConfig.calcularValorMercado(ovr, nivelEquipo, nivelLiga);
+  valorOfrecidoPorClub(ovr, equipo, liga) {
+    const base = GameConfig.calcularValorMercado(ovr, equipo, liga);
     const jitter = 1 + (Math.random() * 2 - 1) * GameConfig.OFERTA_VARIACION_VALOR;
     return Math.round((base * jitter) / 1000) * 1000;
   },
@@ -401,28 +451,30 @@ const GameConfig = {
   },
 
   // ============================================================
-  // PRESTIGIO DEL JUGADOR → a qué nivel de equipo/liga "apunta"
-  // Cuanto más OVR, más cerca de nivel 1 (mejor) apuntan sus ofertas.
-  // No es un corte duro: se usa como peso, así que igual pueden
-  // aparecer ofertas de clubes algo más grandes o más chicos.
+  // PRESTIGIO DEL JUGADOR → a qué poder de equipo/liga "apunta"
+  // Cuanto más OVR, a más poder apuntan sus ofertas. No es un corte
+  // duro: se usa como peso, así que igual pueden aparecer ofertas de
+  // clubes algo más grandes o más chicos.
   // ============================================================
   calcularPrestigioJugador(ovr) {
     const rango = GameConfig.OVR_CARRERA_MAX - GameConfig.OVR_CARRERA_MIN;
     return GameConfig.clamp((ovr - GameConfig.OVR_CARRERA_MIN) / rango, 0, 1);
   },
 
-  nivelEquipoObjetivo(ovr) {
-    const prestigio = GameConfig.calcularPrestigioJugador(ovr);
-    return GameConfig.NIVEL_EQUIPO_MAX - prestigio * (GameConfig.NIVEL_EQUIPO_MAX - GameConfig.NIVEL_EQUIPO_MIN);
+  // Un solo objetivo (no uno por equipo y otro por liga, como antes):
+  // ahora que equipo y liga comparten la misma escala de poder 0-100,
+  // no hace falta un objetivo por escala distinta.
+  poderObjetivo(ovr) {
+    return GameConfig.calcularPrestigioJugador(ovr) * GameConfig.EJE_MAX;
   },
 
-  nivelLigaObjetivo(ovr) {
-    const prestigio = GameConfig.calcularPrestigioJugador(ovr);
-    return GameConfig.NIVEL_LIGA_MAX - prestigio * (GameConfig.NIVEL_LIGA_MAX - GameConfig.NIVEL_LIGA_MIN);
-  },
-
-  // Peso de una oferta según qué tan cerca está su nivel del objetivo del jugador.
-  // Exponente > 1 para que el efecto se note fuerte (no un sesgo apenas perceptible).
+  // Peso de una oferta según qué tan cerca está su poder del objetivo del
+  // jugador. Exponente > 1 para que el efecto se note fuerte (no un sesgo
+  // apenas perceptible). PESO_ESCALA_DISTANCIA lleva la distancia (en
+  // puntos de poder, 0-100) a un rango parecido al que tenía la vieja
+  // escala de "nivel" (unos pocos puntos) para que el exponente siga
+  // funcionando con la misma sensibilidad de antes.
+  PESO_ESCALA_DISTANCIA: 10,
   PESO_DISTANCIA_LIGA: 0.6, // cuánto pesa desviarse en liga vs. desviarse en equipo
   PESO_EXPONENTE: 2.2,
   // Quedarte CORTO de tu objetivo (club/liga peor de lo que ese nivel de
@@ -435,11 +487,16 @@ const GameConfig = {
   // bueno-pero-no-élite (~80), Europa nunca competía con ligas más
   // chicas pero más "cercanas" al objetivo exacto.
   PESO_FACTOR_SOBRAR: 0.05,
-  pesoPorCercaniaNivel(nivelEquipo, nivelLiga, nivelEquipoObjetivo, nivelLigaObjetivo) {
-    const deltaEquipo = nivelEquipo - nivelEquipoObjetivo;
-    const deltaLiga = nivelLiga - nivelLigaObjetivo;
-    const factorEquipo = deltaEquipo > 0 ? 1 : GameConfig.PESO_FACTOR_SOBRAR;
-    const factorLiga = deltaLiga > 0 ? 1 : GameConfig.PESO_FACTOR_SOBRAR;
+  pesoPorCercaniaNivel(poderEquipo, poderLiga, poderObjetivo) {
+    const deltaEquipo = (poderEquipo - poderObjetivo) / GameConfig.PESO_ESCALA_DISTANCIA;
+    const deltaLiga = (poderLiga - poderObjetivo) / GameConfig.PESO_ESCALA_DISTANCIA;
+    // A diferencia de la vieja escala de "nivel" (1 = mejor, invertida),
+    // acá más poder es SIEMPRE mejor — así que "sobrar" es delta > 0
+    // (club/liga por encima del objetivo) y "quedarse corto" es delta < 0,
+    // al revés de como se comparaba con nivel. Sobrar casi no penaliza;
+    // quedarse corto penaliza normal (ver comentario arriba).
+    const factorEquipo = deltaEquipo > 0 ? GameConfig.PESO_FACTOR_SOBRAR : 1;
+    const factorLiga = deltaLiga > 0 ? GameConfig.PESO_FACTOR_SOBRAR : 1;
     const distancia = Math.abs(deltaEquipo) * factorEquipo
       + Math.abs(deltaLiga) * factorLiga * GameConfig.PESO_DISTANCIA_LIGA;
     return 1 / Math.pow(1 + distancia, GameConfig.PESO_EXPONENTE);
@@ -453,32 +510,25 @@ const GameConfig = {
   // rango de carrera (45-99): el punto donde ese club es "justo tu
   // nivel", más/menos una tolerancia. Al recortarse solo en 45/99,
   // los clubes top no tienen techo y los chicos no tienen piso.
-  // Tolerancia ampliada de 10 a 13: con 10, un club top (nivel 1 liga +
-  // nivel 1 equipo, centro en el 99 absoluto) recién se volvía elegible
-  // a partir de 89 OVR — con el rango real de picos de carrera (~85-90),
-  // los grandes del mundo eran prácticamente inalcanzables. Con 13, ya
-  // entran en juego desde los 86, un nivel de "muy bueno" real.
   // ============================================================
   OFERTA_TOLERANCIA_OVR: 13,
 
-  calcularCentroOvr(nivelEquipo, nivelLiga) {
-    const calidadEquipo = GameConfig.normalizarNivel(nivelEquipo, GameConfig.NIVEL_EQUIPO_MIN, GameConfig.NIVEL_EQUIPO_MAX);
-    const calidadLiga = GameConfig.normalizarNivel(nivelLiga, GameConfig.NIVEL_LIGA_MIN, GameConfig.NIVEL_LIGA_MAX);
-    const calidadCombinada = calidadEquipo * GameConfig.OVR_PESO_EQUIPO + calidadLiga * GameConfig.OVR_PESO_LIGA;
+  calcularCentroOvr(equipo, liga) {
+    const calidadCombinada = GameConfig.calidadPoderCombinada(equipo, liga);
     const rango = GameConfig.OVR_CARRERA_MAX - GameConfig.OVR_CARRERA_MIN;
     return GameConfig.OVR_CARRERA_MIN + calidadCombinada * rango;
   },
 
-  ventanaOvrOferta(nivelEquipo, nivelLiga) {
-    const centro = GameConfig.calcularCentroOvr(nivelEquipo, nivelLiga);
+  ventanaOvrOferta(equipo, liga) {
+    const centro = GameConfig.calcularCentroOvr(equipo, liga);
     return {
       min: GameConfig.clamp(centro - GameConfig.OFERTA_TOLERANCIA_OVR, GameConfig.OVR_CARRERA_MIN, GameConfig.OVR_CARRERA_MAX),
       max: GameConfig.clamp(centro + GameConfig.OFERTA_TOLERANCIA_OVR, GameConfig.OVR_CARRERA_MIN, GameConfig.OVR_CARRERA_MAX),
     };
   },
 
-  equipoElegibleParaOvr(nivelEquipo, nivelLiga, ovr) {
-    const ventana = GameConfig.ventanaOvrOferta(nivelEquipo, nivelLiga);
+  equipoElegibleParaOvr(equipo, liga, ovr) {
+    const ventana = GameConfig.ventanaOvrOferta(equipo, liga);
     return ovr >= ventana.min && ovr <= ventana.max;
   },
 
@@ -522,8 +572,8 @@ const GameConfig = {
   // se resetea cada vez que cambiás de club, sea el inicial o no.
   TEMPORADAS_GRACIA_CONTRATO: 2,
 
-  contratoDebeTerminar(nivelEquipo, nivelLiga, ovr) {
-    const ventana = GameConfig.ventanaOvrOferta(nivelEquipo, nivelLiga);
+  contratoDebeTerminar(equipo, liga, ovr) {
+    const ventana = GameConfig.ventanaOvrOferta(equipo, liga);
     return ovr < ventana.min;
   },
 
@@ -534,8 +584,7 @@ const GameConfig = {
   // el joven apunta más arriba. Esto NO toca la elegibilidad real
   // (equipoElegibleParaOvr sigue siendo puro OVR, así que "no ofertas
   // sin sentido" se mantiene) — solo ajusta a cuáles clubes, dentro del
-  // pool ya elegible, se los prioriza vía nivelEquipoObjetivo/
-  // nivelLigaObjetivo.
+  // pool ya elegible, se los prioriza vía poderObjetivo.
   // ============================================================
   EDAD_POTENCIAL_BONUS_MAX: 8,
   EDAD_POTENCIAL_BONUS_HASTA: 24, // desde acá, sin bono: ya está en su prime
@@ -765,7 +814,7 @@ const GameConfig = {
     desanimado: 0.3, bajo: 0.15, lesionado: 0.05,
   },
 
-  FUERZA_PESO_NIVEL: 0.5,
+  FUERZA_PESO_CLUB: 0.5,
   FUERZA_PESO_FORMA: 0.2,
   FUERZA_PESO_EQUIPO_ACUMULADO: 0.3,
   // Umbral de referencia para "normalizar" equipoAcumuladoTemporada a
@@ -773,19 +822,23 @@ const GameConfig = {
   // neutral (0.5), en +REFERENCIA llega a 1, en -REFERENCIA a 0.
   FUERZA_EQUIPO_ACUMULADO_REFERENCIA: 4,
 
-  calidadNivelClub(nivelEquipo, nivelLiga) {
-    const calidadEquipo = GameConfig.normalizarNivel(nivelEquipo, GameConfig.NIVEL_EQUIPO_MIN, GameConfig.NIVEL_EQUIPO_MAX);
-    const calidadLiga = GameConfig.normalizarNivel(nivelLiga, GameConfig.NIVEL_LIGA_MIN, GameConfig.NIVEL_LIGA_MAX);
-    return calidadEquipo * GameConfig.OVR_PESO_EQUIPO + calidadLiga * GameConfig.OVR_PESO_LIGA;
+  // A propósito usa SOLO el eje fuerza (no poder): ganar títulos depende
+  // de qué tan fuerte es el plantel hoy, no de cuánta plata tiene el club
+  // ni de su prestigio histórico — un club rico y prestigioso pero flojo
+  // en cancha no debería ganar la liga solo por serlo.
+  calidadFuerzaClub(equipo, liga) {
+    const fuerzaEquipo = equipo.fuerza / GameConfig.EJE_MAX;
+    const fuerzaLiga = liga.fuerza / GameConfig.EJE_MAX;
+    return fuerzaEquipo * GameConfig.OVR_PESO_EQUIPO + fuerzaLiga * GameConfig.OVR_PESO_LIGA;
   },
 
-  calcularFuerzaCampana(nivelEquipo, nivelLiga, forma, equipoAcumuladoTemporada) {
-    const calidadClub = GameConfig.calidadNivelClub(nivelEquipo, nivelLiga);
+  calcularFuerzaCampana(equipo, liga, forma, equipoAcumuladoTemporada) {
+    const calidadClub = GameConfig.calidadFuerzaClub(equipo, liga);
     const calidadForma = GameConfig.FORMA_CALIDAD[forma] ?? 0.5;
     const calidadEquipoAcumulado = GameConfig.clamp(
       0.5 + equipoAcumuladoTemporada / (2 * GameConfig.FUERZA_EQUIPO_ACUMULADO_REFERENCIA), 0, 1
     );
-    const fuerza = GameConfig.FUERZA_PESO_NIVEL * calidadClub
+    const fuerza = GameConfig.FUERZA_PESO_CLUB * calidadClub
       + GameConfig.FUERZA_PESO_FORMA * calidadForma
       + GameConfig.FUERZA_PESO_EQUIPO_ACUMULADO * calidadEquipoAcumulado;
     return GameConfig.clamp(fuerza, 0, 1);

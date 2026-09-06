@@ -75,7 +75,7 @@ if (!player) {
 
     const equipo = ofertas[idx];
     const liga = ligaDe(equipo);
-    const ovrInicial = GameConfig.calcularOvrInicial(equipo.nivel, liga.nivel);
+    const ovrInicial = GameConfig.calcularOvrInicial(equipo, liga);
 
     const jugador = { ...player, equipoId: equipo.id, ovrInicial };
     localStorage.setItem("leyendaPlayer", JSON.stringify(jugador));

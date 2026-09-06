@@ -663,14 +663,22 @@
   text-align: center;
 }
 .trophy-card__name-under {
-  display: none;
   font-size: 0.56rem;
   font-weight: 700;
   line-height: 1.15;
   color: var(--trophy-gold);
   max-width: 3.6rem;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-3px);
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease, transform 0.2s ease;
 }
-.timeline-item--expandida .trophy-card__name-under { display: block; }
+.timeline-item--expandida .trophy-card__name-under {
+  max-height: 2.4rem;
+  opacity: 1;
+  transform: translateY(0);
+}
 /* El contenido de escritorio vive en una sola fila plana (ver más abajo);
    `display: contents` hace que este wrapper sea invisible para el layout,
    así sus hijos se comportan como si fueran hijos directos de

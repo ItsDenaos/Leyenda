@@ -1,6 +1,6 @@
 <h1>Leyenda ⚽</h1>
 <p>Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.</p>
-<p><strong>Versión:</strong> 0.3.0-alpha — publicada el 6 de septiembre de 2026 · 13:44.</p>
+<p><strong>Versión:</strong> 0.4.0-alpha — publicada el 6 de septiembre de 2026 · 18:14.</p>
 <blockquote>
 <p>Este documento describe <strong>absolutamente toda la lógica del juego</strong>: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás &quot;cómo se juega&quot; en términos de jugador, ver el <em>Manual de Juego</em> aparte.</p>
 </blockquote>
@@ -143,22 +143,22 @@ Retiro (forzoso por edad, o elegido) → resumen de carrera → volver a index.h
 <h2 id="5-elección-de-club-inicial-equipohtml-jsequipojs">5. Elección de club inicial (<code>equipo.html</code> + <code>js/equipo.js</code>)</h2>
 <p>Se presentan <strong>4 ofertas de club</strong>, elegidas así (<a href="js/equipo.js:17">equipo.js:17-32</a>):</p>
 <ul>
-<li><strong>Si el país elegido tiene una liga propia</strong> en la base de datos (Argentina, Brasil, México, Estados Unidos o Colombia — las únicas 5 con <code>pais</code> cargado en <code>GameDatabase.ligas</code>), las 4 ofertas salen de esa liga, en esta banda fija (<code>OFERTAS_INICIALES</code>, <a href="js/config.js:54">config.js:54-59</a>):<ul>
-<li>2 clubes de <strong>nivel 3</strong> (chicos)</li>
-<li>1 club de <strong>nivel 2</strong> (consolidado)</li>
-<li>1 club de <strong>nivel aleatorio</strong> (1, 2 o 3 — la única chance de arrancar en un club grande)</li>
+<li><strong>Si el país elegido tiene una liga propia</strong> en la base de datos (Argentina, Brasil, México, Estados Unidos o Colombia — las únicas 5 con <code>pais</code> cargado en <code>GameDatabase.ligas</code>), las 4 ofertas salen de esa liga, en esta banda fija (<code>OFERTAS_INICIALES</code>, <a href="js/config.js:120">config.js:120-125</a>):<ul>
+<li>2 clubes <strong>humildes</strong> (mitad de abajo por poder, dentro de esa liga)</li>
+<li>1 club <strong>consolidado</strong> (entre el 50% y el 85% por poder)</li>
+<li>1 club <strong>al azar</strong>, de cualquier categoría (la única chance de arrancar en un club grande)</li>
 </ul>
 </li>
-<li><strong>Si el país NO tiene liga propia</strong> (la inmensa mayoría — solo 5 de los 46 países la tienen), arranca &quot;de extranjero&quot; en una de las <strong>5 grandes ligas europeas</strong> elegida al azar (Premier League, La Liga, Serie A, Bundesliga, Ligue 1 — <code>LIGAS_GRANDES_EUROPEAS</code>, <a href="js/config.js:51">config.js:51</a>), con una banda más floja y sin favores (<code>OFERTAS_INICIALES_EXTRANJERO</code>, <a href="js/config.js:61">config.js:61-66</a>): 3 clubes de nivel 3 + 1 de nivel 2, nunca nivel 1.</li>
+<li><strong>Si el país NO tiene liga propia</strong> (la inmensa mayoría — solo 5 de los 46 países la tienen), arranca &quot;de extranjero&quot; en una de las <strong>5 grandes ligas europeas</strong> elegida al azar (Premier League, La Liga, Serie A, Bundesliga, Ligue 1 — <code>LIGAS_GRANDES_EUROPEAS</code>, <a href="js/config.js:116">config.js:116</a>), con una banda más floja y sin favores (<code>OFERTAS_INICIALES_EXTRANJERO</code>, <a href="js/config.js:127">config.js:127-132</a>): 3 clubes humildes + 1 consolidado, nunca uno grande.</li>
 </ul>
-<p>El <strong>OVR inicial</strong> con el que arrancarías en cada club se calcula recién al elegirlo, con <code>calcularOvrInicial(nivelEquipo, nivelLiga)</code> (<a href="js/config.js:94">config.js:94-115</a>):</p>
+<p>&quot;Humilde&quot; / &quot;consolidado&quot; / &quot;grande&quot; son percentiles por poder <strong>dentro de la liga elegida</strong> (<code>categoriaEquipoEnLiga</code>, <a href="js/config.js:174">config.js:174-183</a> — ver <a href="#">sección 16.6</a> para qué es el poder de un club), no una categoría fija guardada en cada club: humilde es la mitad de abajo, consolidado el 50-85%, grande el 15% de arriba (<code>CATEGORIA_EQUIPO_PERCENTIL</code>, <a href="js/config.js:118">config.js:118</a>).</p>
+<p>El <strong>OVR inicial</strong> con el que arrancarías en cada club se calcula recién al elegirlo, con <code>calcularOvrInicial(equipo, liga)</code> (<a href="js/config.js:155">config.js:155-167</a>):</p>
 <ol>
-<li>Se normaliza el nivel del equipo (1–3) y el de la liga (1–6) a una escala 0..1 donde 1 = mejor: <code>normalizarNivel(nivel, min, max) = (max - nivel) / (max - min)</code>.</li>
-<li>Se combinan con pesos fijos: <strong>55% equipo + 45% liga</strong> (<code>OVR_PESO_EQUIPO</code>/<code>OVR_PESO_LIGA</code>).</li>
+<li>Se combina el poder del equipo y el de la liga con pesos fijos: <strong>55% equipo + 45% liga</strong> (<code>OVR_PESO_EQUIPO</code>/<code>OVR_PESO_LIGA</code>, <code>calidadPoderCombinada</code>, <a href="js/config.js:96">config.js:96-100</a>), normalizado a una escala 0..1.</li>
 <li>Ese 0..1 se mapea al rango <strong>50–65</strong> (<code>OVR_INICIAL_MIN</code>/<code>MAX</code>) — un novato, por definición, nunca arranca más alto que eso, sin importar cuán grande sea el club.</li>
 <li>Se le suma una &quot;suerte&quot; aleatoria de hasta ±4 puntos (<code>OVR_SUERTE_VARIACION</code>) y se redondea, recortado siempre entre 50 y 65.</li>
 </ol>
-<p>El jugador nunca ve estos números crudos: en la tarjeta de oferta solo se muestra el nombre del club/liga, su escudo, bandera y una etiqueta descriptiva (<code>descripcionNivelEquipo</code>/<code>descripcionNivelLiga</code>, <a href="js/config.js:159">config.js:159-169</a>: &quot;Club grande&quot; / &quot;consolidado&quot; / &quot;humilde&quot;, &quot;Liga de élite&quot; / &quot;competitiva&quot; / &quot;regional&quot;).</p>
+<p>El jugador nunca ve estos números crudos: en la tarjeta de oferta solo se muestra el nombre del club/liga, su escudo y su bandera — sin ninguna etiqueta de &quot;qué tan grande es&quot;, a diferencia de versiones anteriores.</p>
 <p>Al elegir un club se guarda <code>equipoId</code> y <code>ovrInicial</code> en el mismo objeto de <code>localStorage</code>, y se pasa a <code>carrera.html</code>.</p>
 <hr>
 <h2 id="6-el-motor-de-carrera-visión-general-jscarrerajs">6. El motor de carrera — visión general (<code>js/carrera.js</code>)</h2>
@@ -418,8 +418,43 @@ ovrNuevo = clamp(ovrActual + delta, 45, 99)     (OVR_CARRERA_MIN / MAX — piso 
 <p><strong>Recuperación al darte de alta</strong>: al cumplirse los tramos de baja, se te devuelve el <strong>50%</strong> del OVR que perdiste por esa lesión (<code>LESION_RECUPERACION_OVR</code>, <a href="js/config.js:907">config.js:907</a>, aplicado en <a href="js/carrera.js:636">carrera.js:636-645</a>) — fue un golpe físico puntual, no una pérdida de nivel definitiva. El toast de &quot;te recuperaste&quot; muestra cuánto OVR recuperaste, si fue mayor a 0.</p>
 <hr>
 <h2 id="14-sistema-de-competiciones-liga-copas-clasificación-internacional">14. Sistema de competiciones (liga, copas, clasificación internacional)</h2>
-<p>Todo sale de un único número por temporada, la <strong>&quot;fuerza de campaña&quot;</strong> — <code>calcularFuerzaCampana(nivelEquipo, nivelLiga, forma, equipoAcumuladoTemporada)</code> (<a href="js/config.js:719">config.js:719-729</a>):</p>
-<pre><code>calidadClub          = misma fórmula de &quot;calidad&quot; que el OVR inicial (55% equipo + 45% liga)
+<h3>14.0 Antes de esto: la clasificación de clubes y ligas</h3>
+<p>Cada club y cada liga en <code>GameDatabase</code> tiene <strong>3 ejes ocultos de 0 a 100</strong> (reemplazan al viejo <code>nivel</code> entero 1-3/1-6):</p>
+<table>
+<thead>
+<tr>
+<th>Eje</th>
+<th>Qué mide</th>
+<th>Dónde se usa</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fuerza</code></td>
+<td>Nivel deportivo actual del plantel/competencia</td>
+<td>Quién gana títulos (<a href="#">sección 14</a>, acá mismo)</td>
+</tr>
+<tr>
+<td><code>prestigio</code></td>
+<td>Historia, títulos, marca, hinchada</td>
+<td>Valor de mercado (<a href="#">sección 15</a>) y qué tan aspiracional es un destino (<a href="#">sección 16</a>)</td>
+</tr>
+<tr>
+<td><code>economia</code></td>
+<td>Poder financiero (presupuesto, sueldos, TV)</td>
+<td>Valor de mercado y ofertas</td>
+</tr>
+</tbody></table>
+<p>Se combinan de dos formas distintas, a propósito, según qué le corresponde a cada mecánica (<a href="js/config.js:34">config.js:34-100</a>):</p>
+<ul>
+<li><strong><code>poderEquipo</code>/<code>poderLiga</code></strong> (<code>PODER_PESO_FUERZA=0.4</code> / <code>PODER_PESO_PRESTIGIO=0.35</code> / <code>PODER_PESO_ECONOMIA=0.25</code>): mezcla los 3 ejes para todo lo que en la vida real depende de una combinación de las tres cosas a la vez — el OVR inicial, la ventana de ofertas, el objetivo de prestigio del jugador.</li>
+<li><strong><code>calidadFuerzaClub</code></strong> (sección 14, acá abajo): usa <strong>solo</strong> <code>fuerza</code> — ganar títulos depende de qué tan fuerte es el plantel hoy, no de cuánta plata tiene el club ni de su prestigio histórico.</li>
+<li><strong><code>valorScoreEquipo</code>/<code>valorScoreLiga</code></strong> (sección 15): usan <strong>solo</strong> <code>economia</code> + <code>prestigio</code> — cuánto valés en el mercado depende de la plata y la marca del club que te tiene, no de si ese club está ganando esta temporada.</li>
+</ul>
+<p>La economía de un club nunca cae debajo del 60% de la de su propia liga (<code>ECONOMIA_PISO_LIGA</code>, <code>economiaEfectiva</code>, <a href="js/config.js:63">config.js:63-67</a>) — un club chico de una liga rica igual tiene más plata que casi cualquier gigante de una liga menor, por el reparto de TV.</p>
+<p>Los ~25 clubes más reconocibles del mundo (Real Madrid, Boca Juniors, PSG, Newcastle, etc.) tienen estos 3 valores puestos a mano; el resto se generó una sola vez a partir de su antiguo nivel 1-3 y la liga a la que pertenece, con una variación estable por club (mismo id → siempre el mismo resultado) para que no todos los equipos de un mismo nivel queden con el número idéntico — ver el comentario de formato en <a href="js/database.js:9">database.js:9-38</a>.</p>
+<h3>14.1 Fuerza de campaña</h3>
+<p>Todo sale de un único número por temporada, la <strong>&quot;fuerza de campaña&quot;</strong> — <code>calcularFuerzaCampana(equipo, liga, forma, equipoAcumuladoTemporada)</code> (<a href="js/config.js:835">config.js:835-843</a>):</p>
+<pre><code>calidadClub          = calidadFuerzaClub(equipo, liga)   (SOLO el eje fuerza, 55% equipo + 45% liga)
 calidadForma         = FORMA_CALIDAD[forma]     (1.0 inspirado ... 0.05 lesionado)
 calidadEquipoAcum    = clamp(0.5 + equipoAcumuladoTemporada / 8, 0, 1)
 
@@ -445,14 +480,16 @@ fuerza = 0.5 × calidadClub + 0.2 × calidadForma + 0.3 × calidadEquipoAcum
 <p>Los partidos de cada competición (mínimos garantizados + extra por ronda) salen de <code>GameDatabase.competiciones</code> — ver <a href="#">sección 20</a>.</p>
 <hr>
 <h2 id="15-valor-de-mercado">15. Valor de mercado</h2>
-<p><code>calcularValorMercado(ovr, nivelEquipo, nivelLiga)</code> (<a href="js/config.js:192">config.js:192-197</a>) — curva exponencial sobre el OVR (cada punto extra cerca del techo vale desproporcionadamente más, como en la vida real), multiplicada por el prestigio del club/liga actual:</p>
+<p><code>calcularValorMercado(ovr, equipo, liga)</code> (<a href="js/config.js:255">config.js:255-260</a>) — curva exponencial sobre el OVR (cada punto extra cerca del techo vale desproporcionadamente más, como en la vida real), multiplicada por la economía y el prestigio del club/liga actual (a propósito, <strong>no</strong> por su fuerza — ver <a href="#">sección 14.0</a>):</p>
 <pre><code>valorPorOvr = 18000 × 1.185^(ovr − 45)          (VALOR_MERCADO_BASE, VALOR_MERCADO_CRECIMIENTO)
-multiplicadorClub = interpola entre 0.5 (club/liga más floja) y 1.4 (más prestigiosa)
-                     según la misma &quot;calidad combinada&quot; de siempre (55% equipo + 45% liga)
+valorScore  = 0.6 × economía-efectiva + 0.4 × prestigio     (VALOR_PESO_ECONOMIA / _PRESTIGIO,
+              valorScoreEquipo/valorScoreLiga, config.js:238-245)
+multiplicadorClub = interpola entre 0.5 (valorScore más flojo) y 1.4 (más alto)
+                     combinando equipo y liga (55% / 45%, calcularMultiplicadorClub)
 valor = round(valorPorOvr × multiplicadorClub / 1000) × 1000    (redondeado al millar)
 </code></pre>
-<p>Se recalcula cada vez que cambia el OVR (cada tramo) y cada vez que cambiás de club (con el nivel del club nuevo). Se muestra formateado con <code>formatMarketValue</code> (<a href="js/carrera.js:51">carrera.js:51-55</a>): <code>€18K</code>, <code>€1.2M</code>, etc.</p>
-<p>Para las <strong>ofertas de fichaje</strong> se usa una variante cosmética, <code>valorOfrecidoPorClub</code>, que le suma un ±8% de variación aleatoria (<code>OFERTA_VARIACION_VALOR</code>, <a href="js/config.js:205">config.js:205-210</a>) — para que dos clubes del mismo nivel exacto no muestren el mismísimo número al centavo en sus tarjetas. No afecta tu valor de mercado real, solo el texto &quot;Te valoran en €X&quot; de esa tarjeta puntual.</p>
+<p>Se recalcula cada vez que cambia el OVR (cada tramo) y cada vez que cambiás de club (con la economía/prestigio del club nuevo). Se muestra formateado con <code>formatMarketValue</code> (<a href="js/carrera.js:67">carrera.js:67</a>): <code>€18K</code>, <code>€1.2M</code>, etc.</p>
+<p>Para las <strong>ofertas de fichaje</strong> se usa una variante cosmética, <code>valorOfrecidoPorClub</code> (<a href="js/config.js:267">config.js:267-271</a>), que le suma un ±8% de variación aleatoria (<code>OFERTA_VARIACION_VALOR</code>) — para que dos clubes de poder parecido no muestren el mismísimo número al centavo en sus tarjetas. No afecta tu valor de mercado real, solo el texto &quot;Te valoran en €X&quot; de esa tarjeta puntual.</p>
 <hr>
 <h2 id="16-sistema-de-fichajes-y-ofertas">16. Sistema de fichajes y ofertas</h2>
 <p>Toda la lógica vive en <code>generarLoteOfertas(equipoActualId, ovr, edad, valorActual)</code> (<a href="js/carrera.js:203">carrera.js:203-375</a>), que corre en la única pausa de &quot;oferta&quot; de cada temporada (ver <a href="#">sección 7</a>).</p>
@@ -466,14 +503,14 @@ valor = round(valorPorOvr × multiplicadorClub / 1000) × 1000    (redondeado al
 </code></pre>
 <p>Mientras estés en gracia (tus primeras <strong>2 temporadas completas</strong> en el club actual, sea el inicial o uno fichado después), tu club <strong>nunca</strong> puede &quot;no renovarte&quot; — sin este colchón, cualquier club de nivel medio/alto para arriba te dejaría ir en tu primerísima ventana de fichajes, porque ningún novato arranca con el OVR de un jugador hecho (ver <a href="#">sección 5</a>: tope de 65 vs. ventanas de OVR que fácilmente piden 70+). El contador se resetea a 0 cada vez que fichás por otro club y sube +1 en cada cierre de temporada en el mismo club.</p>
 <h3>16.3 ¿Tu club actual te renueva?</h3>
-<p>Pasado el período de gracia, <code>contratoDebeTerminar(nivelEquipo, nivelLiga, ovr)</code> (<a href="js/config.js:525">config.js:525-528</a>) compara tu OVR contra la &quot;ventana de OVR&quot; de tu propio club (ver 16.5 más abajo): si caíste por debajo del mínimo que ese nivel tolera, no te renuevan — la carta de &quot;Quedarme&quot; se reemplaza por una de retiro (no forzoso, con el texto &quot;tu nivel ya no alcanza&quot;).</p>
+<p>Pasado el período de gracia, <code>contratoDebeTerminar(equipo, liga, ovr)</code> (<a href="js/config.js:575">config.js:575-578</a>) compara tu OVR contra la &quot;ventana de OVR&quot; de tu propio club (ver 16.5 más abajo): si caíste por debajo del mínimo que ese club tolera, no te renuevan — la carta de &quot;Quedarme&quot; se reemplaza por una de retiro (no forzoso, con el texto &quot;tu nivel ya no alcanza&quot;).</p>
 <h3>16.4 Retiro voluntario</h3>
 <pre><code class="language-js">puedeElegirRetiro = !contratoTerminado &amp;&amp; edad &gt;= 36     (EDAD_RETIRO_OFERTA)
 </code></pre>
 <p>Desde los 36 años podés elegir colgar los botines aunque tu club te siga queriendo — ocupa una de las 3 cartas de club, dejando solo 2 cupos de fichaje ese año (y, en ese caso puntual, sin la garantía de liga/país local del punto 16.6).</p>
 <h3>16.5 Elegibilidad real: la &quot;ventana de OVR&quot; de cada club</h3>
-<p>Cada combinación equipo+liga solo puede ofertarte si tu OVR cae dentro de su ventana — <code>equipoElegibleParaOvr</code> / <code>ventanaOvrOferta</code> (<a href="js/config.js:472">config.js:472-486</a>):</p>
-<pre><code>centro = 45 + calidadCombinada(nivelEquipo, nivelLiga) × 54    (mapeado a todo el rango 45-99 de carrera)
+<p>Cada combinación equipo+liga solo puede ofertarte si tu OVR cae dentro de su ventana — <code>equipoElegibleParaOvr</code> / <code>ventanaOvrOferta</code> (<a href="js/config.js:516">config.js:516-533</a>):</p>
+<pre><code>centro = 45 + calidadPoderCombinada(equipo, liga) × 54    (mapeado a todo el rango 45-99 de carrera)
 ventana = [ clamp(centro − 13, 45, 99) , clamp(centro + 13, 45, 99) ]     (OFERTA_TOLERANCIA_OVR = 13)
 </code></pre>
 <p>Es un <strong>corte duro</strong>, no solo &quot;menos probable&quot;: un club chico deja de poder ofertarte en cuanto sos demasiado bueno para él, y uno grande no entra en juego hasta que estás a su altura (con la tolerancia de 13 puntos, los clubes top del mundo ya son alcanzables desde ~86 de OVR). Esta ventana de elegibilidad <strong>no cambió</strong> con el ajuste de pesos de 16.6 — lo que cambió es solo cómo se prioriza/ordena a los ya elegibles, no quién entra al pool.</p>
@@ -482,23 +519,23 @@ ventana = [ clamp(centro − 13, 45, 99) , clamp(centro + 13, 45, 99) ]     (OFE
 <h3>16.6 Cuáles de los elegibles aparecen (y en qué orden de prioridad)</h3>
 <p>Dentro del pool ya elegible, no se sortea parejo entre todos:</p>
 <ol>
-<li><p><strong>Potencial ajustado por edad</strong> (no el OVR real) decide a qué nivel de club/liga &quot;apunta&quot; el jugador — <code>potencialAjustadoPorEdad(ovr, edad)</code> (<a href="js/config.js:503">config.js:503-515</a>):</p>
+<li><p><strong>Potencial ajustado por edad</strong> (no el OVR real) decide a qué poder de club/liga &quot;apunta&quot; el jugador — <code>potencialAjustadoPorEdad(ovr, edad)</code> (<a href="js/config.js:594">config.js:594-606</a>):</p>
 <pre><code>17 a 24 años: bono que baja linealmente de +8 (a los 17) a 0 (a los 24) — EDAD_POTENCIAL_BONUS_MAX/HASTA
 25 a 30 años: sin ajuste (edad ideal)
 30+ años:     penalización de −0.7 de OVR efectivo por cada año por encima de 30
 </code></pre>
 <p>Esto <strong>no</strong> toca la elegibilidad real del punto 16.5 (esa sigue siendo puro OVR) — solo decide, entre los clubes ya alcanzables, cuáles se priorizan. A igual OVR, un jugador de 27 años apunta más arriba que uno de 38.</p>
 </li>
-<li><p>Con ese potencial se calcula el &quot;nivel objetivo&quot; de equipo y de liga (<code>nivelEquipoObjetivo</code>/<code>nivelLigaObjetivo</code> — cuanto más prestigio, más cerca de nivel 1), y el peso de cada candidato según qué tan cerca está de ese objetivo (<code>pesoPorCercaniaNivel</code>, <a href="js/config.js:437">config.js:437-448</a>):</p>
-<pre><code>deltaEquipo = nivelEquipo − objetivoEquipo
-deltaLiga   = nivelLiga − objetivoLiga
-factor(delta) = 1 si delta &gt; 0 (te &quot;sobra&quot; nivel), 0.05 si no (PESO_FACTOR_SOBRAR)
+<li><p>Con ese potencial se calcula un <strong>único</strong> <code>poderObjetivo</code> (<a href="js/config.js:467">config.js:467-469</a>: <code>prestigioJugador(ovr) × 100</code> — más OVR, más poder objetivo), y el peso de cada candidato según qué tan cerca está de ese objetivo (<code>pesoPorCercaniaNivel</code>, <a href="js/config.js:490">config.js:490-499</a>):</p>
+<pre><code>deltaEquipo = (poderEquipo − poderObjetivo) / 10     (PESO_ESCALA_DISTANCIA — lleva el delta,
+deltaLiga   = (poderLiga − poderObjetivo) / 10        en puntos de poder 0-100, a una escala chica)
+factor(delta) = 0.05 si delta &gt; 0 (el club/liga &quot;sobra&quot; de poder), 1 si no (PESO_FACTOR_SOBRAR)
 distancia = |deltaEquipo| × factor(deltaEquipo) + |deltaLiga| × factor(deltaLiga) × 0.6
 peso = 1 / (1 + distancia)^2.2
 </code></pre>
-<p><strong>Asimétrico a propósito</strong>: &quot;quedarte corto&quot; de nivel (delta negativo) pesa la distancia completa, pero &quot;sobrar&quot; de nivel (delta positivo — un club/liga mejor de lo que tu potencial pide) casi no penaliza (factor 0.05 en vez de 1). Antes la fórmula era simétrica y penalizaba por igual quedarte corto o pasarte: un OVR de 83 terminaba viendo casi solo clubes de nivel medio (el &quot;objetivo&quot; real a ese OVR, en una escala de prestigio de 45 a 99), porque un club top &quot;se pasaba&quot; del objetivo tanto como un club chico se quedaba corto, y ambos pesaban lo mismo — en la práctica, nunca aparecían los grandes de Europa hasta OVRs absurdamente altos. Con el peso asimétrico, un club mejor que tu objetivo deja de competir en desventaja contra uno que directamente te queda grande.</p>
+<p><strong>Asimétrico a propósito</strong>: &quot;quedarte corto&quot; de poder (delta negativo — un club/liga peor de lo que tu potencial pide) pesa la distancia completa, pero &quot;sobrar&quot; (delta positivo, un club/liga mejor) casi no penaliza (factor 0.05 en vez de 1). Con una fórmula simétrica, un club top &quot;se pasaba&quot; del objetivo tanto como un club chico se quedaba corto, y ambos pesaban lo mismo — en la práctica, nunca aparecían los grandes de Europa hasta OVRs absurdamente altos. Con el peso asimétrico, un club mejor que tu objetivo deja de competir en desventaja contra uno que directamente te queda grande.</p>
 </li>
-<li><p><strong><code>elegirMejorEncaje</code></strong> (<a href="js/config.js:398">config.js:398-401</a>): apoyada en <code>gruposTierAlto</code> (<a href="js/config.js:392">config.js:392-396</a>, ver también 16.7), ordena los candidatos por peso descendente y sortea (ponderado, para que siga habiendo variedad) <strong>solo dentro del 40% superior</strong> (<code>OFERTA_TOP_ENCAJE_FRACCION</code>) — así, si tu nivel da para los grandes, van a ser los grandes los que en verdad aparezcan, en vez de perderse en un sorteo parejo contra todo el pool elegible.</p>
+<li><p><strong><code>elegirMejorEncaje</code></strong> (<a href="js/config.js:448">config.js:448-451</a>): apoyada en <code>gruposTierAlto</code> (<a href="js/config.js:442">config.js:442-446</a>, ver también 16.7), ordena los candidatos por peso descendente y sortea (ponderado, para que siga habiendo variedad) <strong>solo dentro del 40% superior</strong> (<code>OFERTA_TOP_ENCAJE_FRACCION</code>) — así, si tu nivel da para los grandes, van a ser los grandes los que en verdad aparezcan, en vez de perderse en un sorteo parejo contra todo el pool elegible.</p>
 </li>
 </ol>
 <h3>16.7 Cuántas ofertas de club, y la garantía de &quot;tu entorno&quot; (condicional)</h3>
@@ -508,16 +545,16 @@ peso = 1 / (1 + distancia)^2.2
 </ul>
 <p>Con 3 cupos, la garantía de &quot;tu entorno&quot; ya <strong>no es incondicional</strong> — solo se activa si ese entorno sigue siendo un destino de tu nivel:</p>
 <ul>
-<li><code>gruposTierAlto(elegibles, pesoFn)</code> (<a href="js/config.js:392">config.js:392-396</a>) calcula el mismo 40% superior por peso que usa <code>elegirMejorEncaje</code> (16.6) sobre <strong>todos</strong> los elegibles, sin filtrar por entorno.</li>
+<li><code>gruposTierAlto(elegibles, pesoFn)</code> (<a href="js/config.js:442">config.js:442-446</a>) calcula el mismo 40% superior por peso que usa <code>elegirMejorEncaje</code> (16.6) sobre <strong>todos</strong> los elegibles, sin filtrar por entorno.</li>
 <li>Si algún club de tu entorno cae dentro de ese tier alto, se garantizan <strong>hasta 2 ofertas</strong> de ahí — exactamente 2 si hay al menos 2 candidatos en esa intersección, menos si no los hay.</li>
 <li>Si <strong>ningún</strong> club de tu entorno llega al tier alto (tu nivel ya superó a tu liga actual, o a tu país de origen si sos veterano), la garantía <strong>desaparece del todo</strong> — salvo la excepción de abajo para veteranos.</li>
 </ul>
 <p>&quot;Tu entorno&quot; es:</p>
 <ul>
 <li>Normalmente, <strong>tu liga actual</strong>.</li>
-<li>Desde los <strong>33 años</strong> (<code>EDAD_OCASO_RETORNO_PAIS</code>, <a href="js/config.js:568">config.js:568</a>), pasa a ser <strong>tu país de origen</strong> — para simular volver a cerrar la carrera en casa, aunque la hayas jugado toda en el exterior.</li>
+<li>Desde los <strong>33 años</strong> (<code>EDAD_OCASO_RETORNO_PAIS</code>, <a href="js/config.js:617">config.js:617</a>), pasa a ser <strong>tu país de origen</strong> — para simular volver a cerrar la carrera en casa, aunque la hayas jugado toda en el exterior.</li>
 </ul>
-<p><strong>Retorno nostálgico esporádico (solo veteranos, 33+)</strong>: si tu país de origen ya no entra en el tier alto (tu nivel lo superó de sobra) pero igual hay clubes elegibles ahí, aparece <strong>como máximo 1</strong> oferta de esos clubes con <strong>30% de probabilidad</strong> por ventana (<code>PROB_OFERTA_NOSTALGICA</code>, <a href="js/config.js:569">config.js:569</a>) — ya no es una garantía, es una posibilidad ocasional de que un club de tu país intente el gesto sentimental de traerte de vuelta, sin que se sienta forzado en cada carrera.</p>
+<p><strong>Retorno nostálgico esporádico (solo veteranos, 33+)</strong>: si tu país de origen ya no entra en el tier alto (tu nivel lo superó de sobra) pero igual hay clubes elegibles ahí, aparece <strong>como máximo 1</strong> oferta de esos clubes con <strong>30% de probabilidad</strong> por ventana (<code>PROB_OFERTA_NOSTALGICA</code>, <a href="js/config.js:618">config.js:618</a>) — ya no es una garantía, es una posibilidad ocasional de que un club de tu país intente el gesto sentimental de traerte de vuelta, sin que se sienta forzado en cada carrera.</p>
 <p>El resto de los cupos (y todo, si no hay candidatos de entorno) sale libre del pool elegible completo, mismo criterio de mejor encaje. Si aun así faltan candidatos distintos, se completa repitiendo clubes antes que mostrar menos ofertas de las que corresponden.</p>
 <h3>16.8 Orden de las cartas, y resolver la pausa</h3>
 <p>Las cartas ya <strong>no se mezclan en orden aleatorio</strong>: la carta de tu club actual (quedarme, o el retiro forzoso si no te renuevan) va siempre <strong>primera</strong>; si además aparece la opción de retirarte voluntariamente (16.4), esa va <strong>segunda</strong>. El resto de ofertas de club llena los cupos restantes, en cualquier orden — así el jugador siempre encuentra &quot;seguir acá&quot; (y &quot;retirarme&quot;, si corresponde) en el mismo lugar de la fila, en vez de tener que buscarlos entre las demás ofertas.</p>
@@ -598,68 +635,90 @@ peso = 1 / (1 + distancia)^2.2
 <p><strong>Lesiones</strong> (contenido, no la lógica — ver <a href="#">sección 13</a>): 17 lesiones reales con nombre y descripción médica, repartidas en nivel3 (6, leves), nivel2 (6, moderadas) y nivel1 (5, graves — LCA, fractura de tibia/peroné, tendón de Aquiles, hernia discal, rotura muscular grado 3).</p>
 <hr>
 <h2 id="20-base-de-datos-de-ligas-y-equipos-jsdatabasejs">20. Base de datos de ligas y equipos (<code>js/database.js</code>)</h2>
-<p><strong>10 ligas reales</strong>, con nivel oculto de 1 (mejor) a 6 (peor):</p>
+<p><strong>10 ligas reales</strong>, cada una con sus 3 ejes ocultos de 0 a 100 (<code>fuerza</code> / <code>prestigio</code> / <code>economia</code> — ver <a href="#">sección 14.0</a>):</p>
 <table>
 <thead>
 <tr>
 <th>Liga</th>
 <th>País</th>
-<th>Nivel</th>
+<th>Fuerza</th>
+<th>Prestigio</th>
+<th>Economía</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>Premier League</td>
 <td>Inglaterra</td>
-<td>1</td>
+<td>96</td>
+<td>92</td>
+<td>100</td>
 </tr>
 <tr>
 <td>La Liga</td>
 <td>España</td>
-<td>1</td>
+<td>93</td>
+<td>97</td>
+<td>88</td>
 </tr>
 <tr>
 <td>Serie A</td>
 <td>Italia</td>
-<td>1</td>
+<td>88</td>
+<td>90</td>
+<td>78</td>
 </tr>
 <tr>
 <td>Bundesliga</td>
 <td>Alemania</td>
-<td>1</td>
+<td>87</td>
+<td>82</td>
+<td>82</td>
 </tr>
 <tr>
 <td>Ligue 1</td>
 <td>Francia</td>
-<td>1</td>
+<td>82</td>
+<td>75</td>
+<td>75</td>
 </tr>
 <tr>
 <td>Brasileirão Série A</td>
 <td>Brasil</td>
-<td>2</td>
+<td>74</td>
+<td>80</td>
+<td>45</td>
 </tr>
 <tr>
 <td>Primera División Argentina</td>
 <td>Argentina</td>
-<td>3</td>
+<td>68</td>
+<td>85</td>
+<td>25</td>
 </tr>
 <tr>
 <td>Liga MX</td>
 <td>México</td>
-<td>3</td>
+<td>66</td>
+<td>55</td>
+<td>42</td>
 </tr>
 <tr>
 <td>MLS</td>
 <td>Estados Unidos</td>
-<td>3</td>
+<td>58</td>
+<td>40</td>
+<td>55</td>
 </tr>
 <tr>
 <td>Primera A (Colombia)</td>
 <td>Colombia</td>
-<td>4</td>
+<td>55</td>
+<td>50</td>
+<td>20</td>
 </tr>
 </tbody></table>
 <p>Solo las últimas 5 tienen el campo <code>pais</code> cargado (por eso son las únicas que pueden ser el punto de partida &quot;local&quot; en la creación de personaje — ver <a href="#">sección 5</a>).</p>
-<p><strong>~290 equipos reales</strong> repartidos en esas 10 ligas, cada uno con: nombre real, nivel oculto de 1 (grande) a 3 (chico), iniciales y colores propios (para el placeholder si el escudo no carga) y el nombre del archivo de escudo real.</p>
+<p><strong>214 equipos reales</strong> repartidos en esas 10 ligas, cada uno con: nombre real, sus propios <code>fuerza</code>/<code>prestigio</code>/<code>economia</code>, iniciales y colores propios (para el placeholder si el escudo no carga) y el nombre del archivo de escudo real. Los ~25 clubes más reconocibles del mundo (Real Madrid, Manchester City, Bayern Múnich, PSG, Boca Juniors, River Plate, Flamengo, Newcastle, RB Leipzig, etc.) tienen esos 3 valores puestos a mano; el resto se derivó una sola vez de su antiguo nivel 1-3 y la liga a la que pertenece, con una variación estable por club para que no todos los equipos de un mismo nivel terminen con el número idéntico.</p>
 <p><strong>19 competiciones reales</strong> (<a href="js/database.js:314">database.js:314-376</a>):</p>
 <ul>
 <li>10 ligas domésticas (una por cada liga cargada), con la cantidad real de partidos de su formato vigente (ej. Premier League 38, Liga MX 34 + 12 de liguilla, Primera A Colombia 38 + 10 de cuadrangulares).</li>
@@ -766,14 +825,24 @@ peso = 1 / (1 + distancia)^2.2
 <td>Techo de edad para el banco &quot;promedio&quot; (arriba, &quot;veterano&quot;)</td>
 </tr>
 <tr>
-<td><code>NIVEL_EQUIPO_MIN</code> / <code>MAX</code></td>
-<td>1 / 3</td>
-<td>Escala oculta de nivel de club</td>
+<td><code>EJE_MIN</code> / <code>MAX</code></td>
+<td>0 / 100</td>
+<td>Escala oculta de los 3 ejes de clasificación (fuerza/prestigio/economía) de cada club y liga</td>
 </tr>
 <tr>
-<td><code>NIVEL_LIGA_MIN</code> / <code>MAX</code></td>
-<td>1 / 6</td>
-<td>Escala oculta de nivel de liga</td>
+<td><code>PODER_PESO_FUERZA</code> / <code>_PRESTIGIO</code> / <code>_ECONOMIA</code></td>
+<td>0.4 / 0.35 / 0.25</td>
+<td>Peso de cada eje al combinarlos en el &quot;poder&quot; único (OVR inicial, ventana de ofertas, objetivo)</td>
+</tr>
+<tr>
+<td><code>ECONOMIA_PISO_LIGA</code></td>
+<td>0.6</td>
+<td>La economía de un club nunca cae debajo de este % de la de su propia liga</td>
+</tr>
+<tr>
+<td><code>VALOR_PESO_ECONOMIA</code> / <code>_PRESTIGIO</code></td>
+<td>0.6 / 0.4</td>
+<td>Peso de economía vs. prestigio en el valor de mercado (no usa el eje fuerza)</td>
 </tr>
 <tr>
 <td><code>OVR_INICIAL_MIN</code> / <code>MAX</code></td>
@@ -783,7 +852,7 @@ peso = 1 / (1 + distancia)^2.2
 <tr>
 <td><code>OVR_PESO_EQUIPO</code> / <code>OVR_PESO_LIGA</code></td>
 <td>0.55 / 0.45</td>
-<td>Peso de club vs. liga en toda &quot;calidad combinada&quot;</td>
+<td>Peso de club vs. liga al combinar sus &quot;poder&quot;/&quot;valorScore&quot;</td>
 </tr>
 <tr>
 <td><code>OVR_SUERTE_VARIACION</code></td>
@@ -803,7 +872,7 @@ peso = 1 / (1 + distancia)^2.2
 <tr>
 <td><code>VALOR_MULTIPLICADOR_CLUB_MIN</code> / <code>MAX</code></td>
 <td>0.5 / 1.4</td>
-<td>Rango del multiplicador de valor según prestigio del club/liga</td>
+<td>Rango del multiplicador de valor según economía/prestigio combinados del club/liga</td>
 </tr>
 <tr>
 <td><code>OFERTA_VARIACION_VALOR</code></td>
@@ -818,12 +887,22 @@ peso = 1 / (1 + distancia)^2.2
 <tr>
 <td><code>OFERTA_TOP_ENCAJE_FRACCION</code></td>
 <td>0.4</td>
-<td>% superior (por cercanía a tu nivel objetivo) del que se sortean las ofertas</td>
+<td>% superior (por cercanía a tu poder objetivo) del que se sortean las ofertas</td>
 </tr>
 <tr>
 <td><code>OFERTA_TOLERANCIA_OVR</code></td>
 <td>13</td>
 <td>Ancho de la &quot;ventana de OVR&quot; de cada club (±)</td>
+</tr>
+<tr>
+<td><code>CATEGORIA_EQUIPO_PERCENTIL</code></td>
+<td>humilde 0-50% / consolidado 50-85% / grande 85-100%</td>
+<td>Percentiles de poder dentro de la liga, para las ofertas iniciales (sección 5)</td>
+</tr>
+<tr>
+<td><code>PESO_ESCALA_DISTANCIA</code></td>
+<td>10</td>
+<td>Divisor que lleva la distancia de poder (0-100) a una escala chica antes del exponente</td>
 </tr>
 <tr>
 <td><code>PESO_DISTANCIA_LIGA</code></td>
@@ -833,17 +912,17 @@ peso = 1 / (1 + distancia)^2.2
 <tr>
 <td><code>PESO_EXPONENTE</code></td>
 <td>2.2</td>
-<td>Qué tan fuerte castiga la distancia al nivel objetivo</td>
+<td>Qué tan fuerte castiga la distancia al poder objetivo</td>
 </tr>
 <tr>
 <td><code>PESO_FACTOR_SOBRAR</code></td>
 <td>0.05</td>
-<td>Factor que aplica la distancia (en vez del 100%) cuando un club/liga &quot;sobra&quot; de nivel en vez de quedar corto — ver <a href="#">sección 16.6</a></td>
+<td>Factor que aplica la distancia (en vez del 100%) cuando un club/liga &quot;sobra&quot; de poder en vez de quedar corto — ver <a href="#">sección 16.6</a></td>
 </tr>
 <tr>
 <td><code>PROB_OFERTA_NOSTALGICA</code></td>
 <td>0.3</td>
-<td>Probabilidad, por ventana, de que aparezca 1 oferta de &quot;vuelta a casa&quot; para un veterano cuyo país de origen ya no es santo de su nivel</td>
+<td>Probabilidad, por ventana, de que aparezca 1 oferta de &quot;vuelta a casa&quot; para un veterano cuyo país de origen ya no llega a su tier de poder</td>
 </tr>
 <tr>
 <td><code>EDAD_RETIRO_OFERTA</code></td>
@@ -981,9 +1060,9 @@ peso = 1 / (1 + distancia)^2.2
 <td>Calidad aportada por cada estado de forma a la fuerza de campaña</td>
 </tr>
 <tr>
-<td><code>FUERZA_PESO_NIVEL</code> / <code>_FORMA</code> / <code>_EQUIPO_ACUMULADO</code></td>
+<td><code>FUERZA_PESO_CLUB</code> / <code>_FORMA</code> / <code>_EQUIPO_ACUMULADO</code></td>
 <td>0.5 / 0.2 / 0.3</td>
-<td>Pesos de la fórmula de fuerza de campaña</td>
+<td>Pesos de la fórmula de fuerza de campaña (el eje club usa solo <code>fuerza</code>, no el poder combinado)</td>
 </tr>
 <tr>
 <td><code>UMBRAL_CLASIFICA_PRIMER_NIVEL</code> / <code>_SEGUNDO_NIVEL</code></td>
