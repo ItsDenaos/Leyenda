@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.5.0-Beta",
-  FECHA_PUBLICACION: "6 de septiembre de 2026 · 21:10",
+  VERSION: "0.6.0-Beta",
+  FECHA_PUBLICACION: "7 de septiembre de 2026 · 15:33",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
@@ -294,6 +294,36 @@ const GameConfig = {
     desanimado: { label: "Desanimado", icon: "😕", color: "#f97316" },
     bajo: { label: "Bajo de forma", icon: "📉", color: "#ef4444" },
     lesionado: { label: "Tocado físicamente", icon: "🤕", color: "#ef4444" },
+  },
+
+  // Mismo orden que arriba (de mejor a peor) pero como lista, para poder
+  // movernos por pasos en vez de solo consultar cada estado por nombre.
+  FORMA_ORDEN: ["inspirado", "plenitud", "animado", "regular", "desanimado", "bajo", "lesionado"],
+
+  // Cada opción de evento ya no TELETRANSPORTA la forma al estado que
+  // indica su `efectos.forma` — lo usa como un objetivo hacia el que te
+  // "empuja" ese eje, recorriendo una fracción del camino desde donde
+  // ya estabas. Así, si en la misma pausa resolvés 2 decisiones que
+  // tiran para el mismo lado, tu forma sigue mejorando/empeorando en
+  // vez de que la segunda pise a la primera — y si tiran para lados
+  // opuestos, se combinan en vez de que gane la que se resolvió último.
+  FORMA_PESO_ACUMULACION: 0.5,
+
+  acumularForma(formaActual, formaObjetivo) {
+    const orden = GameConfig.FORMA_ORDEN;
+    const iActual = orden.indexOf(formaActual);
+    const iObjetivo = orden.indexOf(formaObjetivo);
+    if (iActual === -1 || iObjetivo === -1 || iActual === iObjetivo) return formaObjetivo ?? formaActual;
+    // Paso mínimo de 1 (no proporcional puro): con brechas cortas, redondear
+    // hacia abajo dejaba la mejora empantanada justo un escalón antes del
+    // objetivo para siempre (0.5 de un solo escalón nunca llegaba a
+    // completarlo) — así, un mismo empujón sostenido SIEMPRE termina
+    // alcanzando el objetivo tras suficientes pasos, nunca se estanca.
+    const direccion = iObjetivo > iActual ? 1 : -1;
+    const distancia = Math.abs(iObjetivo - iActual);
+    const paso = Math.max(1, Math.round(distancia * GameConfig.FORMA_PESO_ACUMULACION));
+    const iNuevo = GameConfig.clamp(iActual + direccion * paso, 0, orden.length - 1);
+    return orden[iNuevo];
   },
 
   // ============================================================
@@ -792,8 +822,49 @@ const GameConfig = {
     return GameConfig.clamp(ovrActual + delta, GameConfig.OVR_CARRERA_MIN, GameConfig.OVR_CARRERA_MAX);
   },
 
-  calcularTitular(ovr, rendimientoAcumulado) {
-    const prob = GameConfig.clamp(0.6 + rendimientoAcumulado * 0.05 + (ovr - 55) * 0.015, 0.1, 0.97);
+  // `pesoTitular` (0-1) es cuánto te ganaste el puesto DE VERDAD en tu
+  // club actual — a diferencia de antes (un sorteo nuevo e independiente
+  // cada tramo, sin memoria de nada), ahora es el factor dominante y se
+  // arrastra tramo a tramo e incluso de una temporada a la siguiente
+  // mientras sigas en el mismo club (ver PESO_TITULAR_INICIAL más abajo y
+  // cómo se hereda/resetea en carrera.js). Una gran temporada ya no se
+  // "olvida" al arrancar la próxima.
+  PESO_TITULAR_INICIAL: 0.4, // novato o recién fichado: tenés que ganarte el puesto
+  PESO_TITULAR_MIN: 0.05,
+  PESO_TITULAR_MAX: 0.95,
+  PESO_TITULAR_RATING_NEUTRO: 6.5, // rating de tramo que ni suma ni resta peso
+  PESO_TITULAR_AJUSTE_RATING: 0.05,
+  PESO_TITULAR_AJUSTE_MIN: -0.08,
+  PESO_TITULAR_AJUSTE_MAX: 0.12,
+  PESO_TITULAR_CASTIGO_SIN_MINUTOS: -0.05, // no te tocó jugar nada este tramo (suplente sin entrar)
+  PESO_TITULAR_CASTIGO_LESION: -0.03, // una lesión te saca del radar un poco, aunque no sea "tu culpa"
+
+  // Cuánto se ajusta pesoTitular después de simular un tramo, según cómo
+  // te fue en los partidos que jugaste (o si no jugaste ninguno).
+  ajustarPesoTitular(pesoActual, ratingTramo, estabaLesionado) {
+    let delta;
+    if (estabaLesionado) {
+      delta = GameConfig.PESO_TITULAR_CASTIGO_LESION;
+    } else if (ratingTramo === null) {
+      delta = GameConfig.PESO_TITULAR_CASTIGO_SIN_MINUTOS;
+    } else {
+      delta = GameConfig.clamp(
+        (ratingTramo - GameConfig.PESO_TITULAR_RATING_NEUTRO) * GameConfig.PESO_TITULAR_AJUSTE_RATING,
+        GameConfig.PESO_TITULAR_AJUSTE_MIN,
+        GameConfig.PESO_TITULAR_AJUSTE_MAX
+      );
+    }
+    return GameConfig.clamp(pesoActual + delta, GameConfig.PESO_TITULAR_MIN, GameConfig.PESO_TITULAR_MAX);
+  },
+
+  // pesoTitular es ahora el factor dominante (ya está en escala 0-1, la
+  // misma que la probabilidad) — el OVR todavía empuja un poco (para que
+  // un jugador claramente mejor que el resto del plantel tenga ventaja
+  // incluso saliendo de una mala racha) y las decisiones del tramo
+  // aportan su granito, pero ya no deciden todo un sorteo desde cero.
+  calcularTitular(pesoTitular, ovr, rendimientoAcumulado) {
+    const ajusteOvr = (ovr - 55) * 0.01;
+    const prob = GameConfig.clamp(pesoTitular + ajusteOvr + rendimientoAcumulado * 0.03, 0.08, 0.95);
     return Math.random() < prob;
   },
 

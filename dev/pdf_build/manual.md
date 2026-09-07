@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 0.5.0-Beta — publicada el 6 de septiembre de 2026 · 21:10**
+**Versión 0.6.0-Beta — publicada el 7 de septiembre de 2026 · 15:33**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -78,7 +78,7 @@ Una temporada se divide en bloques de partidos ("tramos") separados por pausas. 
 3. Otra pausa de decisiones, en cualquier punto del año.
 4. Una última pausa de decisiones, ya sobre el cierre.
 
-Cada vez que resolvés todo lo que había en una pausa, el juego simula automáticamente el bloque de partidos siguiente: vas a ver tus estadísticas subir con una animación, tu OVR ajustarse, y tu progreso de temporada avanzar — todo eso pasa solo, no hace falta ningún clic extra.
+Cada vez que resolvés todo lo que había en una pausa, el juego simula automáticamente el bloque de partidos siguiente: vas a ver tus estadísticas subir con una animación, tu OVR ajustarse, y tu progreso de temporada avanzar (siguiendo de cerca los partidos de liga que ya jugaste) — todo eso pasa solo, no hace falta ningún clic extra.
 
 Al cerrar la temporada (después de la última pausa) vas a ver si ganaste la liga y, si llegaste a la final, la copa nacional — con un mensaje resumiendo cómo te fue — y arranca la siguiente.
 
@@ -123,9 +123,9 @@ Tus partidos y goles con la selección se ven aparte de los de club, nunca sumad
 
 ## 9. Tu forma y tu rendimiento
 
-Tu **forma** (visible como una píldora de color en el panel de temporada) va desde "Inspirado" 🔥 en el mejor de los casos hasta "Tocado físicamente" 🤕 en el peor — pasando por "En plenitud", "Animado", "Regular", "Desanimado" y "Bajo de forma". Se actualiza con cada decisión que tomás, y afecta directamente cuántos minutos vas a tener: en buena forma jugás más partidos y rendís mejor; en mala forma, te quedás afuera más seguido.
+Tu **forma** (visible como una píldora de color en el panel de temporada) va desde "Inspirado" 🔥 en el mejor de los casos hasta "Tocado físicamente" 🤕 en el peor — pasando por "En plenitud", "Animado", "Regular", "Desanimado" y "Bajo de forma". Cada decisión te empuja hacia un estado objetivo, pero no te teletransporta ahí de golpe: te vas acercando de a poco, así que una racha de decisiones en la misma dirección construye un cambio real, y una sola decisión aislada no te hace pasar de "Inspirado" a "Tocado" de un tirón. Afecta directamente cuántos minutos vas a tener: en buena forma jugás más partidos y rendís mejor; en mala forma, te quedás afuera más seguido.
 
-Ser **titular** en un bloque de partidos también suma minutos reales — no es solo una etiqueta, un titular efectivamente juega más que un suplente.
+Ser **titular** en un bloque de partidos también suma minutos reales — no es solo una etiqueta, un titular efectivamente juega más que un suplente. Y no es un sorteo nuevo cada vez: cuanto mejor rindas siendo titular, más te "ganás" el puesto de cara a los próximos bloques (e incluso de una temporada a la siguiente, mientras sigas en el mismo club) — una gran temporada no se olvida al arrancar la próxima. Al fichar por un club nuevo, ese progreso se resetea: ahí también hay que ganarse el puesto desde cero.
 
 ---
 
@@ -138,6 +138,8 @@ Cada tanto, en una pausa de decisiones, en vez de las 2 tarjetas de siempre vas 
 - **Grave** — puede dejarte afuera el resto de la temporada, con una baja más importante de OVR.
 
 El riesgo de lesionarte sube un poco con la edad. No hay forma de evitarlo del todo (las decisiones que tomás no lo previenen), es parte del riesgo de cualquier carrera — pero las graves son mucho menos frecuentes que las leves.
+
+Mientras estés lesionado, tu tarjeta de temporada se marca con un resplandor rojo y un 🤕 — para que de un vistazo sepas que hay algo importante pasando, incluso si no llegaste a leer el parte médico.
 
 La buena noticia: el OVR que perdés por una lesión **no es para siempre**. Cuando te dan de alta, recuperás una parte de ese OVR — fue un golpe físico puntual, no que te volviste peor jugador de la nada. El mensaje de "te recuperaste" te va a avisar cuánto recuperaste.
 

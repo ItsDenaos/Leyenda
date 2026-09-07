@@ -146,7 +146,7 @@ function inicializarCompeticionesTemporada(equipoId, clasificacionInternacional)
 // Una temporada "vive" mientras la página esté abierta: no hay
 // guardado persistente (juego web, sin partida guardada).
 // ============================================================
-function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionInternacional) {
+function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionInternacional, pesoTitularHeredado) {
   // Selección nacional: se resuelve una vez por temporada, igual que Alto
   // Impacto (ver más abajo) — si el roll pasa, se sortea en qué pausa cae
   // (buildDecisionBatch la muestra ahí, reemplazando el slot deportivo).
@@ -169,6 +169,12 @@ function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionIntern
     trofeos: [],
     forma: "regular",
     titular: false,
+    // Qué tan afianzado estás como titular en ESTE club — se hereda de la
+    // temporada anterior si seguís en el mismo club (ver finalizarTemporada),
+    // o arranca "en la cuerda floja" si sos novato o recién fichado (ver
+    // resolveOferta, que lo resetea al cambiar de club). Ver GameConfig.
+    // calcularTitular/ajustarPesoTitular para cómo se usa y evoluciona.
+    pesoTitular: pesoTitularHeredado ?? GameConfig.PESO_TITULAR_INICIAL,
     progreso: 0,
     enCurso: true,
     calendario: GameConfig.crearCalendarioTemporada(numero),
@@ -746,11 +752,13 @@ function simularTramoYAvanzar() {
   // ---- Cuántos de esos partidos del club juegas realmente tú ----
   // Lesionado (cualquier nivel): no juegas nada este tramo, sin importar
   // qué tan bueno seas — eso es lo único que garantiza incluso el nivel 3.
-  // Ser titular se decide antes (con el OVR/rendimiento con los que se
-  // entra al tramo) para que además de mostrarse como badge, sume de
-  // verdad a la participación — ver PARTICIPACION_BONUS_TITULAR.
+  // Ser titular se decide antes (con el peso de titular ya ganado, más un
+  // empujón de OVR/rendimiento) para que además de mostrarse como badge,
+  // sume de verdad a la participación — ver PARTICIPACION_BONUS_TITULAR.
   const estabaLesionado = Boolean(temporadaActual.lesionActiva);
-  const esTitularEsteTramo = estabaLesionado ? false : GameConfig.calcularTitular(temporadaActual.ovr, temporadaActual.bufferRendimiento);
+  const esTitularEsteTramo = estabaLesionado
+    ? false
+    : GameConfig.calcularTitular(temporadaActual.pesoTitular, temporadaActual.ovr, temporadaActual.bufferRendimiento);
   let partidosJugador;
   if (estabaLesionado) {
     partidosJugador = 0;
@@ -773,14 +781,29 @@ function simularTramoYAvanzar() {
   temporadaActual.sumaRating += resultado.sumaRating;
   temporadaActual.promedio = temporadaActual.partidos > 0 ? temporadaActual.sumaRating / temporadaActual.partidos : 0;
 
+  // El puesto se gana (o se pierde) con lo que de verdad pasó este tramo:
+  // el rating de los partidos que jugaste, si jugaste alguno — así una
+  // gran temporada pesa en la próxima en vez de arrancar de cero.
+  const ratingTramo = partidosJugador > 0 ? resultado.sumaRating / partidosJugador : null;
+  temporadaActual.pesoTitular = GameConfig.ajustarPesoTitular(temporadaActual.pesoTitular, ratingTramo, estabaLesionado);
+
   temporadaActual.ovr = GameConfig.ajustarOvrTramo(temporadaActual.ovr, temporadaActual.bufferRendimiento, getEdadActual(), factorTalento);
   temporadaActual.titular = esTitularEsteTramo;
   temporadaActual.equipoAcumuladoTemporada += temporadaActual.bufferEquipo;
   temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, equipo, liga);
   temporadaActual.tramoIndex++;
 
-  const siguiente = temporadaActual.calendario[temporadaActual.checkpointIndex + 1];
-  temporadaActual.progreso = siguiente ? siguiente.progreso : 100;
+  // El progreso mostrado (anillo/barra) sale de los partidos de LIGA del
+  // club realmente jugados hasta ahora, no del `progreso` del calendario
+  // (ese es solo para ordenar las pausas narrativamente — "antes de la
+  // mitad", "último momento" — y podía quedar totalmente desligado de
+  // cuántos partidos se habían jugado en verdad). El último tramo siempre
+  // cierra en exactamente 100%, porque partidosLigaParaTramo reparte el
+  // resto ahí.
+  const estadoLiga = temporadaActual.competiciones.liga;
+  temporadaActual.progreso = estadoLiga.competicion
+    ? GameConfig.clamp(Math.round((estadoLiga.partidosJugados / estadoLiga.competicion.partidosMinimos) * 100), 0, 100)
+    : Math.round(((tramoIndex + 1) / GameConfig.TOTAL_TRAMOS_TEMPORADA) * 100);
 
   // La baja se cuenta en tramos: al llegar a 0 se da de alta (y, si
   // estaba bloqueando la forma, vuelve a un estado neutral en vez de
@@ -875,12 +898,14 @@ function finalizarTemporada() {
 
   const ovrHeredado = temporadaActual.ovr;
   const equipoAcumuladoCerrado = temporadaActual.equipoAcumuladoTemporada;
+  const pesoTitularCerrado = temporadaActual.pesoTitular;
   temporadaActual = crearTemporada(
     numeroCerrada + 1,
     temporadaActual.equipoId,
     ovrHeredado,
     GameConfig.calcularValorMercado(ovrHeredado, equipo, liga),
-    clasificacionProxima
+    clasificacionProxima,
+    pesoTitularCerrado
   );
 
   // Habilita el pedido de cambio de dorsal: el club lo evalúa con el OVR
@@ -1015,8 +1040,11 @@ function renderSpotlight() {
 
   const trofeosMobileHtml = s.trofeos && s.trofeos.length > 0 ? trophiesHtml(s.trofeos, true) : "";
 
+  const lesionado = Boolean(s.lesionActiva);
+
   spotlight.innerHTML = `
-    <article class="spotlight-card spotlight-card--desktop">
+    <article class="spotlight-card spotlight-card--desktop${lesionado ? " spotlight-card--lesionado" : ""}">
+      ${lesionado ? '<span class="spotlight-card__lesion-badge" title="Lesionado">🤕</span>' : ""}
       <div class="spotlight-card__head">
         <div>
           <span class="spotlight-card__season">Temporada ${s.numero} · ${s.anio}</span>
@@ -1055,7 +1083,8 @@ function renderSpotlight() {
          animan igual que en desktop (ver animarBarraMobile/animarNumero
          en animarSpotlightDesde), solo que con una barra lineal en vez
          de un anillo. -->
-    <article class="spotlight-mobile">
+    <article class="spotlight-mobile${lesionado ? " spotlight-mobile--lesionado" : ""}">
+      ${lesionado ? '<span class="spotlight-mobile__lesion-badge" title="Lesionado">🤕</span>' : ""}
       <div class="spotlight-mobile__top">
         <span class="spotlight-mobile__season">T${s.numero} · ${s.anio}</span>
         <span class="forma-pill forma-pill--sm" style="background:${forma.color}22;color:${forma.color}">${forma.icon} ${forma.label}</span>
@@ -1356,7 +1385,7 @@ function animarReacomodoCards(track, posicionesPrevias) {
     el.style.transform = `translate(${dx}px, ${dy}px)`;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        el.style.transition = "transform 0.35s ease";
+        el.style.transition = "transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1)";
         el.style.transform = "";
       });
     });
@@ -1438,7 +1467,7 @@ function resolveDecisionEvento(id, optionIdx) {
   // "lesionado" durante la baja — las decisiones igual suman rendimiento
   // y equipo, pero no te "curan" el estado de ánimo de golpe.
   if (!(temporadaActual.lesionActiva && temporadaActual.lesionActiva.bloqueaForma)) {
-    temporadaActual.forma = option.efectos.forma;
+    temporadaActual.forma = GameConfig.acumularForma(temporadaActual.forma, option.efectos.forma);
   }
   temporadaActual.bufferRendimiento += option.efectos.rendimiento;
   temporadaActual.bufferEquipo += option.efectos.equipo;
@@ -1502,6 +1531,9 @@ function resolveOferta(item) {
     // TEMPORADAS_GRACIA_CONTRATO en generarLoteOfertas).
     temporadasEnClubActual = 0;
     temporadaActual.titular = false;
+    // Club nuevo: el puesto ganado en el club anterior no se traslada —
+    // arrancás otra vez "en la cuerda floja" hasta ganártelo acá.
+    temporadaActual.pesoTitular = GameConfig.PESO_TITULAR_INICIAL;
     temporadaActual.forma = "regular";
     temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, item.equipo, item.liga);
     showToast(`Fichaste por ${item.equipo.nombre}.`);
@@ -1811,6 +1843,23 @@ function cargarImagenSegura(src) {
   });
 }
 
+// Igual que arriba, pero para imágenes de OTRO origen (las banderas salen
+// de flagcdn.com, no de este sitio) — sin `crossOrigin`, dibujar una
+// imagen cross-origin en el canvas lo deja "tainted" y toBlob()/toDataURL()
+// truenan con SecurityError apenas se intenta copiar la tarjeta. Si el
+// servidor remoto no manda los headers CORS necesarios, el navegador
+// rechaza la carga sola (onerror) y seguimos con el respaldo de emoji,
+// igual que en cualquier otro `cargarImagenSegura` fallido.
+function cargarImagenSeguraCrossOrigin(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
 // Recorta el contexto actual a un círculo o a un rectángulo redondeado
 // antes de dibujar adentro — mismo criterio que .team-crest--avatar
 // (círculo) vs .team-crest--md (esquinas redondeadas) en el CSS real.
@@ -1867,8 +1916,12 @@ async function generarTarjetaResumenCanvas() {
 
   const imgUltimoClub = await cargarImagenSegura(GameConfig.rutaEscudoEquipo(ultimoClub));
   const imgsClubes = await Promise.all(r.clubes.map((e) => cargarImagenSegura(GameConfig.rutaEscudoEquipo(e))));
+  const imgLogo = await cargarImagenSegura("assets/logo/logo_leyenda_transparent.png");
+  // Misma bandera real (no emoji) que usa el resto del juego — en Windows
+  // los emoji de bandera no se dibujan ni en HTML, mucho menos en canvas.
+  const imgBanderaSeleccion = r.seleccionPartidos > 0 ? await cargarImagenSeguraCrossOrigin(`${GameConfig.RUTA_BANDERAS}${player.paisCode}.png`) : null;
 
-  const W = 1080, H = 1350;
+  const W = 1080, H = r.seleccionPartidos > 0 ? 1450 : 1350;
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -1884,12 +1937,19 @@ async function generarTarjetaResumenCanvas() {
   ctx.fillStyle = "rgba(13, 17, 32, 0.86)";
   ctx.fillRect(0, 0, W, H);
 
-  // Marca
-  ctx.fillStyle = "#ffb703";
-  ctx.font = '800 30px "Segoe UI", sans-serif';
+  // Marca: el logo real del juego (trofeo + wordmark), no una aproximación
+  // a mano con emoji — mismo archivo que usa el header de index.html.
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText("⚽ LEYENDA", 60, 70);
+  if (imgLogo) {
+    const logoH = 56;
+    const logoW = logoH * (imgLogo.width / imgLogo.height);
+    ctx.drawImage(imgLogo, 60, 30, logoW, logoH);
+  } else {
+    ctx.fillStyle = "#ffb703";
+    ctx.font = '800 30px "Segoe UI", sans-serif';
+    ctx.fillText("⚽ LEYENDA", 60, 70);
+  }
 
   // Encabezado: escudo + nombre + subtítulo, badge de pico de OVR a la derecha
   dibujarEscudoCanvas(ctx, ultimoClub, imgUltimoClub, 60, 110, 130, "circulo");
@@ -1975,8 +2035,33 @@ async function generarTarjetaResumenCanvas() {
     cx += escudoSize + espacioEntre;
   });
 
-  // ---- Trofeos ----
+  // ---- Con la selección (si hubo alguna convocatoria en la carrera) ----
   y += 170;
+  if (r.seleccionPartidos > 0) {
+    ctx.textAlign = "left";
+    ctx.fillStyle = "#9aa3c2";
+    ctx.font = '700 20px "Segoe UI", sans-serif';
+    ctx.fillText("CON LA SELECCIÓN", 60, y);
+    y += 44;
+    const banderaW = 40, banderaH = 28;
+    if (imgBanderaSeleccion) {
+      ctx.drawImage(imgBanderaSeleccion, 60, y - banderaH + 6, banderaW, banderaH);
+    } else {
+      ctx.font = '400 26px "Segoe UI", sans-serif';
+      ctx.fillText(player.flag ?? "🏳️", 60, y);
+    }
+    ctx.fillStyle = "#eef1fb";
+    ctx.font = '700 24px "Segoe UI", sans-serif';
+    ctx.fillText(player.pais, 60 + banderaW + 16, y);
+    const anchoPais = ctx.measureText(player.pais).width;
+    ctx.fillStyle = "#9aa3c2";
+    ctx.font = '400 22px "Segoe UI", sans-serif';
+    const golesTxt = `${r.seleccionPartidos} partido${r.seleccionPartidos === 1 ? "" : "s"} · ${r.seleccionGoles} gol${r.seleccionGoles === 1 ? "" : "es"}`;
+    ctx.fillText(golesTxt, 60 + banderaW + 16 + anchoPais + 20, y);
+    y += 50;
+  }
+
+  // ---- Trofeos ----
   ctx.textAlign = "left";
   ctx.fillStyle = "#9aa3c2";
   ctx.font = '700 20px "Segoe UI", sans-serif';

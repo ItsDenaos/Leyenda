@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.
 
-**Versión:** 0.5.0-Beta — publicada el 6 de septiembre de 2026 · 21:10.
+**Versión:** 0.6.0-Beta — publicada el 7 de septiembre de 2026 · 15:33.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -208,7 +208,9 @@ Cada temporada tiene **3 "tramos"** (`TOTAL_TRAMOS_TEMPORADA`, [config.js:590](j
 | Decisión | aleatorio entre 0% y 100% | "en cualquier punto" |
 | Decisión | aleatorio entre 92% y 99% | "último momento" |
 
-Las 4 (o 3, en la Temporada 1) se ordenan por `progreso` para que el calendario quede cronológico. Cada pausa de decisión resuelta dispara la simulación del tramo siguiente (`simularTramoYAvanzar`) y avanza al próximo checkpoint (`avanzarCheckpoint`); al agotarse el calendario, se cierra la temporada (`finalizarTemporada`).
+Las 4 (o 3, en la Temporada 1) se ordenan por este `progreso` para que el calendario quede cronológico **al narrar la temporada** — pero ese número es solo para ordenar pausas, no es lo que se muestra en pantalla (ver más abajo). Cada pausa de decisión resuelta dispara la simulación del tramo siguiente (`simularTramoYAvanzar`) y avanza al próximo checkpoint (`avanzarCheckpoint`); al agotarse el calendario, se cierra la temporada (`finalizarTemporada`).
+
+**El progreso que ves en pantalla (anillo/barra) es otro número**: `temporadaActual.progreso` se recalcula en cada tramo como `partidosJugados / partidosMinimos` de la liga (`simularTramoYAvanzar`, [carrera.js](js/carrera.js)), no a partir de la tabla de arriba — antes reusaba esos valores aleatorios de la tabla, así que la barra podía verse casi llena con 15 partidos jugados y saltar a más de 50% recién en el último tramo. Ahora sigue de cerca el avance real de partidos de liga (no puede ser 100% exacto porque la cantidad de partidos por tramo no es fija, pero da la ilusión correcta de avance).
 
 **Por qué una sola ventana, y siempre en pretemporada**: antes había una segunda pausa de fichajes a mitad de año, lo que permitía que un traspaso partiera una temporada en dos (dos clubes distintos, dos filas de historial, el mismo año). Se sacó a propósito — ahora un fichaje sale siempre con la temporada en cero (0 partidos jugados con el club nuevo) y la corres entera de punta a punta con ese club, tal como pasaría en la realidad con una ventana de pases real. `resolveOferta` ([carrera.js:1299-1343](js/carrera.js:1299)) ya no tiene ninguna rama de "traspaso a mitad de camino": cambiar de club siempre resetea `competiciones` (liga + copa nacional; la clasificación internacional NO se hereda, es del club, no del jugador) desde cero.
 
@@ -223,14 +225,15 @@ Todo pasa en `simularTramoYAvanzar()` ([carrera.js:567-659](js/carrera.js:567)),
 1. **Partidos del club esta franja**, sumando las 3 competiciones activas:
    - Liga: `partidosLigaParaTramo` reparte el total de la temporada entre los 3 tramos a partes iguales, y el último tramo absorbe el resto del redondeo.
    - Copa nacional / internacional: `resolverKnockout` — en su tramo de "partidos mínimos" juega la ronda garantizada; después, un tramo por cada ronda extra disponible, con una tirada de `probAvanzarRonda(fuerza)` para seguir viva (si pierde, queda eliminado para el resto de la temporada).
-2. **Titularidad de este tramo**: `calcularTitular(ovr, rendimientoAcumulado)` — una tirada (ver fórmula en [sección 9](#9-participación-cuántos-partidos-jugás-vos)) decidida **antes** de calcular cuánto jugás, para que ser titular realmente sume participación (no es solo un badge decorativo).
+2. **Titularidad de este tramo**: `calcularTitular(pesoTitular, ovr, rendimientoAcumulado)` — una tirada (ver fórmula en [sección 9](#9-participación-cuántos-partidos-jugás-vos)) decidida **antes** de calcular cuánto jugás, para que ser titular realmente sume participación (no es solo un badge decorativo). Al cierre del tramo, el resultado también ajusta `pesoTitular` de cara al próximo (paso 7 más abajo).
 3. **Cuántos de esos partidos jugás vos** (no todos, ver sección 9) — si estás lesionado, **cero**, sin excepción.
 4. **Resultado del tramo** (`GameConfig.simularTramo`, ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)): goles, asistencias, MVPs y la suma de ratings de esos partidos.
 5. Se acumulan a las estadísticas de la temporada, se recalcula el promedio (`sumaRating / partidos`).
 6. **Se ajusta el OVR** (`ajustarOvrTramo`, [sección 11](#11-progresión-de-ovr)) y se recalcula el **valor de mercado** con el nuevo OVR.
-7. Se descuenta un tramo a la lesión activa, si había una; al llegar a 0, se da de alta.
-8. Se avanza `tramoIndex` y el `progreso` salta al de la próxima pausa del calendario.
-9. Se anima el spotlight (anillo de progreso + contadores) y, 1050ms después (`ANIMACION_TRAMO_MS` + margen), se pasa a la próxima pausa (o se cierra la temporada si no queda ninguna).
+7. **Se ajusta `pesoTitular`** con el rating de este tramo (`ajustarPesoTitular`, ver [sección 9](#9-participación-cuántos-partidos-jugás-vos)) — de cara al próximo tramo, no a este que ya se jugó.
+8. Se descuenta un tramo a la lesión activa, si había una; al llegar a 0, se da de alta.
+9. Se avanza `tramoIndex` y se recalcula el `progreso` mostrado en pantalla a partir de `partidosJugados / partidosMinimos` de la liga (ver [sección 7](#7-calendario-de-temporada)).
+10. Se anima el spotlight (anillo de progreso + contadores) y, 1050ms después (`ANIMACION_TRAMO_MS` + margen), se pasa a la próxima pausa (o se cierra la temporada si no queda ninguna).
 
 Al **cerrar la temporada** (`finalizarTemporada`, [carrera.js:661-737](js/carrera.js:661)):
 
@@ -244,11 +247,26 @@ Al **cerrar la temporada** (`finalizarTemporada`, [carrera.js:661-737](js/carrer
 
 Los partidos de arriba son los del **equipo**; cuántos de esos jugás vos depende de tu nivel, tu momento y si sos titular ese tramo.
 
-**Titularidad** — `calcularTitular(ovr, rendimientoAcumulado)` ([config.js:684-687](js/config.js:684)):
+**Titularidad** — ya no es un sorteo nuevo e independiente cada tramo: hay un valor persistente `pesoTitular` (0-1, "cuánto te ganaste el puesto DE VERDAD") que se arrastra tramo a tramo e incluso de una temporada a la siguiente mientras sigas en el mismo club. Una gran temporada ya no se "olvida" al arrancar la próxima, y un jugador titular indiscutido no vuelve a ser una moneda al aire de un día para el otro.
+
+Arranca en `PESO_TITULAR_INICIAL = 0.4` (novato o recién fichado — hay que ganarse el puesto) y se resetea a ese mismo valor en cada transferencia ([`resolveOferta`](js/carrera.js)); si te quedás en el club, se hereda de una temporada a la siguiente sin tocar.
+
+Después de cada tramo, `ajustarPesoTitular(pesoActual, ratingTramo, estabaLesionado)` ([config.js:844-858](js/config.js:844)) lo mueve según cómo te fue:
 
 ```
-prob = clamp(0.6 + rendimientoAcumulado × 0.05 + (ovr − 55) × 0.015, 0.1, 0.97)
+si estabas lesionado:        delta = PESO_TITULAR_CASTIGO_LESION       (−0.03)
+si no jugaste ningún partido: delta = PESO_TITULAR_CASTIGO_SIN_MINUTOS  (−0.05)
+si no:                        delta = clamp((ratingTramo − 6.5) × 0.05, −0.08, 0.12)
+pesoTitular = clamp(pesoActual + delta, 0.05, 0.95)
 ```
+
+Y `calcularTitular(pesoTitular, ovr, rendimientoAcumulado)` ([config.js:865-869](js/config.js:865)) decide el tramo actual:
+
+```
+prob = clamp(pesoTitular + (ovr − 55) × 0.01 + rendimientoAcumulado × 0.03, 0.08, 0.95)
+```
+
+El OVR todavía empuja un poco (un jugador claramente mejor que el resto del plantel tiene ventaja incluso saliendo de una mala racha) y las decisiones del tramo aportan su granito, pero `pesoTitular` es el factor dominante — ya no decide todo un sorteo desde cero.
 
 **Probabilidad de jugar cada partido** — `probabilidadJugar(ovr, rendimientoAcumulado, forma, esTitular)` ([config.js:779-785](js/config.js:779)):
 
@@ -349,7 +367,7 @@ En cuanto el declive es mayor a 0, el piso de variación por tramo pasa de −1 
 
 7 estados (`FORM_STATES`, [config.js:229-237](js/config.js:229)), de mejor a peor: **Inspirado 🔥 → En plenitud 💪 → Animado 🙂 → Regular 😐 → Desanimado 😕 → Bajo de forma 📉 → Tocado físicamente 🤕**.
 
-Cada opción de cada decisión de evento cambia la forma directamente a un valor fijo (no es aleatorio: está definido evento por evento en `js/events.js`). La forma afecta:
+Cada opción de cada decisión de evento define un **objetivo** de forma fijo (`efectos.forma`, no es aleatorio — está definido evento por evento en `js/events.js`), pero ya no la teletransporta ahí directamente: `acumularForma(formaActual, formaObjetivo)` ([config.js:312-327](js/config.js:312)) te acerca a ese objetivo recorriendo una fracción del camino (`FORMA_PESO_ACUMULACION = 0.5` del tramo que falta, con un paso mínimo de 1 escalón para no estancarse justo antes de llegar). Así, dos decisiones seguidas que tiran para el mismo lado siguen sumando en vez de que la segunda pise a la primera, y si tiran para lados opuestos se combinan en vez de que gane la última resuelta. La forma afecta:
 
 - **Participación** (tabla en [sección 9](#9-participación-cuántos-partidos-jugás-vos)).
 - **La "calidad" de la temporada del equipo** (`FORMA_CALIDAD`, ver [sección 14](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)) — de 1.0 (inspirado) a 0.05 (lesionado).
@@ -739,6 +757,8 @@ Cada opción define el texto del botón y sus `efectos` (`rendimiento` −3..+3 
 
 **510 equipos reales** repartidos en esas 29 ligas, cada uno con: nombre real, sus propios `fuerza`/`prestigio`/`economia`, iniciales y colores propios (para el placeholder si el escudo no carga) y el nombre del archivo de escudo real. Los ~25 clubes más reconocibles del mundo de las 10 ligas originales tienen esos 3 valores puestos a mano; el resto (incluidos los 296 equipos de las 19 ligas nuevas) se derivó con una variación estable por club (mismo id → siempre el mismo resultado) a partir de 3 niveles de referencia por liga — "grande" / "consolidado" / "humilde" — para que no todos los equipos de una misma liga terminen con el número idéntico.
 
+**Nombres cortos, "como se los conoce"**: los 510 equipos usan el nombre por el que se los reconoce popularmente en vez de su denominación social completa (194 renombrados) — por ejemplo "Club Sportivo Independiente Rivadavia" pasó a ser "Independiente Rivadavia", "Club Atlético Boca Juniors" a "Boca Juniors", "FC Barcelona" a "Barcelona", "Sport Club Corinthians Paulista" a "Corinthians", "FC Internazionale Milano" a "Inter". Se dejaron sin tocar los casos donde el prefijo/sufijo es parte genuina del nombre reconocido en su país (Bayern München, Borussia Dortmund, Hamburger SV, VfB Stuttgart, Club Brugge, Royal Antwerp, etc.) — no hay dos equipos con el mismo nombre visible dentro de una misma liga.
+
 **Escudos reales para toda la incorporación nueva**: los 296 equipos, las 19 ligas y sus 38 trofeos (liga + copa nacional de cada una) tienen su imagen real cargada — no hay ninguna liga nueva con ícono genérico de respaldo, salvo el trofeo de liga de Eredivisie (que sí tiene su logo real, pero todavía no un trofeo de campeón propio) y el logo de liga de Costa Rica.
 
 **Sustituciones por falta de escudo**: cuando un club realmente vigente en la temporada de referencia no tenía imagen disponible, se lo reemplazó por otro club real del mismo país que sí la tenía (nunca por un club inventado) — por ejemplo, en la J1 League japonesa Mito HollyHock/JEF United Chiba/V-Varen Nagasaki se reemplazaron por Albirex Niigata/Shonan Bellmare/Yokohama FC; en la Liga Premier Rusa, Akron Tolyatti/Dynamo Majachkalá/Rodina Moscú por Nizhni Nóvgorod/Sochi/Ural Yekaterinburg. La liga de Ucrania quedó con **16 equipos reales** en vez de sus 20 oficiales de esta temporada, por no tener sustitutos disponibles para completar los 4 que faltaban — se prefirió esto antes que inventar clubes sin escudo real.
@@ -761,7 +781,7 @@ Todos los números de partidos (mínimos garantizados + rondas extra) son una re
 - **Escudos con fallback**: `crestHtml`/`ligaCrestHtml` ([config.js:283-310](js/config.js:283)) intentan cargar el PNG real; si falla (`onerror`), se reemplazan solas por un placeholder de iniciales + degradado de los colores del club (`crestFallback`). Los escudos de liga no llevan ese fondo — solo el logo (clase `team-crest--liga`).
 - **Banderas reales** vía [flagcdn.com](https://flagcdn.com) (los emoji de bandera no se dibujan en Windows), con el emoji como respaldo de texto si la imagen falla (`flagHtml`/`flagFallback`).
 - **Trofeos**: siluetas PNG en `assets/escudos/trofeos/`, pintadas vía `mask-image` con un dorado **propio** (`--trophy-gold: #d4af37`, [css/style.css](css/style.css)) — el color original del archivo no importa, solo su transparencia define la forma (`trofeoIconHtml`). Este dorado es deliberadamente distinto del `--accent` ámbar que usan los botones y el nivel "oro" del OVR: si el trofeo reutilizara ese mismo color, se perdería entre el resto de la interfaz en vez de leerse como un logro aparte.
-  - **Historial en mobile**: el nombre del trofeo va apilado y bien chico debajo de su ícono (no en un listado aparte) — oculto por default, se revela al tocar la tarjeta entera de esa temporada (`.timeline-item--expandida`, delegado sobre `#timelineList` en [carrera.js](js/carrera.js)). En desktop el nombre completo ya está disponible al pasar el mouse (`title`).
+  - **Historial en mobile**: el nombre del trofeo va apilado y bien chico debajo de su ícono (no en un listado aparte) — oculto por default, se revela al tocar la tarjeta entera de esa temporada (`.timeline-item--expandida`, delegado sobre `#timelineList` en [carrera.js](js/carrera.js)). El texto aparece de golpe (`display: none`/`block`, sin transición) — antes tenía una animación de alto/opacidad que en algunos trofeos se veía como un pequeño salto del ícono, sin aportar nada. En desktop el nombre completo ya está disponible al pasar el mouse (`title`).
 - **Color del badge de OVR** (`ovrTierColor`, [carrera.js:58-65](js/carrera.js:58)) — 6 niveles fijos, de metal a gema, proporcionales al rango real de carrera (45–99):
 
   | OVR | Color |
@@ -775,9 +795,11 @@ Todos los números de partidos (mínimos garantizados + rondas extra) son una re
 
 - **Etiquetas de efecto en cada opción de decisión** (`efectoRendimientoHtml`/`efectoFormaHtml`/`efectoEquipoHtml`, [carrera.js:1021-1034](js/carrera.js:1021)): antes de elegir, cada botón muestra de forma explícita qué le va a pasar a tu rendimiento, tu forma y al equipo si lo tocás — no hay efectos ocultos en las decisiones de evento.
 - **Animaciones de tramo**: los números del spotlight (partidos, goles, OVR, anillo de progreso) no saltan de golpe — se animan con un *ease-out* cúbico durante 900ms (`animarNumero`/`animarAnilloProgreso`, [carrera.js:466-516](js/carrera.js:466)). En mobile, la versión chata tiene su propio equivalente: la barra de progreso lineal anima su ancho con una transición CSS (`animarBarraMobile`) y los mismos números se animan con `animarNumero` sobre los elementos `[data-stat-mobile]` — antes en mobile los números y la barra saltaban de golpe, sin animación.
-- **Reacomodo de tarjetas (técnica FLIP)**: al resolver una decisión y quedar menos tarjetas, la que sigue no salta de golpe a su nueva posición — se captura su posición anterior y se anima el desplazamiento (`capturarPosicionesCards`/`animarReacomodoCards`, [carrera.js:1131-1158](js/carrera.js:1131)). **Solo en desktop**: en mobile, la técnica FLIP (que traslada la tarjeta desde su posición "antes") entraba en conflicto con el scroll-snap nativo del carrusel de decisiones y producía un rebote visible al terminar la transición — en mobile se usa en cambio un fundido + escala simple (`@keyframes decisionCardEntrando`), sin tocar la posición real de la tarjeta.
+- **Reacomodo de tarjetas (técnica FLIP)**: al resolver una decisión y quedar menos tarjetas, la que sigue no salta de golpe a su nueva posición — se captura su posición anterior y se anima el desplazamiento (`capturarPosicionesCards`/`animarReacomodoCards`, [carrera.js:1131-1158](js/carrera.js:1131)), con una curva de easing pronunciada de 550ms (antes 350ms — se sentía demasiado brusco). **Solo en desktop**: en mobile, la técnica FLIP (que traslada la tarjeta desde su posición "antes") entraba en conflicto con el scroll-snap nativo del carrusel de decisiones y producía un rebote visible al terminar la transición — en mobile se usa en cambio un fundido + escala simple (`@keyframes decisionCardEntrando`, también en 500ms), sin tocar la posición real de la tarjeta.
+- **Lesión activa — efecto de luz roja**: mientras el jugador tiene una lesión en curso, la tarjeta de spotlight de la temporada (desktop y su equivalente mobile) muestra un borde y resplandor rojo (`.spotlight-card--lesionado`/`.spotlight-mobile--lesionado`) más un ícono 🤕 superpuesto — el mismo lenguaje visual que ya usaban la tarjeta de evento de alto impacto y el ícono de mundo de la convocatoria a la selección, para que "algo importante está pasando" se lea igual en toda la interfaz.
 - **Línea de diseño móvil independiente**: por debajo de los 640px, `carrera.css` no solo achica la versión de escritorio — el hero, el spotlight y el historial tienen su propio HTML más chato (generado aparte en `carrera.js`, oculto/mostrado por CSS), y el panel de decisiones pasa a un carrusel de una tarjeta a la vez con scroll-snap, sin JavaScript adicional para eso.
-- **Tarjeta para compartir el resumen de carrera**: el botón "C" junto a la ✕ del modal de resumen (`#resumenModalCompartir`) genera una imagen propia con los mismos datos del resumen — no es una captura del popup (eso pediría una librería externa que el proyecto no usa), es una tarjeta de 1080×1350 dibujada a mano en un `<canvas>` (`generarTarjetaResumenCanvas`, [carrera.js](js/carrera.js)): escudo del último club, degradado con sus colores, badge de pico de OVR, gráfico de evolución de OVR, grid de estadísticas, recorrido de clubes y trofeos — y se copia al portapapeles con la Clipboard API (`navigator.clipboard.write`), con un `window.open` de respaldo si el navegador no la soporta.
+- **Tarjeta para compartir el resumen de carrera**: el botón "C" junto a la ✕ del modal de resumen (`#resumenModalCompartir`) genera una imagen propia con los mismos datos del resumen — no es una captura del popup (eso pediría una librería externa que el proyecto no usa), es una tarjeta de 1080×1350 (1450 si hubo selección) dibujada a mano en un `<canvas>` (`generarTarjetaResumenCanvas`, [carrera.js](js/carrera.js)): el logo real del juego (`assets/logo/logo_leyenda_transparent.png`) en la esquina, escudo del último club, degradado con sus colores, badge de pico de OVR, gráfico de evolución de OVR, grid de estadísticas, recorrido de clubes, sección "Con la selección" (bandera + país + partidos/goles, si aplica) y trofeos — y se copia al portapapeles con la Clipboard API (`navigator.clipboard.write`), con un `window.open` de respaldo si el navegador no la soporta.
+  - **Imágenes cross-origin en el canvas**: la bandera del país sale de [flagcdn.com](https://flagcdn.com), un origen distinto al del juego. Dibujar una imagen así en el canvas sin marcarla `crossOrigin = "anonymous"` lo deja "tainted" (contaminado) y el navegador bloquea después cualquier intento de exportarlo (`toBlob`/`toDataURL`) con un `SecurityError` — rompía la tarjeta entera apenas la carrera incluía convocatorias a la selección. La bandera se carga ahora con `cargarImagenSeguraCrossOrigin` en vez de la función genérica `cargarImagenSegura` (reservada para assets propios del sitio); si el servidor remoto no coopera con CORS, cae sola al respaldo de emoji sin romper nada.
 - **Con la selección**: cuando hubo convocatoria esa temporada, el spotlight y el historial muestran una línea aparte con la bandera del país + partidos/goles con la selección (ver [sección 19](#19-selección-nacional)) — nunca mezclada con los números de club.
 - **Chips del hero** (edad, país, valor de mercado): los 3 comparten el mismo estilo neutro (texto blanco, borde translúcido) — el de valor de mercado (`.value-badge`) usaba antes el celeste `--accent-2`, distinto de los otros dos sin motivo aparente; ahora los 3 son visualmente el mismo tipo de dato.
 - **Altura real de viewport en mobile (`--vh-real`)**: el layout de `carrera.html` (hero fijo / centro scrolleable / footer de decisiones fijo) depende de conocer la altura visible real de la pantalla. `100dvh` la calcula bien en Safari/iOS, pero varios navegadores mobile (Chrome/Firefox en Android, algunos in-app browsers) la calculan mal al cargar la página y dejan una franja del footer tapada. `actualizarAlturaViewport()` ([carrera.js](js/carrera.js), tope del archivo) mide `window.innerHeight` por JS al cargar y en cada resize/orientationchange, y esa variable pisa a `100dvh` en `.body--career` como última palabra — `100vh` y `100dvh` quedan como respaldo en cascada para cuando el JS todavía no corrió.
@@ -850,6 +872,14 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `OVR_EDAD_ACELERA_DECLIVE` | 39 | Edad desde la que el declive se acelera fuerte |
 | `OVR_EDAD_DECLIVE_TASA_BASE` / `_ACELERADA` | 0.08 / 0.35 | OVR perdido por tramo, por año, antes/después de acelerar |
 | `FORMA_CALIDAD` | ver [sección 12](#12-estado-de-forma) | Calidad aportada por cada estado de forma a la fuerza de campaña |
+| `FORMA_PESO_ACUMULACION` | 0.5 | Fracción del camino hacia el objetivo de forma que se recorre por decisión (ver [sección 12](#12-estado-de-forma)) |
+| `PESO_TITULAR_INICIAL` | 0.4 | `pesoTitular` de arranque (novato o recién fichado) |
+| `PESO_TITULAR_MIN` / `MAX` | 0.05 / 0.95 | Piso y techo de `pesoTitular` |
+| `PESO_TITULAR_RATING_NEUTRO` | 6.5 | Rating de tramo que ni suma ni resta `pesoTitular` |
+| `PESO_TITULAR_AJUSTE_RATING` | 0.05 | Sensibilidad del ajuste de `pesoTitular` al rating del tramo |
+| `PESO_TITULAR_AJUSTE_MIN` / `MAX` | −0.08 / 0.12 | Rango del ajuste de `pesoTitular` por rendimiento en un tramo |
+| `PESO_TITULAR_CASTIGO_SIN_MINUTOS` | −0.05 | Ajuste de `pesoTitular` si no jugaste ningún partido ese tramo |
+| `PESO_TITULAR_CASTIGO_LESION` | −0.03 | Ajuste de `pesoTitular` si estuviste lesionado ese tramo |
 | `FUERZA_PESO_CLUB` / `_FORMA` / `_EQUIPO_ACUMULADO` | 0.5 / 0.2 / 0.3 | Pesos de la fórmula de fuerza de campaña (el eje club usa solo `fuerza`, no el poder combinado) |
 | `UMBRAL_CLASIFICA_PRIMER_NIVEL` / `_SEGUNDO_NIVEL` | 0.72 / 0.45 | Umbrales de fuerza para clasificar a competición internacional |
 | `UMBRAL_OVR_CONVOCATORIA_BASE` / `_FACTOR` | 50 / 0.35 | Fórmula del OVR de referencia (50/50 de convocatoria) según la fuerza de tu selección — ver [sección 19](#19-selección-nacional) |
