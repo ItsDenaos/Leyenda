@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.
 
-**Versión:** 0.4.0-alpha — publicada el 6 de septiembre de 2026 · 18:14.
+**Versión:** 0.5.0-Beta — publicada el 6 de septiembre de 2026 · 21:10.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -28,12 +28,13 @@ Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso).
 16. [Sistema de fichajes y ofertas](#16-sistema-de-fichajes-y-ofertas)
 17. [Fin de carrera: retiro y resumen](#17-fin-de-carrera-retiro-y-resumen)
 18. [Solicitud de cambio de dorsal](#18-solicitud-de-cambio-de-dorsal)
-19. [Banco de eventos de temporada](#19-banco-de-eventos-de-temporada-jseventsjs)
-20. [Base de datos de ligas y equipos](#20-base-de-datos-de-ligas-y-equipos-jsdatabasejs)
-21. [Interfaz: componentes, animaciones y responsive](#21-interfaz-componentes-animaciones-y-responsive)
-22. [Persistencia y estado](#22-persistencia-y-estado)
-23. [Tabla completa de constantes de balance](#23-tabla-completa-de-constantes-de-balance)
-24. [Limitaciones conocidas y notas para el futuro](#24-limitaciones-conocidas-y-notas-para-el-futuro)
+19. [Selección nacional](#19-selección-nacional)
+20. [Banco de eventos de temporada](#20-banco-de-eventos-de-temporada-jseventsjs)
+21. [Base de datos de ligas y equipos](#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs)
+22. [Interfaz: componentes, animaciones y responsive](#22-interfaz-componentes-animaciones-y-responsive)
+23. [Persistencia y estado](#23-persistencia-y-estado)
+24. [Tabla completa de constantes de balance](#24-tabla-completa-de-constantes-de-balance)
+25. [Limitaciones conocidas y notas para el futuro](#25-limitaciones-conocidas-y-notas-para-el-futuro)
 
 ---
 
@@ -113,7 +114,7 @@ carrera.html (el juego)
 Retiro (forzoso por edad, o elegido) → resumen de carrera → volver a index.html
 ```
 
-No hay guardado de partida: **todo el estado de la carrera vive en memoria mientras la pestaña está abierta**. Recargar la página reinicia la carrera desde la Temporada 1 (con el mismo club/OVR inicial, porque eso sí quedó en `localStorage`). Ver [sección 22](#22-persistencia-y-estado).
+No hay guardado de partida: **todo el estado de la carrera vive en memoria mientras la pestaña está abierta**. Recargar la página reinicia la carrera desde la Temporada 1 (con el mismo club/OVR inicial, porque eso sí quedó en `localStorage`). Ver [sección 23](#23-persistencia-y-estado).
 
 ---
 
@@ -146,11 +147,11 @@ y se pasa a `equipo.html`.
 
 Se presentan **4 ofertas de club**, elegidas así ([equipo.js:17-32](js/equipo.js:17)):
 
-- **Si el país elegido tiene una liga propia** en la base de datos (Argentina, Brasil, México, Estados Unidos o Colombia — las únicas 5 con `pais` cargado en `GameDatabase.ligas`), las 4 ofertas salen de esa liga, en esta banda fija (`OFERTAS_INICIALES`, [config.js:120-125](js/config.js:120)):
+- **Si el país elegido tiene una liga propia** en la base de datos (**23 de los 46** países de la creación de personaje, desde Alemania/Argentina/España hasta Bolivia/Costa Rica/Paraguay — todas las que tienen `pais` cargado en `GameDatabase.ligas`, ver [sección 21](#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs)), las 4 ofertas salen de esa liga, en esta banda fija (`OFERTAS_INICIALES`, [config.js:120-125](js/config.js:120)):
   - 2 clubes **humildes** (mitad de abajo por poder, dentro de esa liga)
   - 1 club **consolidado** (entre el 50% y el 85% por poder)
   - 1 club **al azar**, de cualquier categoría (la única chance de arrancar en un club grande)
-- **Si el país NO tiene liga propia** (la inmensa mayoría — solo 5 de los 46 países la tienen), arranca "de extranjero" en una de las **5 grandes ligas europeas** elegida al azar (Premier League, La Liga, Serie A, Bundesliga, Ligue 1 — `LIGAS_GRANDES_EUROPEAS`, [config.js:116](js/config.js:116)), con una banda más floja y sin favores (`OFERTAS_INICIALES_EXTRANJERO`, [config.js:127-132](js/config.js:127)): 3 clubes humildes + 1 consolidado, nunca uno grande.
+- **Si el país NO tiene liga propia** (los otros 23 — mayormente africanos, asiáticos y del resto de Europa que todavía no tienen liga doméstica cargada), arranca "de extranjero" en una de las **5 grandes ligas europeas** elegida al azar (Premier League, La Liga, Serie A, Bundesliga, Ligue 1 — `LIGAS_GRANDES_EUROPEAS`, [config.js:116](js/config.js:116)), con una banda más floja y sin favores (`OFERTAS_INICIALES_EXTRANJERO`, [config.js:127-132](js/config.js:127)): 3 clubes humildes + 1 consolidado, nunca uno grande.
 
 "Humilde" / "consolidado" / "grande" son percentiles por poder **dentro de la liga elegida** (`categoriaEquipoEnLiga`, [config.js:174-183](js/config.js:174) — ver [sección 16.6](#16-sistema-de-fichajes-y-ofertas) para qué es el poder de un club), no una categoría fija guardada en cada club: humilde es la mitad de abajo, consolidado el 50-85%, grande el 15% de arriba (`CATEGORIA_EQUIPO_PERCENTIL`, [config.js:118](js/config.js:118)).
 
@@ -168,7 +169,7 @@ Al elegir un club se guarda `equipoId` y `ovrInicial` en el mismo objeto de `loc
 
 ## 6. El motor de carrera — visión general (`js/carrera.js`)
 
-Es el archivo más grande (1500+ líneas): mezcla el **estado del juego**, la **simulación** y **todo el render de la UI** de `carrera.html` (no hay separación de capas — es un único script).
+Es el archivo más grande (2100+ líneas): mezcla el **estado del juego**, la **simulación** y **todo el render de la UI** de `carrera.html` (no hay separación de capas — es un único script).
 
 ### Estado central
 
@@ -180,7 +181,7 @@ let carreraFinalizada = false;
 const edadRetiroForzoso = GameConfig.randomInt(41, 45); // sorteada UNA VEZ por carrera, al cargar la página
 ```
 
-`temporadaActual` (creada por `crearTemporada()`, [carrera.js:138](js/carrera.js:138)) contiene, entre otras cosas: `numero`, `anio`, `equipoId`, `ovr`, `partidos/goles/asistencias/mvp/sumaRating/promedio`, `valorMercado`, `trofeos[]`, `forma`, `titular`, `progreso` (0–100%), `calendario[]`, `checkpointIndex`, `tramoIndex`, `lesionActiva`, `bufferRendimiento`/`bufferEquipo` (efecto acumulado de las decisiones del tramo en curso, sin aplicar todavía) y `competiciones` (liga + copa nacional + copa internacional de esa temporada).
+`temporadaActual` (creada por `crearTemporada()`, [carrera.js:138](js/carrera.js:138)) contiene, entre otras cosas: `numero`, `anio`, `equipoId`, `ovr`, `partidos/goles/asistencias/mvp/sumaRating/promedio`, `valorMercado`, `trofeos[]`, `forma`, `titular`, `progreso` (0–100%), `calendario[]`, `checkpointIndex`, `tramoIndex`, `lesionActiva`, `bufferRendimiento`/`bufferEquipo` (efecto acumulado de las decisiones del tramo en curso, sin aplicar todavía), `competiciones` (liga + copa nacional + copa internacional de esa temporada) y todo lo de la selección nacional de esa temporada — `seleccion`, `tipoAnoSeleccion`, `convocatoriaPausa`, `seleccionPartidos`/`seleccionGoles` (ver [sección 19](#19-selección-nacional)).
 
 Si se abre `carrera.html` sin haber pasado por la creación de personaje (sin `equipoId`/`ovrInicial` válidos en `localStorage`), arranca una **carrera demo** ya avanzada, con el mismo motor real (totalmente jugable) — [carrera.js:758-785](js/carrera.js:758).
 
@@ -211,7 +212,7 @@ Las 4 (o 3, en la Temporada 1) se ordenan por `progreso` para que el calendario 
 
 **Por qué una sola ventana, y siempre en pretemporada**: antes había una segunda pausa de fichajes a mitad de año, lo que permitía que un traspaso partiera una temporada en dos (dos clubes distintos, dos filas de historial, el mismo año). Se sacó a propósito — ahora un fichaje sale siempre con la temporada en cero (0 partidos jugados con el club nuevo) y la corres entera de punta a punta con ese club, tal como pasaría en la realidad con una ventana de pases real. `resolveOferta` ([carrera.js:1299-1343](js/carrera.js:1299)) ya no tiene ninguna rama de "traspaso a mitad de camino": cambiar de club siempre resetea `competiciones` (liga + copa nacional; la clasificación internacional NO se hereda, es del club, no del jugador) desde cero.
 
-**Alto Impacto**: al crear la temporada se sortea si va a haber un evento de alto impacto (30% de probabilidad) y, si sale, en cuál de los 3 tramos va a aparecer (`altoImpactoPausa`, [carrera.js:145](js/carrera.js:145)). Ver [sección 19](#19-banco-de-eventos-de-temporada-jseventsjs).
+**Alto Impacto**: al crear la temporada se sortea si va a haber un evento de alto impacto (30% de probabilidad) y, si sale, en cuál de los 3 tramos va a aparecer (`altoImpactoPausa`, [carrera.js:145](js/carrera.js:145)). Ver [sección 20](#20-banco-de-eventos-de-temporada-jseventsjs).
 
 ---
 
@@ -377,7 +378,7 @@ Sube con la edad a partir de los 30 años, con un techo del 18%.
 | Nivel 2 (moderada) | 35% | Sin partidos 1–2 pausas + forma fija en "Tocado" + OVR **−1 a −3**, aplicado de una vez. |
 | Nivel 1 (grave) | 10% | Sin partidos, entre 2 pausas y el resto de la temporada + forma fija en "Tocado" + OVR **−4 a −10**, aplicado de una vez. |
 
-La duración exacta (`duracionLesion`, [config.js:857-868](js/config.js:857)) y la pérdida de OVR (`ovrPerdidoPorLesion`, [config.js:870-874](js/config.js:870)) se sortean dentro de esos rangos, siempre topeados por los tramos que en verdad quedan en la temporada. Cada nivel tiene su propio banco de nombres/descripciones de lesión real (rotura de LCA, esguince, desgarro, etc. — ver [sección 19](#19-banco-de-eventos-de-temporada-jseventsjs)).
+La duración exacta (`duracionLesion`, [config.js:857-868](js/config.js:857)) y la pérdida de OVR (`ovrPerdidoPorLesion`, [config.js:870-874](js/config.js:870)) se sortean dentro de esos rangos, siempre topeados por los tramos que en verdad quedan en la temporada. Cada nivel tiene su propio banco de nombres/descripciones de lesión real (rotura de LCA, esguince, desgarro, etc. — ver [sección 20](#20-banco-de-eventos-de-temporada-jseventsjs)).
 
 Cuando sale una lesión nueva, esa pausa entera se reemplaza por un **parte médico** (sin decisiones que tomar, `crearLesionCard`, [carrera.js:1197-1221](js/carrera.js:1197)): muestra nombre, descripción, OVR perdido (si corresponde) y pausas de baja, y el jugador confirma con un botón **"Continuar"** para avanzar el tramo — no hay temporizador ni avance automático. En mobile esa tarjeta ocupa el ancho completo del carrusel de decisiones en vez de compartir espacio como una tarjeta más.
 
@@ -439,11 +440,13 @@ prob = clamp(0.25 + 0.5 × fuerza, 0.1, 0.85)
 ```
 
 **Clasificación internacional para la próxima temporada**:
-- `fuerza ≥ 0.72` o ganaste la liga → clasificás a la competición de **primer nivel** de tu confederación (Champions League / Libertadores / Concacaf Champions Cup).
-- `fuerza ≥ 0.45` o ganaste la copa nacional → clasificás a la de **segundo nivel** (Europa League / Sudamericana — CONCACAF no tiene equivalente).
+- `fuerza ≥ 0.72` o ganaste la liga → clasificás a la competición de **primer nivel** de tu confederación (Champions League / Libertadores / Concacaf Champions Cup / AFC Champions League Elite).
+- `fuerza ≥ 0.45` o ganaste la copa nacional → clasificás a la de **segundo nivel** (Europa League / Sudamericana / AFC Champions League Two — CONCACAF todavía no tiene equivalente).
 - Si no, no clasificás a nada.
 
-Los partidos de cada competición (mínimos garantizados + extra por ronda) salen de `GameDatabase.competiciones` — ver [sección 20](#20-base-de-datos-de-ligas-y-equipos-jsdatabasejs).
+Las confederaciones con liga(s) cargada(s) son `UEFA` / `CONMEBOL` / `CONCACAF` / `AFC` (`CAF` todavía no tiene ninguna liga doméstica propia, solo selecciones — ver [sección 19](#19-selección-nacional)). Si tu confederación no tiene competición de un nivel dado (el caso de CONCACAF sin segundo nivel), simplemente no clasificás a nada en ese nivel — no hay error ni sustituto.
+
+Los partidos de cada competición (mínimos garantizados + extra por ronda) salen de `GameDatabase.competiciones` — ver [sección 21](#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs).
 
 ---
 
@@ -582,7 +585,7 @@ Al aceptar una carta de retiro (`finalizarCarrera`, [carrera.js:1402-1434](js/ca
 - Se archiva la temporada en curso tal como quedó.
 - El spotlight desaparece y el panel de decisiones muestra el mensaje de despedida con **2 botones**:
   - **"Ver resumen de mi carrera"** → abre un modal (`renderResumenCarrera`, [carrera.js:1540-1580](js/carrera.js:1540)) con:
-    - **Banner** con el degradado de colores del último club (mismo lenguaje visual que el hero de `carrera.html`, vía `--rb-a`/`--rb-b`): escudo, nombre, posición, temporadas jugadas, edad de retiro, y el **badge de pico de OVR** (`ovr-badge--hero`, coloreado con `ovrTierColor` — ver [sección 21](#21-interfaz-componentes-animaciones-y-responsive)) a un costado.
+    - **Banner** con el degradado de colores del último club (mismo lenguaje visual que el hero de `carrera.html`, vía `--rb-a`/`--rb-b`): escudo, nombre, posición, temporadas jugadas, edad de retiro, y el **badge de pico de OVR** (`ovr-badge--hero`, coloreado con `ovrTierColor` — ver [sección 22](#22-interfaz-componentes-animaciones-y-responsive)) a un costado.
     - **Gráfico de evolución de OVR**: un SVG de área + línea (`ovrArcoSvg`, [carrera.js:1494-1512](js/carrera.js:1494)) con el OVR de cada temporada de punta a punta, coloreado con el mismo color de gema/metal que el badge de pico — la caption de al lado indica "De X a Y" (OVR de la Temporada 1 al pico alcanzado).
     - **Estadísticas combinadas** de **toda** la carrera (todas las filas de `temporadasFinalizadas`): partidos, goles, asistencias, MVP, promedio de rating y mayor valor de mercado, cada una con su ícono.
     - **Clubes**, como un recorrido horizontal con flechas entre escudos (en el orden en que los fichaste, sin repetir) en vez de una grilla suelta — con scroll propio si fueron muchos.
@@ -607,7 +610,70 @@ El número pedido en sí no influye en nada — lo que pesa es tu peso dentro de
 
 ---
 
-## 19. Banco de eventos de temporada (`js/events.js`)
+## 19. Selección nacional
+
+Sistema aparte del banco de eventos (aunque su tarjeta se muestra en el mismo lugar): representa las convocatorias, torneos y estadísticas del jugador con la selección de su país, en paralelo a su carrera de club.
+
+### 19.1 Selecciones nacionales (`GameDatabase.selecciones`)
+
+**46 selecciones** — una por cada país de `COUNTRIES` ([script.js:4](js/script.js:4)) — cada una con `fuerza`/`prestigio` (mismo eje 0-100 que clubes/ligas, ver [sección 14.0](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)) y su `confederacion` (`UEFA` / `CONMEBOL` / `CONCACAF` / `CAF` / `AFC` — más amplio que el de `ligas`, porque acá entran todos los países de la creación de personaje, no solo los que tienen liga propia cargada). Van a mano según pedigrí futbolístico real: de Brasil (fuerza 92) a Catar (fuerza 38).
+
+### 19.2 Convocatoria
+
+Se sortea **una vez por temporada**, igual mecanismo que Alto Impacto (ver [sección 20](#20-banco-de-eventos-de-temporada-jseventsjs)): cada país tiene un "OVR de referencia" que te da un 50/50 de ser convocado — `probConvocatoria(ovr, fuerzaSeleccion)` ([config.js](js/config.js)):
+
+```
+umbral = 50 + fuerzaSeleccion × 0.35                         (UMBRAL_OVR_CONVOCATORIA_BASE/_FACTOR)
+prob   = clamp(0.5 + (ovr − umbral) × 0.04, 0.03, 0.95)       (PROB_CONVOCATORIA_PENDIENTE_OVR, min/max)
+```
+
+Cuanto más grande la selección, más alto el OVR que hace falta: a Brasil (fuerza 92, umbral ≈ 82) hay que llegarle con un OVR de élite; a Bolivia (fuerza 35, umbral ≈ 62) un OVR medio ya empareja. La probabilidad sube/baja de forma lineal alrededor de ese umbral — no es un corte seco, hay una franja real de incertidumbre.
+
+Si el sorteo da que sí, se elige al azar en qué pausa de la temporada cae la convocatoria (igual que Alto Impacto). Si esa pausa **ya** está ocupada por un evento de Alto Impacto de tipo "deportivo", la convocatoria simplemente no se muestra esa vez (caso raro: requiere que ambos coincidan de pausa).
+
+### 19.3 La tarjeta de convocatoria
+
+Reemplaza el slot "deportivo" de esa pausa (mismo mecanismo de reemplazo que Alto Impacto), con un dilema real de 2 opciones — nunca gratis, mismo principio que el resto del banco de eventos (ver [sección 20](#20-banco-de-eventos-de-temporada-jseventsjs)):
+
+| Opción | Efecto en tu club | Efecto en tu selección |
+|---|---|---|
+| Priorizar la convocatoria | `rendimiento +1`, `equipo −1` | Jugás normalmente (ver 19.4) |
+| Cuidar tu lugar en el club | `forma: desanimado`, `equipo +1` | 0 partidos esa ventana |
+
+Se identifica con un 🌍 en la esquina superior derecha de la tarjeta (mismo lugar que el ⚠️ de Alto Impacto) y la etiqueta "Selección" en vez de "Deportivo".
+
+### 19.4 Qué se juega — amistosos, eliminatorias o el torneo grande
+
+El calendario de grandes torneos sale directo del número de temporada, sin estado adicional que guardar (`tipoAnoTorneoSeleccion`, [config.js](js/config.js)):
+
+```
+temporada % 4 == 1  →  año de Mundial
+temporada % 4 == 3  →  año de copa continental (Copa América / Eurocopa / Copa Oro / Copa Africana / Copa Asiática, según tu confederación)
+en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
+```
+
+Al aceptar priorizar la convocatoria, `resolverParticipacionSeleccion` resuelve todo de un saque (no se reparte en tramos como las copas de club):
+
+- **Año sin torneo**: jugás 2 amistosos (`PARTIDOS_AMISTOSO_SELECCION`).
+- **Año de torneo**: primero se tira si tu país **clasifica** (`probClasificarTorneoSeleccion(calidad) = clamp(0.15 + 0.8 × calidad, 0.05, 0.97)`, más parejo que ganarlo). Si no clasifica, jugás 2 partidos de eliminatorias igual (`PARTIDOS_ELIMINATORIAS_SELECCION`). Si clasifica:
+  - Fase de grupos garantizada (3 partidos, `PARTIDOS_FASE_DE_GRUPOS_SELECCION`), con una tirada para avanzar (`probAvanzarFaseDeGruposSeleccion(calidad) = clamp(0.35 + 0.6 × calidad, 0.15, 0.95)` — bastante generoso, como en la vida real).
+  - Si avanza, una ronda eliminatoria por vez (octavos → cuartos → semifinal → final en el Mundial, cuartos → semifinal → final en los continentales), cada una con la **misma** `probAvanzarRonda(calidad)` que ya usan las copas de club ([sección 14.1](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)) — si gana todas, es **campeón** y el trofeo (Copa del Mundo / Copa América / Eurocopa / Copa Oro / Copa Africana de Naciones / Copa Asiática) se suma a `temporadaActual.trofeos`, el mismo array que los trofeos de club. Si pierde justo la final, queda **subcampeón**.
+
+`calidad` es `calidadSeleccion(fuerzaSeleccion, forma)` ([config.js](js/config.js)): la fuerza fija del país pesa la enorme mayoría, con un empujón chico (`SELECCION_PESO_JUGADOR = 0.15`) según tu forma del momento — un solo jugador no decide el destino de todo un seleccionado.
+
+Los goles de esos partidos reutilizan `GameConfig.simularTramo` tal cual la usa el club (misma propensión por grupo de posición, [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)), para que meter un gol con la selección se sienta igual que uno de club.
+
+### 19.5 Estadísticas y dónde se ven
+
+Cada temporada guarda su propio `seleccionPartidos`/`seleccionGoles` (independientes de los `partidos`/`goles` de club — nunca se suman entre sí):
+
+- **Temporada en curso**: si hubo convocatoria, el spotlight muestra una línea aparte con la bandera del país + "Selección: N PJ · M G", debajo del club/liga (desktop y mobile).
+- **Historial**: cada temporada pasada con convocatoria repite esa misma línea en su propia fila, sin desplazar las columnas de club (trofeos, OVR, stats).
+- **Resumen final de carrera**: una sección "Con la selección" con la bandera, el país y el total acumulado de partidos/goles de toda la carrera (`construirResumenCarrera`, [carrera.js](js/carrera.js)) — y los trofeos de selección aparecen mezclados con los de club en la misma fila de trofeos, porque comparten el mismo array.
+
+---
+
+## 20. Banco de eventos de temporada (`js/events.js`)
 
 **226 eventos de decisión** en total, cada uno con **2 opciones** (formato completo documentado en el encabezado de [events.js:10-28](js/events.js:10)):
 
@@ -623,47 +689,73 @@ El número pedido en sí no influye en nada — lo que pesa es tu peso dentro de
 
 **Eventos de debut**: 2 eventos de `porEdad.novato` (`nov-08`, `nov-32`) están escritos sobre el debut profesional en sí ("un defensor te marca en tu debut", "debutás en un estadio gigante") — un momento que ocurre una única vez. Quedan marcados con `debut: true` y `esElegibleParaDebut(evento)` ([carrera.js:392-395](js/carrera.js:392)) los excluye del sorteo salvo que sea, literal, la primera pausa de decisión de toda la carrera (Temporada 1, antes de simular el primer tramo) — antes solo se filtraba por rango de edad, así que podían salir en la Temporada 3 con el jugador ya afianzado en el club.
 
-**Sin decisiones "gratis"**: cada opción de cada evento normal (no aplica a `altoImpacto`, ver el porqué debajo) está pensada para que la otra alternativa no sea un No-brainer — ninguna opción gana a la vez en rendimiento, forma y equipo sin ceder nada en ningún eje. Antes, el patrón típico era una opción "comprometida" que sumaba en las tres dimensiones a la vez contra una opción "pasiva" neutra o floja: no había nada en juego, el camino quedaba marcado de antemano. La única excepción a propósito es un evento de `altoImpacto` sobre aceptar un soborno para arreglar un partido (`ai-17`) — ahí rechazar la propuesta debe ser, sí, objetivamente mejor en todo: no es un dilema de números, es una cuestión de integridad.
+**Sin decisiones "gratis"**: cada opción de cada evento normal (no aplica a `altoImpacto`, ver el porqué debajo) tiene siempre **al menos una señal positiva y una negativa** entre `rendimiento`/`forma`/`equipo` — ninguna opción es pura-positiva ni pura-negativa, y ninguna queda neutra-plana. La idea no es que una opción "gane" a la otra en todo, sino que el jugador elija cuál le conviene más, cuál le hace perder más o cuál le hace perder menos. Un segundo pase completo sobre las 452 opciones del banco (238 modificadas) eliminó los últimos casos de "opción comprometida en las tres dimensiones vs. opción pasiva floja" que todavía quedaban del primer ajuste — siempre inyectando la señal que falta en un eje que esa opción tenía en cero, nunca pisando la única señal que ya tenía. La única excepción a propósito sigue siendo un evento de `altoImpacto` sobre aceptar un soborno para arreglar un partido (`ai-17`) — ahí rechazar la propuesta debe ser, sí, objetivamente mejor en todo: no es un dilema de números, es una cuestión de integridad.
 
-**Eventos de Alto Impacto**: sin restricción de edad, efectos mucho más fuertes (hasta ±6 de rendimiento, ±4 de equipo — contra ±3/±2 de los eventos normales), y algunos tienen **las dos opciones en negativo a propósito** (elegir el mal menor, no "ganar"). Se identifican con un ⚠️ en la tarjeta. Se sortea al crear la temporada si va a haber uno (30% de probabilidad) y en qué tramo; si sale, reemplaza al evento del tipo que corresponda en esa pausa.
+**Eventos de Alto Impacto**: sin restricción de edad, efectos mucho más fuertes (hasta ±6 de rendimiento, ±4 de equipo — contra ±3/±2 de los eventos normales), y algunos tienen **las dos opciones en negativo a propósito** (elegir el mal menor, no "ganar"). Se identifican con un ⚠️ en la tarjeta. Se sortea al crear la temporada si va a haber uno (30% de probabilidad) y en qué tramo; si sale, reemplaza al evento del tipo que corresponda en esa pausa — mismo mecanismo de reemplazo que usa la convocatoria a la selección nacional ([sección 19](#19-selección-nacional)), que compite por el mismo slot "deportivo".
 
-Cada opción define: el texto del botón, sus `efectos` (`rendimiento` −3..+3 normal / −6..+6 alto impacto, `forma` nuevo estado fijo, `equipo` −2..+2 normal / −4..+4 alto impacto) y el texto de resultado que se muestra al elegirla.
+Cada opción define el texto del botón y sus `efectos` (`rendimiento` −3..+3 normal / −6..+6 alto impacto, `forma` nuevo estado fijo, `equipo` −2..+2 normal / −4..+4 alto impacto). También trae un texto de `resultado` en los datos — es contenido narrativo pensado para uso futuro (por ejemplo, un registro/historial de decisiones), pero **hoy no se muestra en ningún lado de la interfaz**: se sacó del toast que lo mostraba antes porque era pura redundancia con lo que ya decía el botón elegido.
 
 **Lesiones** (contenido, no la lógica — ver [sección 13](#13-lesiones)): 17 lesiones reales con nombre y descripción médica, repartidas en nivel3 (6, leves), nivel2 (6, moderadas) y nivel1 (5, graves — LCA, fractura de tibia/peroné, tendón de Aquiles, hernia discal, rotura muscular grado 3).
 
 ---
 
-## 20. Base de datos de ligas y equipos (`js/database.js`)
+## 21. Base de datos de ligas y equipos (`js/database.js`)
 
-**10 ligas reales**, cada una con sus 3 ejes ocultos de 0 a 100 (`fuerza` / `prestigio` / `economia` — ver [sección 14.0](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)):
+**29 ligas reales**, cada una con sus 3 ejes ocultos de 0 a 100 (`fuerza` / `prestigio` / `economia` — ver [sección 14.0](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)). Las primeras 10 (las "grandes" originales) tienen estos valores puestos a mano desde el arranque del proyecto; las otras 19 se sumaron después en una incorporación masiva, con la misma metodología:
 
-| Liga | País | Fuerza | Prestigio | Economía |
-|---|---|---|---|---|
-| Premier League | Inglaterra | 96 | 92 | 100 |
-| La Liga | España | 93 | 97 | 88 |
-| Serie A | Italia | 88 | 90 | 78 |
-| Bundesliga | Alemania | 87 | 82 | 82 |
-| Ligue 1 | Francia | 82 | 75 | 75 |
-| Brasileirão Série A | Brasil | 74 | 80 | 45 |
-| Primera División Argentina | Argentina | 68 | 85 | 25 |
-| Liga MX | México | 66 | 55 | 42 |
-| MLS | Estados Unidos | 58 | 40 | 55 |
-| Primera A (Colombia) | Colombia | 55 | 50 | 20 |
+| Liga | País | Confed. | Fuerza | Prestigio | Economía |
+|---|---|---|---|---|---|
+| Premier League | Inglaterra | UEFA | 96 | 92 | 100 |
+| La Liga | España | UEFA | 93 | 97 | 88 |
+| Serie A | Italia | UEFA | 88 | 90 | 78 |
+| Bundesliga | Alemania | UEFA | 87 | 82 | 82 |
+| Ligue 1 | Francia | UEFA | 82 | 75 | 75 |
+| Primeira Liga | Portugal | UEFA | 76 | 80 | 58 |
+| Süper Lig | Turquía | UEFA | 74 | 72 | 65 |
+| Brasileirão Série A | Brasil | CONMEBOL | 74 | 80 | 45 |
+| Eredivisie | Países Bajos | UEFA | 72 | 74 | 60 |
+| Pro League | Bélgica | UEFA | 70 | 62 | 55 |
+| Primera División Argentina | Argentina | CONMEBOL | 68 | 85 | 25 |
+| Liga Premier Rusa | Rusia | UEFA | 66 | 60 | 55 |
+| Liga MX | México | CONCACAF | 66 | 55 | 42 |
+| Primera División (Uruguay) | Uruguay | CONMEBOL | 64 | 72 | 22 |
+| Liga Premier de Ucrania | Ucrania | UEFA | 64 | 62 | 30 |
+| J1 League | Japón | AFC | 62 | 55 | 50 |
+| Primera División (Chile) | Chile | CONMEBOL | 60 | 62 | 30 |
+| Scottish Premiership | Escocia | UEFA | 60 | 58 | 42 |
+| MLS | Estados Unidos | CONCACAF | 58 | 40 | 55 |
+| Super League Greece | Grecia | UEFA | 58 | 55 | 38 |
+| Serie A (Ecuador) | Ecuador | CONMEBOL | 56 | 50 | 22 |
+| Super League China | China | AFC | 55 | 50 | 48 |
+| Primera División (Costa Rica) | Costa Rica | CONCACAF | 52 | 48 | 25 |
+| Primera A (Colombia) | Colombia | CONMEBOL | 55 | 50 | 20 |
+| Primera División (Paraguay) | Paraguay | CONMEBOL | 50 | 54 | 16 |
+| Liga 1 (Perú) | Perú | CONMEBOL | 48 | 45 | 18 |
+| Primera División (Venezuela) | Venezuela | CONMEBOL | 44 | 35 | 16 |
+| Primera División (El Salvador) | El Salvador | CONCACAF | 44 | 38 | 14 |
+| Primera División (Bolivia) | Bolivia | CONMEBOL | 42 | 38 | 15 |
 
-Solo las últimas 5 tienen el campo `pais` cargado (por eso son las únicas que pueden ser el punto de partida "local" en la creación de personaje — ver [sección 5](#5-elección-de-club-inicial-equipohtml--jsequipojs)).
+**23 de las 29** tienen el campo `pais` cargado con un país que existe en `COUNTRIES` (`js/script.js`) — esas son las que pueden ser el punto de partida "local" en la creación de personaje (ver [sección 5](#5-elección-de-club-inicial-equipohtml--jsequipojs)). Turquía, Grecia, Rusia, China, El Salvador y Ucrania tienen liga cargada pero **no** son nacionalidades elegibles todavía — se puede fichar por sus clubes, pero no arrancar la carrera como local ahí.
 
-**214 equipos reales** repartidos en esas 10 ligas, cada uno con: nombre real, sus propios `fuerza`/`prestigio`/`economia`, iniciales y colores propios (para el placeholder si el escudo no carga) y el nombre del archivo de escudo real. Los ~25 clubes más reconocibles del mundo (Real Madrid, Manchester City, Bayern Múnich, PSG, Boca Juniors, River Plate, Flamengo, Newcastle, RB Leipzig, etc.) tienen esos 3 valores puestos a mano; el resto se derivó una sola vez de su antiguo nivel 1-3 y la liga a la que pertenece, con una variación estable por club para que no todos los equipos de un mismo nivel terminen con el número idéntico.
+**510 equipos reales** repartidos en esas 29 ligas, cada uno con: nombre real, sus propios `fuerza`/`prestigio`/`economia`, iniciales y colores propios (para el placeholder si el escudo no carga) y el nombre del archivo de escudo real. Los ~25 clubes más reconocibles del mundo de las 10 ligas originales tienen esos 3 valores puestos a mano; el resto (incluidos los 296 equipos de las 19 ligas nuevas) se derivó con una variación estable por club (mismo id → siempre el mismo resultado) a partir de 3 niveles de referencia por liga — "grande" / "consolidado" / "humilde" — para que no todos los equipos de una misma liga terminen con el número idéntico.
 
-**19 competiciones reales** ([database.js:314-376](js/database.js:314)):
-- 10 ligas domésticas (una por cada liga cargada), con la cantidad real de partidos de su formato vigente (ej. Premier League 38, Liga MX 34 + 12 de liguilla, Primera A Colombia 38 + 10 de cuadrangulares).
-- 10 copas domésticas (FA Cup, Copa del Rey, Coppa Italia, DFB-Pokal, Coupe de France, Copa do Brasil, Copa Argentina, Copa México, Lamar Hunt U.S. Open Cup, Copa Colombia).
-- 4 competiciones internacionales por confederación/categoría: Champions League y Europa League (UEFA), Libertadores y Sudamericana (CONMEBOL), Concacaf Champions Cup (CONCACAF no tiene un segundo nivel continental vigente).
+**Escudos reales para toda la incorporación nueva**: los 296 equipos, las 19 ligas y sus 38 trofeos (liga + copa nacional de cada una) tienen su imagen real cargada — no hay ninguna liga nueva con ícono genérico de respaldo, salvo el trofeo de liga de Eredivisie (que sí tiene su logo real, pero todavía no un trofeo de campeón propio) y el logo de liga de Costa Rica.
+
+**Sustituciones por falta de escudo**: cuando un club realmente vigente en la temporada de referencia no tenía imagen disponible, se lo reemplazó por otro club real del mismo país que sí la tenía (nunca por un club inventado) — por ejemplo, en la J1 League japonesa Mito HollyHock/JEF United Chiba/V-Varen Nagasaki se reemplazaron por Albirex Niigata/Shonan Bellmare/Yokohama FC; en la Liga Premier Rusa, Akron Tolyatti/Dynamo Majachkalá/Rodina Moscú por Nizhni Nóvgorod/Sochi/Ural Yekaterinburg. La liga de Ucrania quedó con **16 equipos reales** en vez de sus 20 oficiales de esta temporada, por no tener sustitutos disponibles para completar los 4 que faltaban — se prefirió esto antes que inventar clubes sin escudo real.
+
+**71 competiciones reales** ([database.js](js/database.js)):
+- **29 ligas domésticas** (una por cada liga cargada), con la cantidad real (o una referencia realista) de partidos de su formato vigente.
+- **29 copas domésticas**, una por liga — de las 10 originales (FA Cup, Copa del Rey, Coppa Italia, DFB-Pokal, Coupe de France, Copa do Brasil, Copa Argentina, Copa México, Lamar Hunt U.S. Open Cup, Copa Colombia) a las 19 nuevas (KNVB Beker, Taça de Portugal, Croky Cup, Copa de Turquía, Scottish Cup, Copa de Grecia, Copa de Rusia, Copa del Emperador, Copa de China, Copa Perú, Copa Simón Bolívar, Copa Chile, Copa AUF Uruguay, Copa Venezuela, Copa Ecuador, Copa Costa Rica, Copa Paraguay, Copa Presidente, Copa de Ucrania).
+- **7 competiciones internacionales de club** por confederación/categoría: Champions League y Europa League (UEFA), Libertadores y Sudamericana (CONMEBOL), Concacaf Champions Cup (CONCACAF no tiene un segundo nivel continental vigente), y **AFC Champions League Elite/Two** (agregadas junto con J1 League y Super League China, para que sus clubes también tengan a qué clasificar — ver [sección 14](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)).
+- **6 competiciones de selección**: Copa del Mundo + una copa continental por confederación (Copa América, Eurocopa, Copa Oro, Copa Africana de Naciones, Copa Asiática) — ver [sección 19](#19-selección-nacional).
 
 Todos los números de partidos (mínimos garantizados + rondas extra) son una referencia realista basada en el formato vigente de cada torneo — ver los comentarios junto a cada entrada en el archivo para el detalle de cada formato.
 
+**46 selecciones nacionales** (`GameDatabase.selecciones`) — una por cada país de la creación de personaje, con `fuerza`/`prestigio` propios y su confederación (`UEFA`/`CONMEBOL`/`CONCACAF`/`CAF`/`AFC`) — ver [sección 19](#19-selección-nacional) para cómo se usan.
+
 ---
 
-## 21. Interfaz: componentes, animaciones y responsive
+## 22. Interfaz: componentes, animaciones y responsive
 
 - **Tokens de diseño** centralizados en `:root` de [css/style.css](css/style.css) (colores, radios) — compartidos por las 3 páginas.
 - **Escudos con fallback**: `crestHtml`/`ligaCrestHtml` ([config.js:283-310](js/config.js:283)) intentan cargar el PNG real; si falla (`onerror`), se reemplazan solas por un placeholder de iniciales + degradado de los colores del club (`crestFallback`). Los escudos de liga no llevan ese fondo — solo el logo (clase `team-crest--liga`).
@@ -682,9 +774,11 @@ Todos los números de partidos (mínimos garantizados + rondas extra) son una re
   | 96–99 | Amatista |
 
 - **Etiquetas de efecto en cada opción de decisión** (`efectoRendimientoHtml`/`efectoFormaHtml`/`efectoEquipoHtml`, [carrera.js:1021-1034](js/carrera.js:1021)): antes de elegir, cada botón muestra de forma explícita qué le va a pasar a tu rendimiento, tu forma y al equipo si lo tocás — no hay efectos ocultos en las decisiones de evento.
-- **Animaciones de tramo**: los números del spotlight (partidos, goles, OVR, anillo de progreso) no saltan de golpe — se animan con un *ease-out* cúbico durante 900ms (`animarNumero`/`animarAnilloProgreso`, [carrera.js:466-516](js/carrera.js:466)).
-- **Reacomodo de tarjetas (técnica FLIP)**: al resolver una decisión y quedar menos tarjetas, la que sigue no salta de golpe a su nueva posición — se captura su posición anterior y se anima el desplazamiento (`capturarPosicionesCards`/`animarReacomodoCards`, [carrera.js:1131-1158](js/carrera.js:1131)).
+- **Animaciones de tramo**: los números del spotlight (partidos, goles, OVR, anillo de progreso) no saltan de golpe — se animan con un *ease-out* cúbico durante 900ms (`animarNumero`/`animarAnilloProgreso`, [carrera.js:466-516](js/carrera.js:466)). En mobile, la versión chata tiene su propio equivalente: la barra de progreso lineal anima su ancho con una transición CSS (`animarBarraMobile`) y los mismos números se animan con `animarNumero` sobre los elementos `[data-stat-mobile]` — antes en mobile los números y la barra saltaban de golpe, sin animación.
+- **Reacomodo de tarjetas (técnica FLIP)**: al resolver una decisión y quedar menos tarjetas, la que sigue no salta de golpe a su nueva posición — se captura su posición anterior y se anima el desplazamiento (`capturarPosicionesCards`/`animarReacomodoCards`, [carrera.js:1131-1158](js/carrera.js:1131)). **Solo en desktop**: en mobile, la técnica FLIP (que traslada la tarjeta desde su posición "antes") entraba en conflicto con el scroll-snap nativo del carrusel de decisiones y producía un rebote visible al terminar la transición — en mobile se usa en cambio un fundido + escala simple (`@keyframes decisionCardEntrando`), sin tocar la posición real de la tarjeta.
 - **Línea de diseño móvil independiente**: por debajo de los 640px, `carrera.css` no solo achica la versión de escritorio — el hero, el spotlight y el historial tienen su propio HTML más chato (generado aparte en `carrera.js`, oculto/mostrado por CSS), y el panel de decisiones pasa a un carrusel de una tarjeta a la vez con scroll-snap, sin JavaScript adicional para eso.
+- **Tarjeta para compartir el resumen de carrera**: el botón "C" junto a la ✕ del modal de resumen (`#resumenModalCompartir`) genera una imagen propia con los mismos datos del resumen — no es una captura del popup (eso pediría una librería externa que el proyecto no usa), es una tarjeta de 1080×1350 dibujada a mano en un `<canvas>` (`generarTarjetaResumenCanvas`, [carrera.js](js/carrera.js)): escudo del último club, degradado con sus colores, badge de pico de OVR, gráfico de evolución de OVR, grid de estadísticas, recorrido de clubes y trofeos — y se copia al portapapeles con la Clipboard API (`navigator.clipboard.write`), con un `window.open` de respaldo si el navegador no la soporta.
+- **Con la selección**: cuando hubo convocatoria esa temporada, el spotlight y el historial muestran una línea aparte con la bandera del país + partidos/goles con la selección (ver [sección 19](#19-selección-nacional)) — nunca mezclada con los números de club.
 - **Chips del hero** (edad, país, valor de mercado): los 3 comparten el mismo estilo neutro (texto blanco, borde translúcido) — el de valor de mercado (`.value-badge`) usaba antes el celeste `--accent-2`, distinto de los otros dos sin motivo aparente; ahora los 3 son visualmente el mismo tipo de dato.
 - **Altura real de viewport en mobile (`--vh-real`)**: el layout de `carrera.html` (hero fijo / centro scrolleable / footer de decisiones fijo) depende de conocer la altura visible real de la pantalla. `100dvh` la calcula bien en Safari/iOS, pero varios navegadores mobile (Chrome/Firefox en Android, algunos in-app browsers) la calculan mal al cargar la página y dejan una franja del footer tapada. `actualizarAlturaViewport()` ([carrera.js](js/carrera.js), tope del archivo) mide `window.innerHeight` por JS al cargar y en cada resize/orientationchange, y esa variable pisa a `100dvh` en `.body--career` como última palabra — `100vh` y `100dvh` quedan como respaldo en cascada para cuando el JS todavía no corrió.
 - **Toast** (`showToast`, definido igual en `carrera.js`/`equipo.js`/`script.js`): en `carrera.html` aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones.
@@ -692,7 +786,7 @@ Todos los números de partidos (mínimos garantizados + rondas extra) son una re
 
 ---
 
-## 22. Persistencia y estado
+## 23. Persistencia y estado
 
 - `localStorage["leyendaPlayer"]` es la **única** persistencia real: identidad del jugador + club/OVR inicial. Se escribe en `index.html` y se completa en `equipo.html`.
 - **Toda la progresión de la carrera** (temporada actual, historial, OVR, trofeos, valor de mercado, etc.) vive únicamente en variables de JavaScript en memoria, dentro de `carrera.html`. **No hay guardado de partida**: cerrar la pestaña o recargar la página pierde el progreso de la carrera (vuelve a arrancar la Temporada 1, con el mismo club/OVR inicial que sí quedó guardado).
@@ -700,7 +794,7 @@ Todos los números de partidos (mínimos garantizados + rondas extra) son una re
 
 ---
 
-## 23. Tabla completa de constantes de balance
+## 24. Tabla completa de constantes de balance
 
 Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos números es la forma correcta de recalibrar el juego — nunca hay "números mágicos" repetidos sueltos en otros archivos.
 
@@ -709,7 +803,7 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `EDAD_MIN` / `EDAD_MAX` | 16 / 19 | Rango de edad al crear personaje |
 | `RANGO_EDAD_NOVATO_MAX` | 21 | Techo de edad para el banco de eventos "novato" |
 | `RANGO_EDAD_PROMEDIO_MAX` | 32 | Techo de edad para el banco "promedio" (arriba, "veterano") |
-| `EJE_MIN` / `MAX` | 0 / 100 | Escala oculta de los 3 ejes de clasificación (fuerza/prestigio/economía) de cada club y liga |
+| `EJE_MAX` | 100 | Techo de la escala oculta de los 3 ejes de clasificación (fuerza/prestigio/economía) de cada club, liga y selección — el piso es 0, implícito en cada `clamp` |
 | `PODER_PESO_FUERZA` / `_PRESTIGIO` / `_ECONOMIA` | 0.4 / 0.35 / 0.25 | Peso de cada eje al combinarlos en el "poder" único (OVR inicial, ventana de ofertas, objetivo) |
 | `ECONOMIA_PISO_LIGA` | 0.6 | La economía de un club nunca cae debajo de este % de la de su propia liga |
 | `VALOR_PESO_ECONOMIA` / `_PRESTIGIO` | 0.6 / 0.4 | Peso de economía vs. prestigio en el valor de mercado (no usa el eje fuerza) |
@@ -758,6 +852,13 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `FORMA_CALIDAD` | ver [sección 12](#12-estado-de-forma) | Calidad aportada por cada estado de forma a la fuerza de campaña |
 | `FUERZA_PESO_CLUB` / `_FORMA` / `_EQUIPO_ACUMULADO` | 0.5 / 0.2 / 0.3 | Pesos de la fórmula de fuerza de campaña (el eje club usa solo `fuerza`, no el poder combinado) |
 | `UMBRAL_CLASIFICA_PRIMER_NIVEL` / `_SEGUNDO_NIVEL` | 0.72 / 0.45 | Umbrales de fuerza para clasificar a competición internacional |
+| `UMBRAL_OVR_CONVOCATORIA_BASE` / `_FACTOR` | 50 / 0.35 | Fórmula del OVR de referencia (50/50 de convocatoria) según la fuerza de tu selección — ver [sección 19](#19-selección-nacional) |
+| `PROB_CONVOCATORIA_PENDIENTE_OVR` | 0.04 | Cuánto sube/baja la probabilidad de convocatoria por cada punto de OVR de diferencia con el umbral |
+| `PROB_CONVOCATORIA_MIN` / `MAX` | 0.03 / 0.95 | Piso y techo de probabilidad de convocatoria |
+| `SELECCION_PESO_JUGADOR` | 0.15 | Cuánto empuja tu forma del momento a la "calidad" de campaña de tu selección (el resto es la fuerza fija del país) |
+| `PARTIDOS_AMISTOSO_SELECCION` | 2 | Partidos de una ventana FIFA sin torneo grande en juego |
+| `PARTIDOS_ELIMINATORIAS_SELECCION` | 2 | Partidos si tu país no logra clasificar al torneo grande ese ciclo |
+| `PARTIDOS_FASE_DE_GRUPOS_SELECCION` | 3 | Partidos garantizados de fase de grupos, ya clasificado |
 | `FORMA_BONUS_PARTICIPACION` | ver [sección 9](#9-participación-cuántos-partidos-jugás-vos) | Bono/malus de participación por estado de forma |
 | `PARTICIPACION_BASE` | 0.65 | Probabilidad base de jugar un partido |
 | `PARTICIPACION_BONUS_TITULAR` | 0.2 | Bono si sos titular ese tramo |
@@ -767,7 +868,7 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `PROB_LESION_BASE` | 0.065 | Probabilidad base de lesión por pausa |
 | `PROB_LESION_EDAD_INICIO` / `_INCREMENTO` | 30 / 0.0027 | Desde cuándo y cuánto sube el riesgo de lesión con la edad |
 | `PROB_LESION_MAX` | 0.18 | Techo de probabilidad de lesión |
-| `PESO_LESION_NIVEL1/2/3` | 0.10 / 0.35 / 0.55 | Probabilidad de que, si hay lesión, sea de cada nivel |
+| `PESO_LESION_NIVEL1` / `_NIVEL2` | 0.10 / 0.35 | Probabilidad de que, si hay lesión, sea nivel 1 o nivel 2 (nivel 3 es el resto, ~0.55) |
 | `LESION_NIVEL3_DURACION` | 1 | Duración fija de una lesión leve (en tramos) |
 | `LESION_NIVEL2_DURACION_MIN/MAX` | 1 / 2 | Rango de duración de una lesión moderada |
 | `LESION_NIVEL1_DURACION_MIN` | 2 | Mínimo de duración de una lesión grave (el máximo es el resto de la temporada) |
@@ -777,10 +878,15 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 
 ---
 
-## 24. Limitaciones conocidas y notas para el futuro
+## 25. Limitaciones conocidas y notas para el futuro
 
 - **Sin guardado de partida**: es una decisión de diseño actual (juego de sesión única), no una limitación técnica — se podría agregar con `localStorage` guardando `temporadaActual`/`temporadasFinalizadas` serializados.
 - **`dev/test.js` / `dev/test.html`** son una herramienta interna para inspeccionar la base de datos y la distribución de OVR inicial durante el desarrollo — no están enlazados desde ninguna pantalla del juego y pueden ignorarse (o borrarse) de cara a producción.
 - **`pierna` hábil** se guarda pero no se usa en ninguna fórmula todavía — es puramente cosmético en la ficha/camiseta.
-- Los números de partidos por competición ([sección 20](#20-base-de-datos-de-ligas-y-equipos-jsdatabasejs)) son una referencia realista, no oficiales fijos, para ligas/copas cuyo formato cambió seguido en la realidad (Argentina, México, Colombia) — están documentados caso por caso en los comentarios de `database.js`.
-- Solo 5 de los 46 países de la creación de personaje tienen liga propia cargada; el resto arranca "de extranjero" en las 5 grandes ligas europeas — es coherente con el diseño actual (documentado en [sección 5](#5-elección-de-club-inicial-equipohtml--jsequipojs)), no un bug, pero es la superficie más obvia para sumar más ligas locales a futuro.
+- Los números de partidos por competición ([sección 21](#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs)) son una referencia realista, no oficiales fijos, para ligas/copas cuyo formato cambió seguido en la realidad (Argentina, México, Colombia) — están documentados caso por caso en los comentarios de `database.js`.
+- 23 de los 46 países de la creación de personaje tienen liga propia cargada (subió de 5 con la incorporación de 19 ligas nuevas); el resto arranca "de extranjero" en las 5 grandes ligas europeas — es coherente con el diseño actual (documentado en [sección 5](#5-elección-de-club-inicial-equipohtml--jsequipojs)), no un bug, pero sigue siendo la superficie más obvia para sumar más ligas locales a futuro.
+- **Rusia sigue cargada como confederación `UEFA`**, aunque sus clubes están suspendidos de las competiciones de UEFA desde 2022 — el juego no modela esa suspensión, así que un club ruso con la fuerza suficiente sí puede "clasificar" a la Champions/Europa League en la ficción del juego. Es una simplificación deliberada (no hay ningún mecanismo de "confederación con competiciones restringidas"), no un error de tipeo.
+- **La Liga Premier de Ucrania quedó con 16 equipos** en vez de los 20 reales de esta temporada (ver [sección 21](#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs)) — se prefirió no completarla con clubes inventados sin escudo real.
+- **Turquía, Grecia, Rusia, China, El Salvador y Ucrania** tienen liga y equipos cargados pero todavía no son nacionalidades elegibles en la creación de personaje — se puede fichar por sus clubes durante la carrera, pero no arrancarla siendo local ahí.
+- **AFC todavía no tiene copa continental de segundo nivel** (a diferencia de UEFA/CONMEBOL) — un club japonés o chino solo puede clasificar a la AFC Champions League Elite, nunca a un equivalente de la Europa League/Sudamericana.
+- **CAF no tiene ninguna liga doméstica de club cargada** — solo existe como confederación de selecciones nacionales (para la Copa Africana de Naciones, [sección 19](#19-selección-nacional)); ningún club africano es fichable todavía.

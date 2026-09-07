@@ -35,10 +35,12 @@
 //     respaldo si la imagen no carga — mismo criterio que COUNTRIES en
 //     script.js. Se muestran junto al nombre de la liga en las cards de
 //     oferta/fichaje.
-//   - confederacion: "UEFA" | "CONMEBOL" | "CONCACAF" (por ahora, según
-//     las ligas cargadas). Define a qué competiciones internacionales
-//     (ver `competiciones` más abajo) puede clasificar un equipo de esa
-//     liga — todavía no afecta el juego, es solo el dato base.
+//   - confederacion: "UEFA" | "CONMEBOL" | "CONCACAF" | "AFC" (según las
+//     ligas cargadas — CAF no tiene liga doméstica propia todavía, solo
+//     selecciones). Define a qué competiciones internacionales (ver
+//     `competiciones` más abajo) puede clasificar un equipo de esa liga;
+//     si la confederación no tiene ese nivel cargado (ej. AFC todavía sin
+//     Champions/Europa League propia), simplemente no clasifica a nada.
 //   - escudo: nombre de archivo dentro de assets/escudos/ligas/.
 //
 // equipos: [{ id, nombre, ligaId, fuerza, prestigio, economia, initials, a, b, escudo? }]
@@ -50,13 +52,15 @@
 //
 // competiciones: [{ id, nombre, tipo, categoria, ligaId?, confederacion?,
 //                    trofeoImagen, partidosMinimos, partidosExtra }]
-//   - tipo: "domestica" | "internacional".
+//   - tipo: "domestica" | "internacional" | "seleccion".
 //   - categoria: "liga" | "copa" (domesticas) — "primerNivel" | "segundoNivel"
-//     (internacionales, ej. Champions/Libertadores vs. Europa League/Sudamericana).
+//     (internacionales, ej. Champions/Libertadores vs. Europa League/Sudamericana)
+//     — "mundial" | "continental" (seleccion, ver GameDatabase.selecciones).
 //   - ligaId (solo domesticas): a qué liga/país pertenece esta competición.
-//   - confederacion (solo internacionales): "UEFA" | "CONMEBOL" | "CONCACAF"
-//     — qué confederación la organiza (cruza con `ligas[].confederacion`
-//     para saber a qué torneo internacional clasifica cada liga).
+//   - confederacion (internacionales y continentales de selección): "UEFA" |
+//     "CONMEBOL" | "CONCACAF" | "CAF" | "AFC" — qué confederación la
+//     organiza (cruza con `ligas[].confederacion` o `selecciones[].confederacion`
+//     según el caso). null en el Mundial, que no tiene confederación.
 //   - trofeoImagen: nombre de archivo dentro de assets/escudos/trofeos/.
 //     Vacío ("") hasta tener las imágenes reales.
 //   - partidosMinimos: partidos que sí o sí se juegan en esa competición
@@ -83,6 +87,95 @@ const GameDatabase = {
     { id: "liga-mx", nombre: "Liga MX", fuerza: 66, prestigio: 55, economia: 42, pais: "México", paisCode: "mx", paisFlag: "🇲🇽", confederacion: "CONCACAF", escudo: "liga-mx.png" },
     { id: "mls", nombre: "MLS", fuerza: 58, prestigio: 40, economia: 55, pais: "Estados Unidos", paisCode: "us", paisFlag: "🇺🇸", confederacion: "CONCACAF", escudo: "mls.png" },
     { id: "primera-a-colombia", nombre: "Primera A (Colombia)", fuerza: 55, prestigio: 50, economia: 20, pais: "Colombia", paisCode: "co", paisFlag: "🇨🇴", confederacion: "CONMEBOL", escudo: "primera-a-colombia.png" },
+
+    // ---------------- 16 LIGAS NUEVAS (incorporación masiva) ----------------
+    { id: "eredivisie", nombre: "Eredivisie", fuerza: 72, prestigio: 74, economia: 60, pais: "Países Bajos", paisCode: "nl", paisFlag: "🇳🇱", confederacion: "UEFA", escudo: "eredivisie.png" },
+    { id: "primeira-liga", nombre: "Primeira Liga", fuerza: 76, prestigio: 80, economia: 58, pais: "Portugal", paisCode: "pt", paisFlag: "🇵🇹", confederacion: "UEFA", escudo: "primeira-liga.png" },
+    { id: "pro-league-belgica", nombre: "Pro League", fuerza: 70, prestigio: 62, economia: 55, pais: "Bélgica", paisCode: "be", paisFlag: "🇧🇪", confederacion: "UEFA", escudo: "pro-league-belgica.png" },
+    { id: "super-lig-turca", nombre: "Süper Lig", fuerza: 74, prestigio: 72, economia: 65, pais: "Turquía", paisCode: "tr", paisFlag: "🇹🇷", confederacion: "UEFA", escudo: "super-lig-turca.png" },
+    { id: "premiership-escocesa", nombre: "Scottish Premiership", fuerza: 60, prestigio: 58, economia: 42, pais: "Escocia", paisCode: "gb-sct", paisFlag: "🏴", confederacion: "UEFA", escudo: "premiership-escocesa.png" },
+    { id: "super-liga-griega", nombre: "Super League Greece", fuerza: 58, prestigio: 55, economia: 38, pais: "Grecia", paisCode: "gr", paisFlag: "🇬🇷", confederacion: "UEFA", escudo: "super-liga-griega.png" },
+    { id: "liga-premier-rusa", nombre: "Liga Premier Rusa", fuerza: 66, prestigio: 60, economia: 55, pais: "Rusia", paisCode: "ru", paisFlag: "🇷🇺", confederacion: "UEFA", escudo: "liga-premier-rusa.png" },
+    { id: "j1-liga", nombre: "J1 League", fuerza: 62, prestigio: 55, economia: 50, pais: "Japón", paisCode: "jp", paisFlag: "🇯🇵", confederacion: "AFC", escudo: "j1-liga.png" },
+    { id: "super-liga-china", nombre: "Super League China", fuerza: 55, prestigio: 50, economia: 48, pais: "China", paisCode: "cn", paisFlag: "🇨🇳", confederacion: "AFC", escudo: "super-liga-china.png" },
+    { id: "liga1-peru", nombre: "Liga 1", fuerza: 48, prestigio: 45, economia: 18, pais: "Perú", paisCode: "pe", paisFlag: "🇵🇪", confederacion: "CONMEBOL", escudo: "liga1-peru.png" },
+    { id: "primera-division-bolivia", nombre: "Primera División", fuerza: 42, prestigio: 38, economia: 15, pais: "Bolivia", paisCode: "bo", paisFlag: "🇧🇴", confederacion: "CONMEBOL", escudo: "primera-division-bolivia.png" },
+    { id: "primera-division-chile", nombre: "Primera División", fuerza: 60, prestigio: 62, economia: 30, pais: "Chile", paisCode: "cl", paisFlag: "🇨🇱", confederacion: "CONMEBOL", escudo: "primera-division-chile.png" },
+    { id: "primera-division-uruguay", nombre: "Primera División", fuerza: 64, prestigio: 72, economia: 22, pais: "Uruguay", paisCode: "uy", paisFlag: "🇺🇾", confederacion: "CONMEBOL", escudo: "primera-division-uruguay.png" },
+    { id: "primera-division-venezuela", nombre: "Primera División", fuerza: 44, prestigio: 35, economia: 16, pais: "Venezuela", paisCode: "ve", paisFlag: "🇻🇪", confederacion: "CONMEBOL", escudo: "primera-division-venezuela.png" },
+    { id: "serie-a-ecuador", nombre: "Serie A", fuerza: 56, prestigio: 50, economia: 22, pais: "Ecuador", paisCode: "ec", paisFlag: "🇪🇨", confederacion: "CONMEBOL", escudo: "serie-a-ecuador.png" },
+    { id: "primera-division-costa-rica", nombre: "Primera División", fuerza: 52, prestigio: 48, economia: 25, pais: "Costa Rica", paisCode: "cr", paisFlag: "🇨🇷", confederacion: "CONCACAF", escudo: "primera-division-costa-rica.png" },
+
+    // ---------------- 3 LIGAS NUEVAS (Paraguay, El Salvador, Ucrania) ----------------
+    { id: "primera-division-paraguay", nombre: "Primera División", fuerza: 50, prestigio: 54, economia: 16, pais: "Paraguay", paisCode: "py", paisFlag: "🇵🇾", confederacion: "CONMEBOL", escudo: "primera-division-paraguay.png" },
+    { id: "primera-division-el-salvador", nombre: "Primera División", fuerza: 44, prestigio: 38, economia: 14, pais: "El Salvador", paisCode: "sv", paisFlag: "🇸🇻", confederacion: "CONCACAF", escudo: "primera-division-el-salvador.png" },
+    { id: "liga-premier-ucrania", nombre: "Liga Premier de Ucrania", fuerza: 64, prestigio: 62, economia: 30, pais: "Ucrania", paisCode: "ua", paisFlag: "🇺🇦", confederacion: "UEFA", escudo: "liga-premier-ucrania.png" },
+  ],
+
+
+  // selecciones: [{ pais, paisCode, paisFlag, confederacion, fuerza, prestigio }]
+  //   - pais: nombre EXACTO tal como aparece en COUNTRIES (script.js) — es
+  //     con lo que se cruza player.pais para encontrar tu selección.
+  //   - confederacion: "UEFA" | "CONMEBOL" | "CONCACAF" | "CAF" | "AFC" —
+  //     organiza tu clasificación a copa continental (cruza con
+  //     `competiciones` de tipo "seleccion", ver más abajo). Más amplio que
+  //     el de `ligas` porque acá entran los 46 países de COUNTRIES, no solo
+  //     los que tienen liga propia cargada.
+  //   - fuerza / prestigio: mismos ejes 0-100 que ligas/equipos, a mano
+  //     según pedigrí futbolístico real (fuerza = nivel actual, prestigio =
+  //     historia/palmarés — ver GameConfig.calidadSeleccion).
+  selecciones: [
+    // -------- CONMEBOL --------
+    { pais: "Argentina", paisCode: "ar", paisFlag: "🇦🇷", confederacion: "CONMEBOL", fuerza: 90, prestigio: 96 },
+    { pais: "Brasil", paisCode: "br", paisFlag: "🇧🇷", confederacion: "CONMEBOL", fuerza: 92, prestigio: 98 },
+    { pais: "Uruguay", paisCode: "uy", paisFlag: "🇺🇾", confederacion: "CONMEBOL", fuerza: 74, prestigio: 78 },
+    { pais: "Chile", paisCode: "cl", paisFlag: "🇨🇱", confederacion: "CONMEBOL", fuerza: 62, prestigio: 58 },
+    { pais: "Colombia", paisCode: "co", paisFlag: "🇨🇴", confederacion: "CONMEBOL", fuerza: 70, prestigio: 62 },
+    { pais: "Paraguay", paisCode: "py", paisFlag: "🇵🇾", confederacion: "CONMEBOL", fuerza: 48, prestigio: 45 },
+    { pais: "Perú", paisCode: "pe", paisFlag: "🇵🇪", confederacion: "CONMEBOL", fuerza: 50, prestigio: 48 },
+    { pais: "Bolivia", paisCode: "bo", paisFlag: "🇧🇴", confederacion: "CONMEBOL", fuerza: 35, prestigio: 30 },
+    { pais: "Ecuador", paisCode: "ec", paisFlag: "🇪🇨", confederacion: "CONMEBOL", fuerza: 58, prestigio: 42 },
+    { pais: "Venezuela", paisCode: "ve", paisFlag: "🇻🇪", confederacion: "CONMEBOL", fuerza: 42, prestigio: 28 },
+    // -------- CONCACAF --------
+    { pais: "México", paisCode: "mx", paisFlag: "🇲🇽", confederacion: "CONCACAF", fuerza: 68, prestigio: 65 },
+    { pais: "Estados Unidos", paisCode: "us", paisFlag: "🇺🇸", confederacion: "CONCACAF", fuerza: 62, prestigio: 45 },
+    { pais: "Costa Rica", paisCode: "cr", paisFlag: "🇨🇷", confederacion: "CONCACAF", fuerza: 50, prestigio: 48 },
+    { pais: "Panamá", paisCode: "pa", paisFlag: "🇵🇦", confederacion: "CONCACAF", fuerza: 44, prestigio: 32 },
+    { pais: "Jamaica", paisCode: "jm", paisFlag: "🇯🇲", confederacion: "CONCACAF", fuerza: 38, prestigio: 28 },
+    { pais: "Canadá", paisCode: "ca", paisFlag: "🇨🇦", confederacion: "CONCACAF", fuerza: 54, prestigio: 35 },
+    // -------- UEFA --------
+    { pais: "España", paisCode: "es", paisFlag: "🇪🇸", confederacion: "UEFA", fuerza: 88, prestigio: 90 },
+    { pais: "Portugal", paisCode: "pt", paisFlag: "🇵🇹", confederacion: "UEFA", fuerza: 84, prestigio: 75 },
+    { pais: "Francia", paisCode: "fr", paisFlag: "🇫🇷", confederacion: "UEFA", fuerza: 94, prestigio: 92 },
+    { pais: "Inglaterra", paisCode: "gb-eng", paisFlag: "🏴", confederacion: "UEFA", fuerza: 86, prestigio: 78 },
+    { pais: "Italia", paisCode: "it", paisFlag: "🇮🇹", confederacion: "UEFA", fuerza: 80, prestigio: 88 },
+    { pais: "Alemania", paisCode: "de", paisFlag: "🇩🇪", confederacion: "UEFA", fuerza: 85, prestigio: 92 },
+    { pais: "Bélgica", paisCode: "be", paisFlag: "🇧🇪", confederacion: "UEFA", fuerza: 78, prestigio: 62 },
+    { pais: "Países Bajos", paisCode: "nl", paisFlag: "🇳🇱", confederacion: "UEFA", fuerza: 82, prestigio: 80 },
+    { pais: "Croacia", paisCode: "hr", paisFlag: "🇭🇷", confederacion: "UEFA", fuerza: 76, prestigio: 60 },
+    { pais: "Polonia", paisCode: "pl", paisFlag: "🇵🇱", confederacion: "UEFA", fuerza: 60, prestigio: 45 },
+    { pais: "Suiza", paisCode: "ch", paisFlag: "🇨🇭", confederacion: "UEFA", fuerza: 64, prestigio: 48 },
+    { pais: "Serbia", paisCode: "rs", paisFlag: "🇷🇸", confederacion: "UEFA", fuerza: 62, prestigio: 46 },
+    { pais: "Dinamarca", paisCode: "dk", paisFlag: "🇩🇰", confederacion: "UEFA", fuerza: 68, prestigio: 55 },
+    { pais: "Suecia", paisCode: "se", paisFlag: "🇸🇪", confederacion: "UEFA", fuerza: 58, prestigio: 50 },
+    { pais: "Noruega", paisCode: "no", paisFlag: "🇳🇴", confederacion: "UEFA", fuerza: 56, prestigio: 38 },
+    { pais: "Gales", paisCode: "gb-wls", paisFlag: "🏴", confederacion: "UEFA", fuerza: 50, prestigio: 35 },
+    { pais: "Escocia", paisCode: "gb-sct", paisFlag: "🏴", confederacion: "UEFA", fuerza: 48, prestigio: 38 },
+    // -------- CAF --------
+    { pais: "Marruecos", paisCode: "ma", paisFlag: "🇲🇦", confederacion: "CAF", fuerza: 72, prestigio: 55 },
+    { pais: "Senegal", paisCode: "sn", paisFlag: "🇸🇳", confederacion: "CAF", fuerza: 68, prestigio: 48 },
+    { pais: "Nigeria", paisCode: "ng", paisFlag: "🇳🇬", confederacion: "CAF", fuerza: 62, prestigio: 45 },
+    { pais: "Ghana", paisCode: "gh", paisFlag: "🇬🇭", confederacion: "CAF", fuerza: 56, prestigio: 42 },
+    { pais: "Camerún", paisCode: "cm", paisFlag: "🇨🇲", confederacion: "CAF", fuerza: 54, prestigio: 48 },
+    { pais: "Argelia", paisCode: "dz", paisFlag: "🇩🇿", confederacion: "CAF", fuerza: 52, prestigio: 40 },
+    { pais: "Egipto", paisCode: "eg", paisFlag: "🇪🇬", confederacion: "CAF", fuerza: 50, prestigio: 40 },
+    // -------- AFC --------
+    { pais: "Japón", paisCode: "jp", paisFlag: "🇯🇵", confederacion: "AFC", fuerza: 64, prestigio: 42 },
+    { pais: "Corea del Sur", paisCode: "kr", paisFlag: "🇰🇷", confederacion: "AFC", fuerza: 60, prestigio: 40 },
+    { pais: "Arabia Saudita", paisCode: "sa", paisFlag: "🇸🇦", confederacion: "AFC", fuerza: 48, prestigio: 32 },
+    { pais: "Catar", paisCode: "qa", paisFlag: "🇶🇦", confederacion: "AFC", fuerza: 38, prestigio: 25 },
+    { pais: "Irán", paisCode: "ir", paisFlag: "🇮🇷", confederacion: "AFC", fuerza: 46, prestigio: 32 },
+    { pais: "Australia", paisCode: "au", paisFlag: "🇦🇺", confederacion: "AFC", fuerza: 50, prestigio: 30 },
   ],
 
   equipos: [
@@ -319,6 +412,340 @@ const GameDatabase = {
     { id: "millonarios", nombre: "Millonarios Fútbol Club", ligaId: "primera-a-colombia", fuerza: 65, prestigio: 57, economia: 23, initials: "MIL", a: "#003DA5", b: "#FFFFFF", escudo: "millonarios.png" },
     { id: "once-caldas", nombre: "Once Caldas", ligaId: "primera-a-colombia", fuerza: 49, prestigio: 40, economia: 14, initials: "ONC", a: "#FFFFFF", b: "#7A1F2B", escudo: "once-caldas.png" },
     { id: "santafe", nombre: "Independiente Santa Fe", ligaId: "primera-a-colombia", fuerza: 61, prestigio: 61, economia: 19, initials: "SFE", a: "#C8102E", b: "#FFFFFF", escudo: "santafe.png" },
+    // ---------------- EREDIVISIE (Países Bajos) ----------------
+    { id: "ajax", nombre: "Ajax", ligaId: "eredivisie", fuerza: 87, prestigio: 89, economia: 73, initials: "AJA", a: "#c8102e", b: "#ffffff", escudo: "ajax.png" },
+    { id: "psv-eindhoven", nombre: "PSV Eindhoven", ligaId: "eredivisie", fuerza: 96, prestigio: 98, economia: 82, initials: "PE", a: "#00205b", b: "#ffffff", escudo: "psv-eindhoven.png" },
+    { id: "feyenoord", nombre: "Feyenoord", ligaId: "eredivisie", fuerza: 93, prestigio: 95, economia: 79, initials: "FEY", a: "#5f259f", b: "#ffffff", escudo: "feyenoord.png" },
+    { id: "az-alkmaar", nombre: "AZ Alkmaar", ligaId: "eredivisie", fuerza: 74, prestigio: 74, economia: 62, initials: "AA", a: "#111111", b: "#f2c500", escudo: "az-alkmaar.png" },
+    { id: "fc-twente", nombre: "FC Twente", ligaId: "eredivisie", fuerza: 78, prestigio: 78, economia: 66, initials: "TWE", a: "#7a1010", b: "#111111", escudo: "fc-twente.png" },
+    { id: "fc-utrecht", nombre: "FC Utrecht", ligaId: "eredivisie", fuerza: 72, prestigio: 72, economia: 60, initials: "UTR", a: "#00205b", b: "#ffffff", escudo: "fc-utrecht.png" },
+    { id: "fc-groningen", nombre: "FC Groningen", ligaId: "eredivisie", fuerza: 61, prestigio: 61, economia: 51, initials: "GRO", a: "#00843d", b: "#ffffff", escudo: "fc-groningen.png" },
+    { id: "sparta-rotterdam", nombre: "Sparta Rotterdam", ligaId: "eredivisie", fuerza: 56, prestigio: 56, economia: 46, initials: "SR", a: "#1d428a", b: "#ffffff", escudo: "sparta-rotterdam.png" },
+    { id: "go-ahead-eagles", nombre: "Go Ahead Eagles", ligaId: "eredivisie", fuerza: 60, prestigio: 60, economia: 50, initials: "GAE", a: "#009edb", b: "#ffffff", escudo: "go-ahead-eagles.png" },
+    { id: "sc-heerenveen", nombre: "SC Heerenveen", ligaId: "eredivisie", fuerza: 54, prestigio: 54, economia: 44, initials: "HEE", a: "#111111", b: "#f2c500", escudo: "sc-heerenveen.png" },
+    { id: "fortuna-sittard", nombre: "Fortuna Sittard", ligaId: "eredivisie", fuerza: 59, prestigio: 59, economia: 49, initials: "FS", a: "#7a1010", b: "#111111", escudo: "fortuna-sittard.png" },
+    { id: "nec-nijmegen", nombre: "NEC Nijmegen", ligaId: "eredivisie", fuerza: 51, prestigio: 51, economia: 41, initials: "NN", a: "#6c1d45", b: "#ffffff", escudo: "nec-nijmegen.png" },
+    { id: "pec-zwolle", nombre: "PEC Zwolle", ligaId: "eredivisie", fuerza: 52, prestigio: 52, economia: 42, initials: "PZ", a: "#e35205", b: "#111111", escudo: "pec-zwolle.png" },
+    { id: "willem-ii", nombre: "Willem II", ligaId: "eredivisie", fuerza: 53, prestigio: 53, economia: 43, initials: "WI", a: "#6c1d45", b: "#ffffff", escudo: "willem-ii.png" },
+    { id: "excelsior", nombre: "Excelsior", ligaId: "eredivisie", fuerza: 58, prestigio: 58, economia: 48, initials: "EXC", a: "#7a1010", b: "#111111", escudo: "excelsior.png" },
+    { id: "sc-cambuur", nombre: "SC Cambuur", ligaId: "eredivisie", fuerza: 55, prestigio: 55, economia: 45, initials: "CAM", a: "#0b2265", b: "#c8102e", escudo: "sc-cambuur.png" },
+    { id: "ado-den-haag", nombre: "ADO Den Haag", ligaId: "eredivisie", fuerza: 59, prestigio: 59, economia: 49, initials: "ADH", a: "#111111", b: "#f2c500", escudo: "ado-den-haag.png" },
+    { id: "telstar", nombre: "Telstar", ligaId: "eredivisie", fuerza: 58, prestigio: 58, economia: 48, initials: "TEL", a: "#e35205", b: "#111111", escudo: "telstar.png" },
+
+    // ---------------- PRIMEIRA LIGA (Portugal) ----------------
+    { id: "fc-porto", nombre: "FC Porto", ligaId: "primeira-liga", fuerza: 94, prestigio: 98, economia: 74, initials: "POR", a: "#00843d", b: "#ffffff", escudo: "fc-porto.png" },
+    { id: "sl-benfica", nombre: "SL Benfica", ligaId: "primeira-liga", fuerza: 95, prestigio: 99, economia: 75, initials: "SB", a: "#0b2265", b: "#c8102e", escudo: "sl-benfica.png" },
+    { id: "sporting-cp", nombre: "Sporting CP", ligaId: "primeira-liga", fuerza: 92, prestigio: 96, economia: 72, initials: "SC", a: "#c8102e", b: "#ffffff", escudo: "sporting-cp.png" },
+    { id: "sc-braga", nombre: "SC Braga", ligaId: "primeira-liga", fuerza: 83, prestigio: 85, economia: 65, initials: "BRA", a: "#0b2265", b: "#c8102e", escudo: "sc-braga.png" },
+    { id: "vitoria-de-guimaraes", nombre: "Vitória de Guimarães", ligaId: "primeira-liga", fuerza: 82, prestigio: 84, economia: 64, initials: "VG", a: "#00843d", b: "#ffffff", escudo: "vitoria-de-guimaraes.png" },
+    { id: "gil-vicente", nombre: "Gil Vicente", ligaId: "primeira-liga", fuerza: 60, prestigio: 62, economia: 44, initials: "GV", a: "#c8102e", b: "#ffffff", escudo: "gil-vicente.png" },
+    { id: "moreirense", nombre: "Moreirense", ligaId: "primeira-liga", fuerza: 63, prestigio: 65, economia: 47, initials: "MOR", a: "#1d428a", b: "#ffffff", escudo: "moreirense.png" },
+    { id: "rio-ave", nombre: "Rio Ave", ligaId: "primeira-liga", fuerza: 62, prestigio: 64, economia: 46, initials: "RA", a: "#111111", b: "#f2c500", escudo: "rio-ave.png" },
+    { id: "famalicao", nombre: "Famalicão", ligaId: "primeira-liga", fuerza: 60, prestigio: 62, economia: 44, initials: "FAM", a: "#6c1d45", b: "#ffffff", escudo: "famalicao.png" },
+    { id: "casa-pia", nombre: "Casa Pia", ligaId: "primeira-liga", fuerza: 56, prestigio: 58, economia: 40, initials: "CP", a: "#c8102e", b: "#ffffff", escudo: "casa-pia.png" },
+    { id: "estoril-praia", nombre: "Estoril Praia", ligaId: "primeira-liga", fuerza: 63, prestigio: 65, economia: 47, initials: "EP", a: "#00843d", b: "#ffffff", escudo: "estoril-praia.png" },
+    { id: "arouca", nombre: "Arouca", ligaId: "primeira-liga", fuerza: 63, prestigio: 65, economia: 47, initials: "ARO", a: "#e35205", b: "#111111", escudo: "arouca.png" },
+    { id: "nacional", nombre: "Nacional", ligaId: "primeira-liga", fuerza: 58, prestigio: 60, economia: 42, initials: "NAC", a: "#7a1010", b: "#111111", escudo: "nacional.png" },
+    { id: "maritimo", nombre: "Marítimo", ligaId: "primeira-liga", fuerza: 63, prestigio: 65, economia: 47, initials: "MAR", a: "#c8102e", b: "#ffffff", escudo: "maritimo.png" },
+    { id: "santa-clara", nombre: "Santa Clara", ligaId: "primeira-liga", fuerza: 59, prestigio: 61, economia: 43, initials: "SC", a: "#6c1d45", b: "#ffffff", escudo: "santa-clara.png" },
+    { id: "estrela-da-amadora", nombre: "Estrela da Amadora", ligaId: "primeira-liga", fuerza: 57, prestigio: 59, economia: 41, initials: "EDA", a: "#0b2265", b: "#c8102e", escudo: "estrela-da-amadora.png" },
+    { id: "alverca", nombre: "Alverca", ligaId: "primeira-liga", fuerza: 60, prestigio: 62, economia: 44, initials: "ALV", a: "#5f259f", b: "#ffffff", escudo: "alverca.png" },
+    { id: "academico-de-viseu", nombre: "Académico de Viseu", ligaId: "primeira-liga", fuerza: 61, prestigio: 63, economia: 45, initials: "AV", a: "#7a1010", b: "#111111", escudo: "academico-de-viseu.png" },
+
+    // ---------------- PRO LEAGUE (Bélgica) ----------------
+    { id: "club-brugge", nombre: "Club Brugge", ligaId: "pro-league-belgica", fuerza: 90, prestigio: 82, economia: 73, initials: "CB", a: "#1d428a", b: "#ffffff", escudo: "club-brugge.png" },
+    { id: "anderlecht", nombre: "Anderlecht", ligaId: "pro-league-belgica", fuerza: 91, prestigio: 83, economia: 74, initials: "AND", a: "#009edb", b: "#ffffff", escudo: "anderlecht.png" },
+    { id: "union-saint-gilloise", nombre: "Union Saint-Gilloise", ligaId: "pro-league-belgica", fuerza: 79, prestigio: 69, economia: 64, initials: "US", a: "#009edb", b: "#ffffff", escudo: "union-saint-gilloise.png" },
+    { id: "genk", nombre: "Genk", ligaId: "pro-league-belgica", fuerza: 69, prestigio: 59, economia: 54, initials: "GEN", a: "#c8102e", b: "#ffffff", escudo: "genk.png" },
+    { id: "standard-liege", nombre: "Standard Liège", ligaId: "pro-league-belgica", fuerza: 77, prestigio: 67, economia: 62, initials: "SL", a: "#111111", b: "#f2c500", escudo: "standard-liege.png" },
+    { id: "gent", nombre: "Gent", ligaId: "pro-league-belgica", fuerza: 69, prestigio: 59, economia: 54, initials: "GEN", a: "#c8102e", b: "#ffffff", escudo: "gent.png" },
+    { id: "royal-antwerp", nombre: "Royal Antwerp", ligaId: "pro-league-belgica", fuerza: 70, prestigio: 60, economia: 55, initials: "RA", a: "#1d428a", b: "#ffffff", escudo: "royal-antwerp.png" },
+    { id: "charleroi", nombre: "Charleroi", ligaId: "pro-league-belgica", fuerza: 53, prestigio: 43, economia: 40, initials: "CHA", a: "#7a1010", b: "#111111", escudo: "charleroi.png" },
+    { id: "sint-truiden", nombre: "Sint-Truiden", ligaId: "pro-league-belgica", fuerza: 54, prestigio: 44, economia: 41, initials: "SIN", a: "#e35205", b: "#111111", escudo: "sint-truiden.png" },
+    { id: "westerlo", nombre: "Westerlo", ligaId: "pro-league-belgica", fuerza: 54, prestigio: 44, economia: 41, initials: "WES", a: "#008542", b: "#111111", escudo: "westerlo.png" },
+    { id: "kortrijk", nombre: "Kortrijk", ligaId: "pro-league-belgica", fuerza: 53, prestigio: 43, economia: 40, initials: "KOR", a: "#1d428a", b: "#ffffff", escudo: "kortrijk.png" },
+    { id: "mechelen", nombre: "Mechelen", ligaId: "pro-league-belgica", fuerza: 52, prestigio: 42, economia: 39, initials: "MEC", a: "#5f259f", b: "#ffffff", escudo: "mechelen.png" },
+    { id: "zulte-waregem", nombre: "Zulte Waregem", ligaId: "pro-league-belgica", fuerza: 58, prestigio: 48, economia: 45, initials: "ZW", a: "#e35205", b: "#111111", escudo: "zulte-waregem.png" },
+    { id: "cercle-brugge", nombre: "Cercle Brugge", ligaId: "pro-league-belgica", fuerza: 52, prestigio: 42, economia: 39, initials: "CB", a: "#009edb", b: "#ffffff", escudo: "cercle-brugge.png" },
+    { id: "oh-leuven", nombre: "OH Leuven", ligaId: "pro-league-belgica", fuerza: 53, prestigio: 43, economia: 40, initials: "OL", a: "#009edb", b: "#ffffff", escudo: "oh-leuven.png" },
+    { id: "beveren", nombre: "Beveren", ligaId: "pro-league-belgica", fuerza: 53, prestigio: 43, economia: 40, initials: "BEV", a: "#008542", b: "#111111", escudo: "beveren.png" },
+    { id: "lommel-sk", nombre: "Lommel SK", ligaId: "pro-league-belgica", fuerza: 57, prestigio: 47, economia: 44, initials: "LOM", a: "#00205b", b: "#ffffff", escudo: "lommel-sk.png" },
+    { id: "raal-la-louviere", nombre: "RAAL La Louvière", ligaId: "pro-league-belgica", fuerza: 57, prestigio: 47, economia: 44, initials: "RL", a: "#c8102e", b: "#ffffff", escudo: "raal-la-louviere.png" },
+
+    // ---------------- SÜPER LIG (Turquía) ----------------
+    { id: "galatasaray", nombre: "Galatasaray", ligaId: "super-lig-turca", fuerza: 96, prestigio: 94, economia: 85, initials: "GAL", a: "#c8102e", b: "#ffffff", escudo: "galatasaray.png" },
+    { id: "fenerbahce", nombre: "Fenerbahçe", ligaId: "super-lig-turca", fuerza: 95, prestigio: 93, economia: 84, initials: "FEN", a: "#1d428a", b: "#ffffff", escudo: "fenerbahce.png" },
+    { id: "besiktas", nombre: "Beşiktaş", ligaId: "super-lig-turca", fuerza: 91, prestigio: 89, economia: 80, initials: "BEŞ", a: "#0b2265", b: "#c8102e", escudo: "besiktas.png" },
+    { id: "trabzonspor", nombre: "Trabzonspor", ligaId: "super-lig-turca", fuerza: 76, prestigio: 72, economia: 67, initials: "TRA", a: "#00843d", b: "#ffffff", escudo: "trabzonspor.png" },
+    { id: "basaksehir", nombre: "Başakşehir", ligaId: "super-lig-turca", fuerza: 77, prestigio: 73, economia: 68, initials: "BAŞ", a: "#1d428a", b: "#ffffff", escudo: "basaksehir.png" },
+    { id: "konyaspor", nombre: "Konyaspor", ligaId: "super-lig-turca", fuerza: 60, prestigio: 56, economia: 53, initials: "KON", a: "#009edb", b: "#ffffff", escudo: "konyaspor.png" },
+    { id: "gaziantep-fk", nombre: "Gaziantep FK", ligaId: "super-lig-turca", fuerza: 58, prestigio: 54, economia: 51, initials: "GF", a: "#6c1d45", b: "#ffffff", escudo: "gaziantep-fk.png" },
+    { id: "samsunspor", nombre: "Samsunspor", ligaId: "super-lig-turca", fuerza: 55, prestigio: 51, economia: 48, initials: "SAM", a: "#e35205", b: "#111111", escudo: "samsunspor.png" },
+    { id: "alanyaspor", nombre: "Alanyaspor", ligaId: "super-lig-turca", fuerza: 63, prestigio: 59, economia: 56, initials: "ALA", a: "#c8102e", b: "#ffffff", escudo: "alanyaspor.png" },
+    { id: "goztepe", nombre: "Göztepe", ligaId: "super-lig-turca", fuerza: 59, prestigio: 55, economia: 52, initials: "GÖZ", a: "#c8102e", b: "#ffffff", escudo: "goztepe.png" },
+    { id: "kasimpasa", nombre: "Kasımpaşa", ligaId: "super-lig-turca", fuerza: 57, prestigio: 53, economia: 50, initials: "KAS", a: "#5f259f", b: "#ffffff", escudo: "kasimpasa.png" },
+    { id: "caykur-rizespor", nombre: "Çaykur Rizespor", ligaId: "super-lig-turca", fuerza: 53, prestigio: 49, economia: 46, initials: "ÇR", a: "#008542", b: "#111111", escudo: "caykur-rizespor.png" },
+    { id: "genclerbirligi", nombre: "Gençlerbirliği", ligaId: "super-lig-turca", fuerza: 55, prestigio: 51, economia: 48, initials: "GEN", a: "#6c1d45", b: "#ffffff", escudo: "genclerbirligi.png" },
+    { id: "kocaelispor", nombre: "Kocaelispor", ligaId: "super-lig-turca", fuerza: 58, prestigio: 54, economia: 51, initials: "KOC", a: "#0b2265", b: "#c8102e", escudo: "kocaelispor.png" },
+    { id: "eyupspor", nombre: "Eyüpspor", ligaId: "super-lig-turca", fuerza: 58, prestigio: 54, economia: 51, initials: "EYÜ", a: "#5f259f", b: "#ffffff", escudo: "eyupspor.png" },
+    { id: "erzurumspor", nombre: "Erzurumspor", ligaId: "super-lig-turca", fuerza: 60, prestigio: 56, economia: 53, initials: "ERZ", a: "#c8102e", b: "#ffffff", escudo: "erzurumspor.png" },
+    { id: "amedspor", nombre: "Amedspor", ligaId: "super-lig-turca", fuerza: 63, prestigio: 59, economia: 56, initials: "AME", a: "#009edb", b: "#ffffff", escudo: "amedspor.png" },
+    { id: "corum-fk", nombre: "Çorum FK", ligaId: "super-lig-turca", fuerza: 60, prestigio: 56, economia: 53, initials: "ÇF", a: "#00205b", b: "#ffffff", escudo: "corum-fk.png" },
+
+    // ---------------- SCOTTISH PREMIERSHIP (Escocia) ----------------
+    { id: "celtic", nombre: "Celtic", ligaId: "premiership-escocesa", fuerza: 77, prestigio: 75, economia: 57, initials: "CEL", a: "#e35205", b: "#111111", escudo: "celtic.png" },
+    { id: "rangers", nombre: "Rangers", ligaId: "premiership-escocesa", fuerza: 76, prestigio: 74, economia: 56, initials: "RAN", a: "#00843d", b: "#ffffff", escudo: "rangers.png" },
+    { id: "aberdeen", nombre: "Aberdeen", ligaId: "premiership-escocesa", fuerza: 65, prestigio: 61, economia: 47, initials: "ABE", a: "#111111", b: "#f2c500", escudo: "aberdeen.png" },
+    { id: "heart-of-midlothian", nombre: "Heart of Midlothian", ligaId: "premiership-escocesa", fuerza: 59, prestigio: 55, economia: 41, initials: "HOM", a: "#e35205", b: "#111111", escudo: "heart-of-midlothian.png" },
+    { id: "hibernian", nombre: "Hibernian", ligaId: "premiership-escocesa", fuerza: 64, prestigio: 60, economia: 46, initials: "HIB", a: "#5f259f", b: "#ffffff", escudo: "hibernian.png" },
+    { id: "dundee-united", nombre: "Dundee United", ligaId: "premiership-escocesa", fuerza: 47, prestigio: 43, economia: 31, initials: "DU", a: "#e35205", b: "#111111", escudo: "dundee-united.png" },
+    { id: "motherwell", nombre: "Motherwell", ligaId: "premiership-escocesa", fuerza: 43, prestigio: 39, economia: 27, initials: "MOT", a: "#009edb", b: "#ffffff", escudo: "motherwell.png" },
+    { id: "st-mirren", nombre: "St Mirren", ligaId: "premiership-escocesa", fuerza: 43, prestigio: 39, economia: 27, initials: "SM", a: "#e35205", b: "#111111", escudo: "st-mirren.png" },
+    { id: "kilmarnock", nombre: "Kilmarnock", ligaId: "premiership-escocesa", fuerza: 39, prestigio: 35, economia: 23, initials: "KIL", a: "#008542", b: "#111111", escudo: "kilmarnock.png" },
+    { id: "dundee-fc", nombre: "Dundee FC", ligaId: "premiership-escocesa", fuerza: 41, prestigio: 37, economia: 25, initials: "DUN", a: "#5f259f", b: "#ffffff", escudo: "dundee-fc.png" },
+    { id: "falkirk", nombre: "Falkirk", ligaId: "premiership-escocesa", fuerza: 41, prestigio: 37, economia: 25, initials: "FAL", a: "#e35205", b: "#111111", escudo: "falkirk.png" },
+    { id: "st-johnstone", nombre: "St Johnstone", ligaId: "premiership-escocesa", fuerza: 49, prestigio: 45, economia: 33, initials: "SJ", a: "#009edb", b: "#ffffff", escudo: "st-johnstone.png" },
+
+    // ---------------- SUPER LEAGUE GREECE (Grecia) ----------------
+    { id: "olympiacos", nombre: "Olympiacos", ligaId: "super-liga-griega", fuerza: 81, prestigio: 78, economia: 59, initials: "OLY", a: "#00205b", b: "#ffffff", escudo: "olympiacos.png" },
+    { id: "panathinaikos", nombre: "Panathinaikos", ligaId: "super-liga-griega", fuerza: 81, prestigio: 78, economia: 59, initials: "PAN", a: "#6c1d45", b: "#ffffff", escudo: "panathinaikos.png" },
+    { id: "aek-athens", nombre: "AEK Athens", ligaId: "super-liga-griega", fuerza: 66, prestigio: 61, economia: 46, initials: "AA", a: "#0b2265", b: "#c8102e", escudo: "aek-athens.png" },
+    { id: "paok", nombre: "PAOK", ligaId: "super-liga-griega", fuerza: 57, prestigio: 52, economia: 37, initials: "PAO", a: "#c8102e", b: "#ffffff", escudo: "paok.png" },
+    { id: "aris", nombre: "Aris", ligaId: "super-liga-griega", fuerza: 37, prestigio: 32, economia: 19, initials: "ARI", a: "#c8102e", b: "#ffffff", escudo: "aris.png" },
+    { id: "asteras-tripolis", nombre: "Asteras Tripolis", ligaId: "super-liga-griega", fuerza: 43, prestigio: 38, economia: 25, initials: "AT", a: "#111111", b: "#f2c500", escudo: "asteras-tripolis.png" },
+    { id: "atromitos", nombre: "Atromitos", ligaId: "super-liga-griega", fuerza: 44, prestigio: 39, economia: 26, initials: "ATR", a: "#009edb", b: "#ffffff", escudo: "atromitos.png" },
+    { id: "ofi-crete", nombre: "OFI Crete", ligaId: "super-liga-griega", fuerza: 43, prestigio: 38, economia: 25, initials: "OC", a: "#e35205", b: "#111111", escudo: "ofi-crete.png" },
+    { id: "panetolikos", nombre: "Panetolikos", ligaId: "super-liga-griega", fuerza: 47, prestigio: 42, economia: 29, initials: "PAN", a: "#1d428a", b: "#ffffff", escudo: "panetolikos.png" },
+    { id: "volos-nfc", nombre: "Volos NFC", ligaId: "super-liga-griega", fuerza: 41, prestigio: 36, economia: 23, initials: "VN", a: "#0b2265", b: "#c8102e", escudo: "volos-nfc.png" },
+    { id: "levadiakos", nombre: "Levadiakos", ligaId: "super-liga-griega", fuerza: 40, prestigio: 35, economia: 22, initials: "LEV", a: "#00843d", b: "#ffffff", escudo: "levadiakos.png" },
+    { id: "iraklis", nombre: "Iraklis", ligaId: "super-liga-griega", fuerza: 45, prestigio: 40, economia: 27, initials: "IRA", a: "#0b2265", b: "#c8102e", escudo: "iraklis.png" },
+    { id: "kalamata", nombre: "Kalamata", ligaId: "super-liga-griega", fuerza: 40, prestigio: 35, economia: 22, initials: "KAL", a: "#00843d", b: "#ffffff", escudo: "kalamata.png" },
+    { id: "ae-kifisia", nombre: "AE Kifisia", ligaId: "super-liga-griega", fuerza: 44, prestigio: 39, economia: 26, initials: "AK", a: "#1d428a", b: "#ffffff", escudo: "ae-kifisia.png" },
+
+    // ---------------- LIGA PREMIER RUSA (Rusia) ----------------
+    { id: "zenit", nombre: "Zenit", ligaId: "liga-premier-rusa", fuerza: 89, prestigio: 83, economia: 76, initials: "ZEN", a: "#c8102e", b: "#ffffff", escudo: "zenit.png" },
+    { id: "spartak-moscu", nombre: "Spartak Moscú", ligaId: "liga-premier-rusa", fuerza: 85, prestigio: 79, economia: 72, initials: "SM", a: "#e35205", b: "#111111", escudo: "spartak-moscu.png" },
+    { id: "cska-moscu", nombre: "CSKA Moscú", ligaId: "liga-premier-rusa", fuerza: 88, prestigio: 82, economia: 75, initials: "CM", a: "#00205b", b: "#ffffff", escudo: "cska-moscu.png" },
+    { id: "dynamo-moscu", nombre: "Dynamo Moscú", ligaId: "liga-premier-rusa", fuerza: 71, prestigio: 63, economia: 60, initials: "DM", a: "#c8102e", b: "#ffffff", escudo: "dynamo-moscu.png" },
+    { id: "lokomotiv-moscu", nombre: "Lokomotiv Moscú", ligaId: "liga-premier-rusa", fuerza: 67, prestigio: 59, economia: 56, initials: "LM", a: "#e35205", b: "#111111", escudo: "lokomotiv-moscu.png" },
+    { id: "krasnodar", nombre: "Krasnodar", ligaId: "liga-premier-rusa", fuerza: 65, prestigio: 57, economia: 54, initials: "KRA", a: "#c8102e", b: "#ffffff", escudo: "krasnodar.png" },
+    { id: "rubin-kazan", nombre: "Rubin Kazán", ligaId: "liga-premier-rusa", fuerza: 50, prestigio: 42, economia: 41, initials: "RK", a: "#7a1010", b: "#111111", escudo: "rubin-kazan.png" },
+    { id: "rostov", nombre: "Rostov", ligaId: "liga-premier-rusa", fuerza: 48, prestigio: 40, economia: 39, initials: "ROS", a: "#5f259f", b: "#ffffff", escudo: "rostov.png" },
+    { id: "krylia-sovetov", nombre: "Krylia Sovetov", ligaId: "liga-premier-rusa", fuerza: 47, prestigio: 39, economia: 38, initials: "KS", a: "#00843d", b: "#ffffff", escudo: "krylia-sovetov.png" },
+    { id: "akhmat-grozny", nombre: "Akhmat Grozny", ligaId: "liga-premier-rusa", fuerza: 54, prestigio: 46, economia: 45, initials: "AG", a: "#7a1010", b: "#111111", escudo: "akhmat-grozny.png" },
+    { id: "baltika-kaliningrado", nombre: "Baltika Kaliningrado", ligaId: "liga-premier-rusa", fuerza: 54, prestigio: 46, economia: 45, initials: "BK", a: "#111111", b: "#f2c500", escudo: "baltika-kaliningrado.png" },
+    { id: "orenburg", nombre: "Orenburg", ligaId: "liga-premier-rusa", fuerza: 47, prestigio: 39, economia: 38, initials: "ORE", a: "#111111", b: "#f2c500", escudo: "orenburg.png" },
+    { id: "fakel-voronezh", nombre: "Fakel Voronezh", ligaId: "liga-premier-rusa", fuerza: 51, prestigio: 43, economia: 42, initials: "FV", a: "#c8102e", b: "#ffffff", escudo: "fakel-voronezh.png" },
+    { id: "nizhni-novgorod", nombre: "Nizhni Nóvgorod", ligaId: "liga-premier-rusa", fuerza: 50, prestigio: 42, economia: 41, initials: "NN", a: "#6c1d45", b: "#ffffff", escudo: "nizhni-novgorod.png" },
+    { id: "sochi", nombre: "Sochi", ligaId: "liga-premier-rusa", fuerza: 53, prestigio: 45, economia: 44, initials: "SOC", a: "#c8102e", b: "#ffffff", escudo: "sochi.png" },
+    { id: "ural-yekaterinburg", nombre: "Ural Yekaterinburg", ligaId: "liga-premier-rusa", fuerza: 49, prestigio: 41, economia: 40, initials: "UY", a: "#00205b", b: "#ffffff", escudo: "ural-yekaterinburg.png" },
+
+    // ---------------- J1 LEAGUE (Japón) ----------------
+    { id: "kashima-antlers", nombre: "Kashima Antlers", ligaId: "j1-liga", fuerza: 85, prestigio: 78, economia: 71, initials: "KA", a: "#e35205", b: "#111111", escudo: "kashima-antlers.png" },
+    { id: "urawa-red-diamonds", nombre: "Urawa Red Diamonds", ligaId: "j1-liga", fuerza: 81, prestigio: 74, economia: 67, initials: "URD", a: "#1d428a", b: "#ffffff", escudo: "urawa-red-diamonds.png" },
+    { id: "yokohama-f-marinos", nombre: "Yokohama F. Marinos", ligaId: "j1-liga", fuerza: 78, prestigio: 71, economia: 64, initials: "YFM", a: "#0b2265", b: "#c8102e", escudo: "yokohama-f-marinos.png" },
+    { id: "kawasaki-frontale", nombre: "Kawasaki Frontale", ligaId: "j1-liga", fuerza: 68, prestigio: 59, economia: 56, initials: "KF", a: "#5f259f", b: "#ffffff", escudo: "kawasaki-frontale.png" },
+    { id: "vissel-kobe", nombre: "Vissel Kobe", ligaId: "j1-liga", fuerza: 67, prestigio: 58, economia: 55, initials: "VK", a: "#e35205", b: "#111111", escudo: "vissel-kobe.png" },
+    { id: "gamba-osaka", nombre: "Gamba Osaka", ligaId: "j1-liga", fuerza: 68, prestigio: 59, economia: 56, initials: "GO", a: "#e35205", b: "#111111", escudo: "gamba-osaka.png" },
+    { id: "cerezo-osaka", nombre: "Cerezo Osaka", ligaId: "j1-liga", fuerza: 68, prestigio: 59, economia: 56, initials: "CO", a: "#5f259f", b: "#ffffff", escudo: "cerezo-osaka.png" },
+    { id: "nagoya-grampus", nombre: "Nagoya Grampus", ligaId: "j1-liga", fuerza: 66, prestigio: 57, economia: 54, initials: "NG", a: "#c8102e", b: "#ffffff", escudo: "nagoya-grampus.png" },
+    { id: "sanfrecce-hiroshima", nombre: "Sanfrecce Hiroshima", ligaId: "j1-liga", fuerza: 64, prestigio: 55, economia: 52, initials: "SH", a: "#6c1d45", b: "#ffffff", escudo: "sanfrecce-hiroshima.png" },
+    { id: "fc-tokyo", nombre: "FC Tokyo", ligaId: "j1-liga", fuerza: 64, prestigio: 55, economia: 52, initials: "TOK", a: "#00843d", b: "#ffffff", escudo: "fc-tokyo.png" },
+    { id: "kashiwa-reysol", nombre: "Kashiwa Reysol", ligaId: "j1-liga", fuerza: 48, prestigio: 39, economia: 38, initials: "KR", a: "#111111", b: "#f2c500", escudo: "kashiwa-reysol.png" },
+    { id: "kyoto-sanga", nombre: "Kyoto Sanga", ligaId: "j1-liga", fuerza: 49, prestigio: 40, economia: 39, initials: "KS", a: "#111111", b: "#f2c500", escudo: "kyoto-sanga.png" },
+    { id: "avispa-fukuoka", nombre: "Avispa Fukuoka", ligaId: "j1-liga", fuerza: 46, prestigio: 37, economia: 36, initials: "AF", a: "#5f259f", b: "#ffffff", escudo: "avispa-fukuoka.png" },
+    { id: "tokyo-verdy", nombre: "Tokyo Verdy", ligaId: "j1-liga", fuerza: 45, prestigio: 36, economia: 35, initials: "TV", a: "#e35205", b: "#111111", escudo: "tokyo-verdy.png" },
+    { id: "machida-zelvia", nombre: "Machida Zelvia", ligaId: "j1-liga", fuerza: 41, prestigio: 32, economia: 31, initials: "MZ", a: "#6c1d45", b: "#ffffff", escudo: "machida-zelvia.png" },
+    { id: "fagiano-okayama", nombre: "Fagiano Okayama", ligaId: "j1-liga", fuerza: 44, prestigio: 35, economia: 34, initials: "FO", a: "#1d428a", b: "#ffffff", escudo: "fagiano-okayama.png" },
+    { id: "shimizu-s-pulse", nombre: "Shimizu S-Pulse", ligaId: "j1-liga", fuerza: 47, prestigio: 38, economia: 37, initials: "SS", a: "#5f259f", b: "#ffffff", escudo: "shimizu-s-pulse.png" },
+    { id: "albirex-niigata", nombre: "Albirex Niigata", ligaId: "j1-liga", fuerza: 46, prestigio: 37, economia: 36, initials: "AN", a: "#e35205", b: "#111111", escudo: "albirex-niigata.png" },
+    { id: "shonan-bellmare", nombre: "Shonan Bellmare", ligaId: "j1-liga", fuerza: 50, prestigio: 41, economia: 40, initials: "SB", a: "#e35205", b: "#111111", escudo: "shonan-bellmare.png" },
+    { id: "yokohama-fc", nombre: "Yokohama FC", ligaId: "j1-liga", fuerza: 47, prestigio: 38, economia: 37, initials: "YOK", a: "#0b2265", b: "#c8102e", escudo: "yokohama-fc.png" },
+
+    // ---------------- SUPER LEAGUE CHINA (China) ----------------
+    { id: "shanghai-port", nombre: "Shanghai Port", ligaId: "super-liga-china", fuerza: 72, prestigio: 67, economia: 63, initials: "SP", a: "#111111", b: "#f2c500", escudo: "shanghai-port.png" },
+    { id: "beijing-guoan", nombre: "Beijing Guoan", ligaId: "super-liga-china", fuerza: 71, prestigio: 66, economia: 62, initials: "BG", a: "#6c1d45", b: "#ffffff", escudo: "beijing-guoan.png" },
+    { id: "shandong-taishan", nombre: "Shandong Taishan", ligaId: "super-liga-china", fuerza: 60, prestigio: 53, economia: 53, initials: "ST", a: "#008542", b: "#111111", escudo: "shandong-taishan.png" },
+    { id: "shanghai-shenhua", nombre: "Shanghai Shenhua", ligaId: "super-liga-china", fuerza: 60, prestigio: 53, economia: 53, initials: "SS", a: "#6c1d45", b: "#ffffff", escudo: "shanghai-shenhua.png" },
+    { id: "chengdu-rongcheng", nombre: "Chengdu Rongcheng", ligaId: "super-liga-china", fuerza: 62, prestigio: 55, economia: 55, initials: "CR", a: "#5f259f", b: "#ffffff", escudo: "chengdu-rongcheng.png" },
+    { id: "wuhan-three-towns", nombre: "Wuhan Three Towns", ligaId: "super-liga-china", fuerza: 56, prestigio: 49, economia: 49, initials: "WTT", a: "#0b2265", b: "#c8102e", escudo: "wuhan-three-towns.png" },
+    { id: "zhejiang", nombre: "Zhejiang", ligaId: "super-liga-china", fuerza: 39, prestigio: 32, economia: 34, initials: "ZHE", a: "#e35205", b: "#111111", escudo: "zhejiang.png" },
+    { id: "tianjin-jinmen-tiger", nombre: "Tianjin Jinmen Tiger", ligaId: "super-liga-china", fuerza: 39, prestigio: 32, economia: 34, initials: "TJT", a: "#c8102e", b: "#ffffff", escudo: "tianjin-jinmen-tiger.png" },
+    { id: "henan-fc", nombre: "Henan FC", ligaId: "super-liga-china", fuerza: 40, prestigio: 33, economia: 35, initials: "HEN", a: "#5f259f", b: "#ffffff", escudo: "henan-fc.png" },
+    { id: "dalian-yingbo", nombre: "Dalian Yingbo", ligaId: "super-liga-china", fuerza: 36, prestigio: 29, economia: 31, initials: "DY", a: "#c8102e", b: "#ffffff", escudo: "dalian-yingbo.png" },
+    { id: "qingdao-west-coast", nombre: "Qingdao West Coast", ligaId: "super-liga-china", fuerza: 39, prestigio: 32, economia: 34, initials: "QWC", a: "#c8102e", b: "#ffffff", escudo: "qingdao-west-coast.png" },
+    { id: "qingdao-hainiu", nombre: "Qingdao Hainiu", ligaId: "super-liga-china", fuerza: 37, prestigio: 30, economia: 32, initials: "QH", a: "#7a1010", b: "#111111", escudo: "qingdao-hainiu.png" },
+    { id: "changchun-yatai", nombre: "Changchun Yatai", ligaId: "super-liga-china", fuerza: 36, prestigio: 29, economia: 31, initials: "CY", a: "#111111", b: "#f2c500", escudo: "changchun-yatai.png" },
+    { id: "yunnan-yukun", nombre: "Yunnan Yukun", ligaId: "super-liga-china", fuerza: 35, prestigio: 28, economia: 30, initials: "YY", a: "#5f259f", b: "#ffffff", escudo: "yunnan-yukun.png" },
+    { id: "guangzhou", nombre: "Guangzhou", ligaId: "super-liga-china", fuerza: 43, prestigio: 36, economia: 38, initials: "GUA", a: "#008542", b: "#111111", escudo: "guangzhou.png" },
+    { id: "kunshan", nombre: "Kunshan", ligaId: "super-liga-china", fuerza: 38, prestigio: 31, economia: 33, initials: "KUN", a: "#00205b", b: "#ffffff", escudo: "kunshan.png" },
+
+    // ---------------- LIGA 1 (Perú) ----------------
+    { id: "universitario", nombre: "Universitario", ligaId: "liga1-peru", fuerza: 64, prestigio: 61, economia: 32, initials: "UNI", a: "#00843d", b: "#ffffff", escudo: "universitario.png" },
+    { id: "alianza-lima", nombre: "Alianza Lima", ligaId: "liga1-peru", fuerza: 71, prestigio: 68, economia: 39, initials: "AL", a: "#6c1d45", b: "#ffffff", escudo: "alianza-lima.png" },
+    { id: "sporting-cristal", nombre: "Sporting Cristal", ligaId: "liga1-peru", fuerza: 68, prestigio: 65, economia: 36, initials: "SC", a: "#0b2265", b: "#c8102e", escudo: "sporting-cristal.png" },
+    { id: "cusco-fc", nombre: "Cusco FC", ligaId: "liga1-peru", fuerza: 50, prestigio: 45, economia: 20, initials: "CUS", a: "#1d428a", b: "#ffffff", escudo: "cusco-fc.png" },
+    { id: "melgar", nombre: "Melgar", ligaId: "liga1-peru", fuerza: 49, prestigio: 44, economia: 19, initials: "MEL", a: "#e35205", b: "#111111", escudo: "melgar.png" },
+    { id: "cienciano", nombre: "Cienciano", ligaId: "liga1-peru", fuerza: 54, prestigio: 49, economia: 24, initials: "CIE", a: "#009edb", b: "#ffffff", escudo: "cienciano.png" },
+    { id: "deportivo-garcilaso", nombre: "Deportivo Garcilaso", ligaId: "liga1-peru", fuerza: 35, prestigio: 30, economia: 7, initials: "DG", a: "#0b2265", b: "#c8102e", escudo: "deportivo-garcilaso.png" },
+    { id: "adt", nombre: "ADT", ligaId: "liga1-peru", fuerza: 27, prestigio: 22, economia: 0, initials: "ADT", a: "#c8102e", b: "#ffffff", escudo: "adt.png" },
+    { id: "alianza-atletico", nombre: "Alianza Atlético", ligaId: "liga1-peru", fuerza: 36, prestigio: 31, economia: 8, initials: "AA", a: "#7a1010", b: "#111111", escudo: "alianza-atletico.png" },
+    { id: "atletico-grau", nombre: "Atlético Grau", ligaId: "liga1-peru", fuerza: 33, prestigio: 28, economia: 5, initials: "AG", a: "#c8102e", b: "#ffffff", escudo: "atletico-grau.png" },
+    { id: "comerciantes-unidos", nombre: "Comerciantes Unidos", ligaId: "liga1-peru", fuerza: 31, prestigio: 26, economia: 3, initials: "CU", a: "#1d428a", b: "#ffffff", escudo: "comerciantes-unidos.png" },
+    { id: "los-chankas", nombre: "Los Chankas", ligaId: "liga1-peru", fuerza: 36, prestigio: 31, economia: 8, initials: "LC", a: "#5f259f", b: "#ffffff", escudo: "los-chankas.png" },
+    { id: "sport-boys", nombre: "Sport Boys", ligaId: "liga1-peru", fuerza: 33, prestigio: 28, economia: 5, initials: "SB", a: "#008542", b: "#111111", escudo: "sport-boys.png" },
+    { id: "sport-huancayo", nombre: "Sport Huancayo", ligaId: "liga1-peru", fuerza: 36, prestigio: 31, economia: 8, initials: "SH", a: "#111111", b: "#f2c500", escudo: "sport-huancayo.png" },
+    { id: "utc", nombre: "UTC", ligaId: "liga1-peru", fuerza: 27, prestigio: 22, economia: 0, initials: "UTC", a: "#c8102e", b: "#ffffff", escudo: "utc.png" },
+    { id: "fc-cajamarca", nombre: "FC Cajamarca", ligaId: "liga1-peru", fuerza: 33, prestigio: 28, economia: 5, initials: "CAJ", a: "#00205b", b: "#ffffff", escudo: "fc-cajamarca.png" },
+    { id: "deportivo-moquegua", nombre: "Deportivo Moquegua", ligaId: "liga1-peru", fuerza: 32, prestigio: 27, economia: 4, initials: "DM", a: "#6c1d45", b: "#ffffff", escudo: "deportivo-moquegua.png" },
+    { id: "juan-pablo-ii-college", nombre: "Juan Pablo II College", ligaId: "liga1-peru", fuerza: 32, prestigio: 27, economia: 4, initials: "JPI", a: "#0b2265", b: "#c8102e", escudo: "juan-pablo-ii-college.png" },
+
+    // ---------------- PRIMERA DIVISIÓN (Bolivia) ----------------
+    { id: "bolivar", nombre: "Bolívar", ligaId: "primera-division-bolivia", fuerza: 61, prestigio: 57, economia: 32, initials: "BOL", a: "#c8102e", b: "#ffffff", escudo: "bolivar.png" },
+    { id: "the-strongest", nombre: "The Strongest", ligaId: "primera-division-bolivia", fuerza: 60, prestigio: 56, economia: 31, initials: "TS", a: "#00205b", b: "#ffffff", escudo: "the-strongest.png" },
+    { id: "always-ready", nombre: "Always Ready", ligaId: "primera-division-bolivia", fuerza: 43, prestigio: 37, economia: 16, initials: "AR", a: "#6c1d45", b: "#ffffff", escudo: "always-ready.png" },
+    { id: "blooming", nombre: "Blooming", ligaId: "primera-division-bolivia", fuerza: 44, prestigio: 38, economia: 17, initials: "BLO", a: "#00205b", b: "#ffffff", escudo: "blooming.png" },
+    { id: "oriente-petrolero", nombre: "Oriente Petrolero", ligaId: "primera-division-bolivia", fuerza: 43, prestigio: 37, economia: 16, initials: "OP", a: "#6c1d45", b: "#ffffff", escudo: "oriente-petrolero.png" },
+    { id: "aurora", nombre: "Aurora", ligaId: "primera-division-bolivia", fuerza: 29, prestigio: 23, economia: 4, initials: "AUR", a: "#e35205", b: "#111111", escudo: "aurora.png" },
+    { id: "independiente-petrolero", nombre: "Independiente Petrolero", ligaId: "primera-division-bolivia", fuerza: 24, prestigio: 18, economia: 0, initials: "IP", a: "#c8102e", b: "#ffffff", escudo: "independiente-petrolero.png" },
+    { id: "nacional-potosi", nombre: "Nacional Potosí", ligaId: "primera-division-bolivia", fuerza: 28, prestigio: 22, economia: 3, initials: "NP", a: "#00843d", b: "#ffffff", escudo: "nacional-potosi.png" },
+    { id: "real-potosi", nombre: "Real Potosí", ligaId: "primera-division-bolivia", fuerza: 26, prestigio: 20, economia: 1, initials: "RP", a: "#5f259f", b: "#ffffff", escudo: "real-potosi.png" },
+    { id: "real-oruro", nombre: "Real Oruro", ligaId: "primera-division-bolivia", fuerza: 29, prestigio: 23, economia: 4, initials: "RO", a: "#111111", b: "#f2c500", escudo: "real-oruro.png" },
+    { id: "real-tomayapo", nombre: "Real Tomayapo", ligaId: "primera-division-bolivia", fuerza: 29, prestigio: 23, economia: 4, initials: "RT", a: "#009edb", b: "#ffffff", escudo: "real-tomayapo.png" },
+    { id: "guabira", nombre: "Guabirá", ligaId: "primera-division-bolivia", fuerza: 27, prestigio: 21, economia: 2, initials: "GUA", a: "#1d428a", b: "#ffffff", escudo: "guabira.png" },
+    { id: "universitario-de-vinto", nombre: "Universitario de Vinto", ligaId: "primera-division-bolivia", fuerza: 24, prestigio: 18, economia: 0, initials: "UV", a: "#111111", b: "#f2c500", escudo: "universitario-de-vinto.png" },
+    { id: "academia-del-balompie", nombre: "Academia del Balompié", ligaId: "primera-division-bolivia", fuerza: 24, prestigio: 18, economia: 0, initials: "AB", a: "#e35205", b: "#111111", escudo: "academia-del-balompie.png" },
+    { id: "gv-san-jose", nombre: "GV San José", ligaId: "primera-division-bolivia", fuerza: 28, prestigio: 22, economia: 3, initials: "GSJ", a: "#c8102e", b: "#ffffff", escudo: "gv-san-jose.png" },
+    { id: "san-antonio-bulo-bulo", nombre: "San Antonio Bulo Bulo", ligaId: "primera-division-bolivia", fuerza: 30, prestigio: 24, economia: 5, initials: "SAB", a: "#008542", b: "#111111", escudo: "san-antonio-bulo-bulo.png" },
+
+    // ---------------- PRIMERA DIVISIÓN (Chile) ----------------
+    { id: "colo-colo", nombre: "Colo-Colo", ligaId: "primera-division-chile", fuerza: 83, prestigio: 85, economia: 51, initials: "COL", a: "#0b2265", b: "#c8102e", escudo: "colo-colo.png" },
+    { id: "universidad-de-chile", nombre: "Universidad de Chile", ligaId: "primera-division-chile", fuerza: 81, prestigio: 83, economia: 49, initials: "UC", a: "#c8102e", b: "#ffffff", escudo: "universidad-de-chile.png" },
+    { id: "universidad-catolica", nombre: "Universidad Católica", ligaId: "primera-division-chile", fuerza: 76, prestigio: 78, economia: 44, initials: "UC", a: "#111111", b: "#f2c500", escudo: "universidad-catolica.png" },
+    { id: "huachipato", nombre: "Huachipato", ligaId: "primera-division-chile", fuerza: 66, prestigio: 66, economia: 36, initials: "HUA", a: "#009edb", b: "#ffffff", escudo: "huachipato.png" },
+    { id: "cobresal", nombre: "Cobresal", ligaId: "primera-division-chile", fuerza: 63, prestigio: 63, economia: 33, initials: "COB", a: "#5f259f", b: "#ffffff", escudo: "cobresal.png" },
+    { id: "palestino", nombre: "Palestino", ligaId: "primera-division-chile", fuerza: 64, prestigio: 64, economia: 34, initials: "PAL", a: "#00843d", b: "#ffffff", escudo: "palestino.png" },
+    { id: "everton-cl", nombre: "Everton", ligaId: "primera-division-chile", fuerza: 47, prestigio: 47, economia: 19, initials: "EVE", a: "#c8102e", b: "#ffffff", escudo: "everton-cl.png" },
+    { id: "nublense", nombre: "Ñublense", ligaId: "primera-division-chile", fuerza: 41, prestigio: 41, economia: 13, initials: "ÑUB", a: "#0b2265", b: "#c8102e", escudo: "nublense.png" },
+    { id: "o-higgins", nombre: "O'Higgins", ligaId: "primera-division-chile", fuerza: 45, prestigio: 45, economia: 17, initials: "OHI", a: "#5f259f", b: "#ffffff", escudo: "o-higgins.png" },
+    { id: "union-la-calera", nombre: "Unión La Calera", ligaId: "primera-division-chile", fuerza: 48, prestigio: 48, economia: 20, initials: "UC", a: "#1d428a", b: "#ffffff", escudo: "union-la-calera.png" },
+    { id: "audax-italiano", nombre: "Audax Italiano", ligaId: "primera-division-chile", fuerza: 47, prestigio: 47, economia: 19, initials: "AI", a: "#5f259f", b: "#ffffff", escudo: "audax-italiano.png" },
+    { id: "coquimbo-unido", nombre: "Coquimbo Unido", ligaId: "primera-division-chile", fuerza: 44, prestigio: 44, economia: 16, initials: "CU", a: "#009edb", b: "#ffffff", escudo: "coquimbo-unido.png" },
+    { id: "deportes-la-serena", nombre: "Deportes La Serena", ligaId: "primera-division-chile", fuerza: 39, prestigio: 39, economia: 11, initials: "DS", a: "#5f259f", b: "#ffffff", escudo: "deportes-la-serena.png" },
+    { id: "deportes-concepcion", nombre: "Deportes Concepción", ligaId: "primera-division-chile", fuerza: 43, prestigio: 43, economia: 15, initials: "DC", a: "#6c1d45", b: "#ffffff", escudo: "deportes-concepcion.png" },
+    { id: "deportes-limache", nombre: "Deportes Limache", ligaId: "primera-division-chile", fuerza: 42, prestigio: 42, economia: 14, initials: "DL", a: "#008542", b: "#111111", escudo: "deportes-limache.png" },
+    { id: "universidad-de-concepcion", nombre: "Universidad de Concepción", ligaId: "primera-division-chile", fuerza: 42, prestigio: 42, economia: 14, initials: "UC", a: "#008542", b: "#111111", escudo: "universidad-de-concepcion.png" },
+
+    // ---------------- PRIMERA DIVISIÓN (Uruguay) ----------------
+    { id: "penarol", nombre: "Peñarol", ligaId: "primera-division-uruguay", fuerza: 80, prestigio: 88, economia: 36, initials: "PEÑ", a: "#00205b", b: "#ffffff", escudo: "penarol.png" },
+    { id: "nacional-uy", nombre: "Nacional", ligaId: "primera-division-uruguay", fuerza: 83, prestigio: 91, economia: 39, initials: "NAC", a: "#00843d", b: "#ffffff", escudo: "nacional-uy.png" },
+    { id: "defensor-sporting", nombre: "Defensor Sporting", ligaId: "primera-division-uruguay", fuerza: 68, prestigio: 74, economia: 26, initials: "DS", a: "#7a1010", b: "#111111", escudo: "defensor-sporting.png" },
+    { id: "danubio", nombre: "Danubio", ligaId: "primera-division-uruguay", fuerza: 67, prestigio: 73, economia: 25, initials: "DAN", a: "#7a1010", b: "#111111", escudo: "danubio.png" },
+    { id: "liverpool-fc", nombre: "Liverpool FC", ligaId: "primera-division-uruguay", fuerza: 73, prestigio: 79, economia: 31, initials: "LIV", a: "#009edb", b: "#ffffff", escudo: "liverpool-fc.png" },
+    { id: "wanderers", nombre: "Wanderers", ligaId: "primera-division-uruguay", fuerza: 50, prestigio: 56, economia: 10, initials: "WAN", a: "#e35205", b: "#111111", escudo: "wanderers.png" },
+    { id: "racing", nombre: "Racing", ligaId: "primera-division-uruguay", fuerza: 45, prestigio: 51, economia: 5, initials: "RAC", a: "#5f259f", b: "#ffffff", escudo: "racing.png" },
+    { id: "cerro", nombre: "Cerro", ligaId: "primera-division-uruguay", fuerza: 50, prestigio: 56, economia: 10, initials: "CER", a: "#c8102e", b: "#ffffff", escudo: "cerro.png" },
+    { id: "cerro-largo", nombre: "Cerro Largo", ligaId: "primera-division-uruguay", fuerza: 49, prestigio: 55, economia: 9, initials: "CL", a: "#009edb", b: "#ffffff", escudo: "cerro-largo.png" },
+    { id: "boston-river", nombre: "Boston River", ligaId: "primera-division-uruguay", fuerza: 45, prestigio: 51, economia: 5, initials: "BR", a: "#009edb", b: "#ffffff", escudo: "boston-river.png" },
+    { id: "progreso", nombre: "Progreso", ligaId: "primera-division-uruguay", fuerza: 51, prestigio: 57, economia: 11, initials: "PRO", a: "#5f259f", b: "#ffffff", escudo: "progreso.png" },
+    { id: "juventud", nombre: "Juventud", ligaId: "primera-division-uruguay", fuerza: 52, prestigio: 58, economia: 12, initials: "JUV", a: "#008542", b: "#111111", escudo: "juventud.png" },
+    { id: "deportivo-maldonado", nombre: "Deportivo Maldonado", ligaId: "primera-division-uruguay", fuerza: 46, prestigio: 52, economia: 6, initials: "DM", a: "#e35205", b: "#111111", escudo: "deportivo-maldonado.png" },
+    { id: "central-espanol", nombre: "Central Español", ligaId: "primera-division-uruguay", fuerza: 46, prestigio: 52, economia: 6, initials: "CE", a: "#00843d", b: "#ffffff", escudo: "central-espanol.png" },
+    { id: "montevideo-city-torque", nombre: "Montevideo City Torque", ligaId: "primera-division-uruguay", fuerza: 47, prestigio: 53, economia: 7, initials: "MCT", a: "#00205b", b: "#ffffff", escudo: "montevideo-city-torque.png" },
+    { id: "albion", nombre: "Albion", ligaId: "primera-division-uruguay", fuerza: 51, prestigio: 57, economia: 11, initials: "ALB", a: "#e35205", b: "#111111", escudo: "albion.png" },
+
+    // ---------------- PRIMERA DIVISIÓN (Venezuela) ----------------
+    { id: "caracas-fc", nombre: "Caracas FC", ligaId: "primera-division-venezuela", fuerza: 66, prestigio: 57, economia: 36, initials: "CAR", a: "#6c1d45", b: "#ffffff", escudo: "caracas-fc.png" },
+    { id: "deportivo-tachira", nombre: "Deportivo Táchira", ligaId: "primera-division-venezuela", fuerza: 64, prestigio: 55, economia: 34, initials: "DT", a: "#111111", b: "#f2c500", escudo: "deportivo-tachira.png" },
+    { id: "estudiantes-de-merida", nombre: "Estudiantes de Mérida", ligaId: "primera-division-venezuela", fuerza: 44, prestigio: 33, economia: 16, initials: "EM", a: "#c8102e", b: "#ffffff", escudo: "estudiantes-de-merida.png" },
+    { id: "metropolitanos-fc", nombre: "Metropolitanos FC", ligaId: "primera-division-venezuela", fuerza: 47, prestigio: 36, economia: 19, initials: "MET", a: "#e35205", b: "#111111", escudo: "metropolitanos-fc.png" },
+    { id: "monagas-sc", nombre: "Monagas SC", ligaId: "primera-division-venezuela", fuerza: 46, prestigio: 35, economia: 18, initials: "MON", a: "#e35205", b: "#111111", escudo: "monagas-sc.png" },
+    { id: "zamora-fc", nombre: "Zamora FC", ligaId: "primera-division-venezuela", fuerza: 28, prestigio: 17, economia: 2, initials: "ZAM", a: "#111111", b: "#f2c500", escudo: "zamora-fc.png" },
+    { id: "carabobo-fc", nombre: "Carabobo FC", ligaId: "primera-division-venezuela", fuerza: 30, prestigio: 19, economia: 4, initials: "CAR", a: "#009edb", b: "#ffffff", escudo: "carabobo-fc.png" },
+    { id: "mineros-de-guayana", nombre: "Mineros de Guayana", ligaId: "primera-division-venezuela", fuerza: 28, prestigio: 17, economia: 2, initials: "MG", a: "#c8102e", b: "#ffffff", escudo: "mineros-de-guayana.png" },
+    { id: "la-guaira-fc", nombre: "La Guaira FC", ligaId: "primera-division-venezuela", fuerza: 29, prestigio: 18, economia: 3, initials: "GUA", a: "#009edb", b: "#ffffff", escudo: "la-guaira-fc.png" },
+    { id: "portuguesa-fc", nombre: "Portuguesa FC", ligaId: "primera-division-venezuela", fuerza: 29, prestigio: 18, economia: 3, initials: "POR", a: "#1d428a", b: "#ffffff", escudo: "portuguesa-fc.png" },
+    { id: "academia-puerto-cabello", nombre: "Academia Puerto Cabello", ligaId: "primera-division-venezuela", fuerza: 26, prestigio: 15, economia: 0, initials: "APC", a: "#1d428a", b: "#ffffff", escudo: "academia-puerto-cabello.png" },
+    { id: "anzoategui", nombre: "Anzoátegui", ligaId: "primera-division-venezuela", fuerza: 32, prestigio: 21, economia: 6, initials: "ANZ", a: "#7a1010", b: "#111111", escudo: "anzoategui.png" },
+    { id: "rayo-zuliano", nombre: "Rayo Zuliano", ligaId: "primera-division-venezuela", fuerza: 32, prestigio: 21, economia: 6, initials: "RZ", a: "#00205b", b: "#ffffff", escudo: "rayo-zuliano.png" },
+    { id: "trujillanos-fc", nombre: "Trujillanos FC", ligaId: "primera-division-venezuela", fuerza: 23, prestigio: 12, economia: 0, initials: "TRU", a: "#1d428a", b: "#ffffff", escudo: "trujillanos-fc.png" },
+    { id: "universidad-central", nombre: "Universidad Central", ligaId: "primera-division-venezuela", fuerza: 24, prestigio: 13, economia: 0, initials: "UC", a: "#00205b", b: "#ffffff", escudo: "universidad-central.png" },
+
+    // ---------------- SERIE A (Ecuador) ----------------
+    { id: "barcelona-sc", nombre: "Barcelona SC", ligaId: "serie-a-ecuador", fuerza: 71, prestigio: 65, economia: 35, initials: "BAR", a: "#009edb", b: "#ffffff", escudo: "barcelona-sc.png" },
+    { id: "ldu-quito", nombre: "LDU Quito", ligaId: "serie-a-ecuador", fuerza: 76, prestigio: 70, economia: 40, initials: "LQ", a: "#6c1d45", b: "#ffffff", escudo: "ldu-quito.png" },
+    { id: "independiente-del-valle", nombre: "Independiente del Valle", ligaId: "serie-a-ecuador", fuerza: 75, prestigio: 69, economia: 39, initials: "IV", a: "#c8102e", b: "#ffffff", escudo: "independiente-del-valle.png" },
+    { id: "emelec", nombre: "Emelec", ligaId: "serie-a-ecuador", fuerza: 61, prestigio: 53, economia: 27, initials: "EME", a: "#e35205", b: "#111111", escudo: "emelec.png" },
+    { id: "aucas", nombre: "Aucas", ligaId: "serie-a-ecuador", fuerza: 62, prestigio: 54, economia: 28, initials: "AUC", a: "#c8102e", b: "#ffffff", escudo: "aucas.png" },
+    { id: "universidad-catolica-ec", nombre: "Universidad Católica", ligaId: "serie-a-ecuador", fuerza: 58, prestigio: 50, economia: 24, initials: "UC", a: "#e35205", b: "#111111", escudo: "universidad-catolica-ec.png" },
+    { id: "delfin-sc", nombre: "Delfín SC", ligaId: "serie-a-ecuador", fuerza: 40, prestigio: 32, economia: 8, initials: "DEL", a: "#008542", b: "#111111", escudo: "delfin-sc.png" },
+    { id: "deportivo-cuenca", nombre: "Deportivo Cuenca", ligaId: "serie-a-ecuador", fuerza: 44, prestigio: 36, economia: 12, initials: "DC", a: "#111111", b: "#f2c500", escudo: "deportivo-cuenca.png" },
+    { id: "macara", nombre: "Macará", ligaId: "serie-a-ecuador", fuerza: 37, prestigio: 29, economia: 5, initials: "MAC", a: "#e35205", b: "#111111", escudo: "macara.png" },
+    { id: "orense-sc", nombre: "Orense SC", ligaId: "serie-a-ecuador", fuerza: 39, prestigio: 31, economia: 7, initials: "ORE", a: "#00843d", b: "#ffffff", escudo: "orense-sc.png" },
+    { id: "mushuc-runa", nombre: "Mushuc Runa", ligaId: "serie-a-ecuador", fuerza: 41, prestigio: 33, economia: 9, initials: "MR", a: "#e35205", b: "#111111", escudo: "mushuc-runa.png" },
+    { id: "manta-fc", nombre: "Manta FC", ligaId: "serie-a-ecuador", fuerza: 35, prestigio: 27, economia: 3, initials: "MAN", a: "#c8102e", b: "#ffffff", escudo: "manta-fc.png" },
+    { id: "guayaquil-city", nombre: "Guayaquil City", ligaId: "serie-a-ecuador", fuerza: 41, prestigio: 33, economia: 9, initials: "GC", a: "#1d428a", b: "#ffffff", escudo: "guayaquil-city.png" },
+    { id: "leones-fc", nombre: "Leones FC", ligaId: "serie-a-ecuador", fuerza: 35, prestigio: 27, economia: 3, initials: "LEO", a: "#00843d", b: "#ffffff", escudo: "leones-fc.png" },
+    { id: "libertad-fc", nombre: "Libertad FC", ligaId: "serie-a-ecuador", fuerza: 37, prestigio: 29, economia: 5, initials: "LIB", a: "#1d428a", b: "#ffffff", escudo: "libertad-fc.png" },
+
+    // ---------------- PRIMERA DIVISIÓN (Costa Rica) ----------------
+    { id: "deportivo-saprissa", nombre: "Deportivo Saprissa", ligaId: "primera-division-costa-rica", fuerza: 68, prestigio: 64, economia: 39, initials: "DS", a: "#1d428a", b: "#ffffff", escudo: "deportivo-saprissa.png" },
+    { id: "alajuelense", nombre: "Alajuelense", ligaId: "primera-division-costa-rica", fuerza: 75, prestigio: 71, economia: 46, initials: "ALA", a: "#009edb", b: "#ffffff", escudo: "alajuelense.png" },
+    { id: "herediano", nombre: "Herediano", ligaId: "primera-division-costa-rica", fuerza: 57, prestigio: 51, economia: 30, initials: "HER", a: "#0b2265", b: "#c8102e", escudo: "herediano.png" },
+    { id: "cartagines", nombre: "Cartaginés", ligaId: "primera-division-costa-rica", fuerza: 61, prestigio: 55, economia: 34, initials: "CAR", a: "#009edb", b: "#ffffff", escudo: "cartagines.png" },
+    { id: "perez-zeledon", nombre: "Pérez Zeledón", ligaId: "primera-division-costa-rica", fuerza: 38, prestigio: 32, economia: 13, initials: "PZ", a: "#00205b", b: "#ffffff", escudo: "perez-zeledon.png" },
+    { id: "san-carlos", nombre: "San Carlos", ligaId: "primera-division-costa-rica", fuerza: 36, prestigio: 30, economia: 11, initials: "SC", a: "#009edb", b: "#ffffff", escudo: "san-carlos.png" },
+    { id: "puntarenas-fc", nombre: "Puntarenas FC", ligaId: "primera-division-costa-rica", fuerza: 37, prestigio: 31, economia: 12, initials: "PUN", a: "#6c1d45", b: "#ffffff", escudo: "puntarenas-fc.png" },
+    { id: "sporting-san-jose", nombre: "Sporting San José", ligaId: "primera-division-costa-rica", fuerza: 39, prestigio: 33, economia: 14, initials: "SSJ", a: "#0b2265", b: "#c8102e", escudo: "sporting-san-jose.png" },
+    { id: "inter-san-carlos", nombre: "Inter San Carlos", ligaId: "primera-division-costa-rica", fuerza: 40, prestigio: 34, economia: 15, initials: "ISC", a: "#e35205", b: "#111111", escudo: "inter-san-carlos.png" },
+    { id: "escorpiones", nombre: "Escorpiones", ligaId: "primera-division-costa-rica", fuerza: 39, prestigio: 33, economia: 14, initials: "ESC", a: "#00843d", b: "#ffffff", escudo: "escorpiones.png" },
+
+    // ---------------- PRIMERA DIVISIÓN (Paraguay) ----------------
+    { id: "olimpia", nombre: "Olimpia", ligaId: "primera-division-paraguay", fuerza: 66, prestigio: 70, economia: 30, initials: "OLI", a: "#e35205", b: "#111111", escudo: "olimpia.png" },
+    { id: "cerro-porteno", nombre: "Cerro Porteño", ligaId: "primera-division-paraguay", fuerza: 68, prestigio: 72, economia: 32, initials: "CP", a: "#5f259f", b: "#ffffff", escudo: "cerro-porteno.png" },
+    { id: "libertad", nombre: "Libertad", ligaId: "primera-division-paraguay", fuerza: 50, prestigio: 52, economia: 16, initials: "LIB", a: "#00843d", b: "#ffffff", escudo: "libertad.png" },
+    { id: "nacional-py", nombre: "Nacional", ligaId: "primera-division-paraguay", fuerza: 53, prestigio: 55, economia: 19, initials: "NAC", a: "#00843d", b: "#ffffff", escudo: "nacional-py.png" },
+    { id: "guarani", nombre: "Guaraní", ligaId: "primera-division-paraguay", fuerza: 55, prestigio: 57, economia: 21, initials: "GUA", a: "#1d428a", b: "#ffffff", escudo: "guarani.png" },
+    { id: "sportivo-luqueno", nombre: "Sportivo Luqueño", ligaId: "primera-division-paraguay", fuerza: 30, prestigio: 32, economia: 0, initials: "SL", a: "#6c1d45", b: "#ffffff", escudo: "sportivo-luqueno.png" },
+    { id: "sportivo-ameliano", nombre: "Sportivo Ameliano", ligaId: "primera-division-paraguay", fuerza: 36, prestigio: 38, economia: 4, initials: "SA", a: "#00205b", b: "#ffffff", escudo: "sportivo-ameliano.png" },
+    { id: "deportivo-recoleta", nombre: "Deportivo Recoleta", ligaId: "primera-division-paraguay", fuerza: 34, prestigio: 36, economia: 2, initials: "DR", a: "#0b2265", b: "#c8102e", escudo: "deportivo-recoleta.png" },
+    { id: "trinidense", nombre: "Trinidense", ligaId: "primera-division-paraguay", fuerza: 30, prestigio: 32, economia: 0, initials: "TRI", a: "#5f259f", b: "#ffffff", escudo: "trinidense.png" },
+    { id: "2-de-mayo", nombre: "2 de Mayo", ligaId: "primera-division-paraguay", fuerza: 34, prestigio: 36, economia: 2, initials: "MAY", a: "#009edb", b: "#ffffff", escudo: "2-de-mayo.png" },
+    { id: "atletico-tembetary", nombre: "Atlético Tembetary", ligaId: "primera-division-paraguay", fuerza: 34, prestigio: 36, economia: 2, initials: "AT", a: "#6c1d45", b: "#ffffff", escudo: "atletico-tembetary.png" },
+    { id: "general-caballero", nombre: "General Caballero", ligaId: "primera-division-paraguay", fuerza: 38, prestigio: 40, economia: 6, initials: "GC", a: "#e35205", b: "#111111", escudo: "general-caballero.png" },
+
+    // ---------------- PRIMERA DIVISIÓN (El Salvador) ----------------
+    { id: "alianza-fc", nombre: "Alianza FC", ligaId: "primera-division-el-salvador", fuerza: 61, prestigio: 55, economia: 29, initials: "ALI", a: "#009edb", b: "#ffffff", escudo: "alianza-fc.png" },
+    { id: "c-d-fas", nombre: "C.D. FAS", ligaId: "primera-division-el-salvador", fuerza: 60, prestigio: 54, economia: 28, initials: "FAS", a: "#5f259f", b: "#ffffff", escudo: "c-d-fas.png" },
+    { id: "c-d-aguila", nombre: "C.D. Águila", ligaId: "primera-division-el-salvador", fuerza: 48, prestigio: 40, economia: 18, initials: "ÁGU", a: "#c8102e", b: "#ffffff", escudo: "c-d-aguila.png" },
+    { id: "isidro-metapan", nombre: "Isidro Metapán", ligaId: "primera-division-el-salvador", fuerza: 46, prestigio: 38, economia: 16, initials: "IM", a: "#6c1d45", b: "#ffffff", escudo: "isidro-metapan.png" },
+    { id: "santa-tecla-fc", nombre: "Santa Tecla FC", ligaId: "primera-division-el-salvador", fuerza: 49, prestigio: 41, economia: 19, initials: "ST", a: "#00205b", b: "#ffffff", escudo: "santa-tecla-fc.png" },
+    { id: "once-deportivo", nombre: "Once Deportivo", ligaId: "primera-division-el-salvador", fuerza: 28, prestigio: 20, economia: 0, initials: "OD", a: "#00205b", b: "#ffffff", escudo: "once-deportivo.png" },
+    { id: "c-d-platense", nombre: "C.D. Platense", ligaId: "primera-division-el-salvador", fuerza: 25, prestigio: 17, economia: 0, initials: "PLA", a: "#c8102e", b: "#ffffff", escudo: "c-d-platense.png" },
+    { id: "municipal-limeno", nombre: "Municipal Limeño", ligaId: "primera-division-el-salvador", fuerza: 29, prestigio: 21, economia: 1, initials: "ML", a: "#008542", b: "#111111", escudo: "municipal-limeno.png" },
+    { id: "c-d-dragon", nombre: "C.D. Dragón", ligaId: "primera-division-el-salvador", fuerza: 24, prestigio: 16, economia: 0, initials: "DRA", a: "#1d428a", b: "#ffffff", escudo: "c-d-dragon.png" },
+    { id: "la-firpo", nombre: "La Firpo", ligaId: "primera-division-el-salvador", fuerza: 32, prestigio: 24, economia: 4, initials: "FIR", a: "#00843d", b: "#ffffff", escudo: "la-firpo.png" },
+    { id: "fuerte-san-francisco", nombre: "Fuerte San Francisco", ligaId: "primera-division-el-salvador", fuerza: 26, prestigio: 18, economia: 0, initials: "FSF", a: "#00843d", b: "#ffffff", escudo: "fuerte-san-francisco.png" },
+    { id: "cacahuatique", nombre: "Cacahuatique", ligaId: "primera-division-el-salvador", fuerza: 31, prestigio: 23, economia: 3, initials: "CAC", a: "#1d428a", b: "#ffffff", escudo: "cacahuatique.png" },
+
+    // ---------------- LIGA PREMIER DE UCRANIA (Ucrania) ----------------
+    { id: "shakhtar-donetsk", nombre: "Shakhtar Donetsk", ligaId: "liga-premier-ucrania", fuerza: 81, prestigio: 79, economia: 45, initials: "SD", a: "#008542", b: "#111111", escudo: "shakhtar-donetsk.png" },
+    { id: "dynamo-kyiv", nombre: "Dynamo Kyiv", ligaId: "liga-premier-ucrania", fuerza: 79, prestigio: 77, economia: 43, initials: "DK", a: "#008542", b: "#111111", escudo: "dynamo-kyiv.png" },
+    { id: "oleksandriya", nombre: "Oleksandriya", ligaId: "liga-premier-ucrania", fuerza: 72, prestigio: 68, economia: 38, initials: "OLE", a: "#008542", b: "#111111", escudo: "oleksandriya.png" },
+    { id: "zorya-luhansk", nombre: "Zorya Luhansk", ligaId: "liga-premier-ucrania", fuerza: 65, prestigio: 61, economia: 31, initials: "ZL", a: "#111111", b: "#f2c500", escudo: "zorya-luhansk.png" },
+    { id: "polissya-zhytomyr", nombre: "Polissya Zhytomyr", ligaId: "liga-premier-ucrania", fuerza: 66, prestigio: 62, economia: 32, initials: "PZ", a: "#c8102e", b: "#ffffff", escudo: "polissya-zhytomyr.png" },
+    { id: "kryvbas-kryvyi-rih", nombre: "Kryvbas Kryvyi Rih", ligaId: "liga-premier-ucrania", fuerza: 71, prestigio: 67, economia: 37, initials: "KKR", a: "#c8102e", b: "#ffffff", escudo: "kryvbas-kryvyi-rih.png" },
+    { id: "vorskla-poltava", nombre: "Vorskla Poltava", ligaId: "liga-premier-ucrania", fuerza: 47, prestigio: 43, economia: 15, initials: "VP", a: "#6c1d45", b: "#ffffff", escudo: "vorskla-poltava.png" },
+    { id: "rukh-lviv", nombre: "Rukh Lviv", ligaId: "liga-premier-ucrania", fuerza: 51, prestigio: 47, economia: 19, initials: "RL", a: "#111111", b: "#f2c500", escudo: "rukh-lviv.png" },
+    { id: "karpaty-lviv", nombre: "Karpaty Lviv", ligaId: "liga-premier-ucrania", fuerza: 47, prestigio: 43, economia: 15, initials: "KL", a: "#0b2265", b: "#c8102e", escudo: "karpaty-lviv.png" },
+    { id: "veres-rivne", nombre: "Veres Rivne", ligaId: "liga-premier-ucrania", fuerza: 46, prestigio: 42, economia: 14, initials: "VR", a: "#1d428a", b: "#ffffff", escudo: "veres-rivne.png" },
+    { id: "obolon-kyiv", nombre: "Obolon Kyiv", ligaId: "liga-premier-ucrania", fuerza: 52, prestigio: 48, economia: 20, initials: "OK", a: "#00205b", b: "#ffffff", escudo: "obolon-kyiv.png" },
+    { id: "kolos-kovalivka", nombre: "Kolos Kovalivka", ligaId: "liga-premier-ucrania", fuerza: 49, prestigio: 45, economia: 17, initials: "KK", a: "#7a1010", b: "#111111", escudo: "kolos-kovalivka.png" },
+    { id: "kudrivka", nombre: "Kudrivka", ligaId: "liga-premier-ucrania", fuerza: 52, prestigio: 48, economia: 20, initials: "KUD", a: "#111111", b: "#f2c500", escudo: "kudrivka.png" },
+    { id: "lnz-cherkasy", nombre: "LNZ Cherkasy", ligaId: "liga-premier-ucrania", fuerza: 43, prestigio: 39, economia: 11, initials: "LC", a: "#c8102e", b: "#ffffff", escudo: "lnz-cherkasy.png" },
+    { id: "epicentr-kamianets-podilskyi", nombre: "Epicentr Kamianets-Podilskyi", ligaId: "liga-premier-ucrania", fuerza: 50, prestigio: 46, economia: 18, initials: "EK", a: "#6c1d45", b: "#ffffff", escudo: "epicentr-kamianets-podilskyi.png" },
+    { id: "metalist-1925-kharkiv", nombre: "Metalist 1925 Kharkiv", ligaId: "liga-premier-ucrania", fuerza: 49, prestigio: 45, economia: 17, initials: "MK", a: "#e35205", b: "#111111", escudo: "metalist-1925-kharkiv.png" },
+
   ],
 
   // ---------------- COMPETICIONES ----------------
@@ -351,6 +778,25 @@ const GameDatabase = {
     // Colombia: Apertura + Clausura (~19 partidos de fase regular cada
     // uno) + cuadrangulares y final de ambos torneos como partidosExtra.
     { id: "liga-primera-a-colombia", nombre: "Primera A (Colombia)", tipo: "domestica", categoria: "liga", ligaId: "primera-a-colombia", trofeoImagen: "liga-primera-a-colombia.png", partidosMinimos: 38, partidosExtra: 10 },
+    { id: "liga-eredivisie", nombre: "Eredivisie", tipo: "domestica", categoria: "liga", ligaId: "eredivisie", trofeoImagen: "liga-eredivisie.png", partidosMinimos: 34, partidosExtra: 0 },
+    { id: "liga-primeira-liga", nombre: "Primeira Liga", tipo: "domestica", categoria: "liga", ligaId: "primeira-liga", trofeoImagen: "liga-primeira-liga.png", partidosMinimos: 34, partidosExtra: 0 },
+    { id: "liga-pro-league-belgica", nombre: "Pro League", tipo: "domestica", categoria: "liga", ligaId: "pro-league-belgica", trofeoImagen: "liga-pro-league-belgica.png", partidosMinimos: 34, partidosExtra: 0 },
+    { id: "liga-super-lig-turca", nombre: "Süper Lig", tipo: "domestica", categoria: "liga", ligaId: "super-lig-turca", trofeoImagen: "liga-super-lig-turca.png", partidosMinimos: 34, partidosExtra: 0 },
+    { id: "liga-premiership-escocesa", nombre: "Scottish Premiership", tipo: "domestica", categoria: "liga", ligaId: "premiership-escocesa", trofeoImagen: "liga-premiership-escocesa.png", partidosMinimos: 33, partidosExtra: 0 },
+    { id: "liga-super-liga-griega", nombre: "Super League Greece", tipo: "domestica", categoria: "liga", ligaId: "super-liga-griega", trofeoImagen: "liga-super-liga-griega.png", partidosMinimos: 26, partidosExtra: 0 },
+    { id: "liga-liga-premier-rusa", nombre: "Liga Premier Rusa", tipo: "domestica", categoria: "liga", ligaId: "liga-premier-rusa", trofeoImagen: "liga-liga-premier-rusa.png", partidosMinimos: 30, partidosExtra: 0 },
+    { id: "liga-j1-liga", nombre: "J1 League", tipo: "domestica", categoria: "liga", ligaId: "j1-liga", trofeoImagen: "liga-j1-liga.png", partidosMinimos: 38, partidosExtra: 0 },
+    { id: "liga-super-liga-china", nombre: "Super League China", tipo: "domestica", categoria: "liga", ligaId: "super-liga-china", trofeoImagen: "liga-super-liga-china.png", partidosMinimos: 30, partidosExtra: 0 },
+    { id: "liga-liga1-peru", nombre: "Liga 1", tipo: "domestica", categoria: "liga", ligaId: "liga1-peru", trofeoImagen: "liga-liga1-peru.png", partidosMinimos: 34, partidosExtra: 0 },
+    { id: "liga-primera-division-bolivia", nombre: "Primera División", tipo: "domestica", categoria: "liga", ligaId: "primera-division-bolivia", trofeoImagen: "liga-primera-division-bolivia.png", partidosMinimos: 30, partidosExtra: 0 },
+    { id: "liga-primera-division-chile", nombre: "Primera División", tipo: "domestica", categoria: "liga", ligaId: "primera-division-chile", trofeoImagen: "liga-primera-division-chile.png", partidosMinimos: 30, partidosExtra: 0 },
+    { id: "liga-primera-division-uruguay", nombre: "Primera División", tipo: "domestica", categoria: "liga", ligaId: "primera-division-uruguay", trofeoImagen: "liga-primera-division-uruguay.png", partidosMinimos: 30, partidosExtra: 0 },
+    { id: "liga-primera-division-venezuela", nombre: "Primera División", tipo: "domestica", categoria: "liga", ligaId: "primera-division-venezuela", trofeoImagen: "liga-primera-division-venezuela.png", partidosMinimos: 28, partidosExtra: 0 },
+    { id: "liga-serie-a-ecuador", nombre: "Serie A", tipo: "domestica", categoria: "liga", ligaId: "serie-a-ecuador", trofeoImagen: "liga-serie-a-ecuador.png", partidosMinimos: 28, partidosExtra: 0 },
+    { id: "liga-primera-division-costa-rica", nombre: "Primera División", tipo: "domestica", categoria: "liga", ligaId: "primera-division-costa-rica", trofeoImagen: "liga-primera-division-costa-rica.png", partidosMinimos: 18, partidosExtra: 0 },
+    { id: "liga-primera-division-paraguay", nombre: "Primera División", tipo: "domestica", categoria: "liga", ligaId: "primera-division-paraguay", trofeoImagen: "liga-primera-division-paraguay.png", partidosMinimos: 22, partidosExtra: 0 },
+    { id: "liga-primera-division-el-salvador", nombre: "Primera División", tipo: "domestica", categoria: "liga", ligaId: "primera-division-el-salvador", trofeoImagen: "liga-primera-division-el-salvador.png", partidosMinimos: 22, partidosExtra: 0 },
+    { id: "liga-liga-premier-ucrania", nombre: "Liga Premier de Ucrania", tipo: "domestica", categoria: "liga", ligaId: "liga-premier-ucrania", trofeoImagen: "liga-liga-premier-ucrania.png", partidosMinimos: 38, partidosExtra: 0 },
 
     // -------- DOMÉSTICAS: COPA --------
     // partidosMinimos: 1 (el partido de la ronda en la que entra el
@@ -369,6 +815,25 @@ const GameDatabase = {
     { id: "copa-mexico", nombre: "Copa México", tipo: "domestica", categoria: "copa", ligaId: "liga-mx", trofeoImagen: "copa-mexico.png", partidosMinimos: 1, partidosExtra: 5 },
     { id: "copa-us-open-cup", nombre: "Lamar Hunt U.S. Open Cup", tipo: "domestica", categoria: "copa", ligaId: "mls", trofeoImagen: "copa-us-open-cup.png", partidosMinimos: 1, partidosExtra: 4 },
     { id: "copa-colombia", nombre: "Copa Colombia", tipo: "domestica", categoria: "copa", ligaId: "primera-a-colombia", trofeoImagen: "copa-colombia.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "knvb-beker", nombre: "KNVB Beker", tipo: "domestica", categoria: "copa", ligaId: "eredivisie", trofeoImagen: "knvb-beker.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "taca-de-portugal", nombre: "Taça de Portugal", tipo: "domestica", categoria: "copa", ligaId: "primeira-liga", trofeoImagen: "taca-de-portugal.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "croky-cup", nombre: "Croky Cup", tipo: "domestica", categoria: "copa", ligaId: "pro-league-belgica", trofeoImagen: "croky-cup.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-turquia", nombre: "Copa de Turquía", tipo: "domestica", categoria: "copa", ligaId: "super-lig-turca", trofeoImagen: "copa-turquia.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "scottish-cup", nombre: "Scottish Cup", tipo: "domestica", categoria: "copa", ligaId: "premiership-escocesa", trofeoImagen: "scottish-cup.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-grecia", nombre: "Copa de Grecia", tipo: "domestica", categoria: "copa", ligaId: "super-liga-griega", trofeoImagen: "copa-grecia.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-rusia", nombre: "Copa de Rusia", tipo: "domestica", categoria: "copa", ligaId: "liga-premier-rusa", trofeoImagen: "copa-rusia.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-emperador", nombre: "Copa del Emperador", tipo: "domestica", categoria: "copa", ligaId: "j1-liga", trofeoImagen: "copa-emperador.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-china", nombre: "Copa de China", tipo: "domestica", categoria: "copa", ligaId: "super-liga-china", trofeoImagen: "copa-china.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-peru", nombre: "Copa Perú", tipo: "domestica", categoria: "copa", ligaId: "liga1-peru", trofeoImagen: "copa-peru.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-simon-bolivar", nombre: "Copa Simón Bolívar", tipo: "domestica", categoria: "copa", ligaId: "primera-division-bolivia", trofeoImagen: "copa-simon-bolivar.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-chile", nombre: "Copa Chile", tipo: "domestica", categoria: "copa", ligaId: "primera-division-chile", trofeoImagen: "copa-chile.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-auf-uruguay", nombre: "Copa AUF Uruguay", tipo: "domestica", categoria: "copa", ligaId: "primera-division-uruguay", trofeoImagen: "copa-auf-uruguay.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-venezuela", nombre: "Copa Venezuela", tipo: "domestica", categoria: "copa", ligaId: "primera-division-venezuela", trofeoImagen: "copa-venezuela.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-ecuador", nombre: "Copa Ecuador", tipo: "domestica", categoria: "copa", ligaId: "serie-a-ecuador", trofeoImagen: "copa-ecuador.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-costa-rica", nombre: "Copa Costa Rica", tipo: "domestica", categoria: "copa", ligaId: "primera-division-costa-rica", trofeoImagen: "copa-costa-rica.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-paraguay", nombre: "Copa Paraguay", tipo: "domestica", categoria: "copa", ligaId: "primera-division-paraguay", trofeoImagen: "copa-paraguay.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-presidente", nombre: "Copa Presidente", tipo: "domestica", categoria: "copa", ligaId: "primera-division-el-salvador", trofeoImagen: "copa-presidente.png", partidosMinimos: 1, partidosExtra: 5 },
+    { id: "copa-ucrania", nombre: "Copa de Ucrania", tipo: "domestica", categoria: "copa", ligaId: "liga-premier-ucrania", trofeoImagen: "copa-ucrania.png", partidosMinimos: 1, partidosExtra: 5 },
 
     // -------- INTERNACIONALES --------
     // Formato vigente desde 2024-25 (fase de liga suiza): 8 partidos de
@@ -388,5 +853,25 @@ const GameDatabase = {
     // clubes equivalente a la Europa League/Sudamericana (la antigua
     // Liga de Naciones de clubes se discontinuó en 2023).
     { id: "concacaf-champions-cup", nombre: "CONCACAF Champions Cup", tipo: "internacional", categoria: "primerNivel", confederacion: "CONCACAF", trofeoImagen: "concacaf-champions-cup.png", partidosMinimos: 2, partidosExtra: 5 },
+    // Formato vigente desde 2024-25 (fase de liga, igual que la Champions
+    // League europea que copió): 8 partidos de fase de liga asegurados +
+    // octavos, cuartos, semis y una final a partido único.
+    { id: "afc-champions-league-elite", nombre: "AFC Champions League Elite", tipo: "internacional", categoria: "primerNivel", confederacion: "AFC", trofeoImagen: "", partidosMinimos: 8, partidosExtra: 9 },
+    { id: "afc-champions-league-two", nombre: "AFC Champions League Two", tipo: "internacional", categoria: "segundoNivel", confederacion: "AFC", trofeoImagen: "", partidosMinimos: 6, partidosExtra: 7 },
+
+    // -------- SELECCIÓN NACIONAL --------
+    // tipo "seleccion": categoria "mundial" (una sola, global, sin
+    // confederacion) o "continental" (una por confederación). Se resuelven
+    // en un solo golpe al aceptar la convocatoria (ver
+    // resolverParticipacionSeleccion en carrera.js), no ronda por ronda
+    // entre tramos como las copas de club — partidosMinimos/partidosExtra
+    // quedan igual como referencia de formato (fase de grupos + rondas
+    // eliminatorias hasta la final).
+    { id: "mundial-fifa", nombre: "Copa del Mundo", tipo: "seleccion", categoria: "mundial", confederacion: null, trofeoImagen: "mundial-fifa.png", partidosMinimos: 3, partidosExtra: 4 },
+    { id: "copa-america", nombre: "Copa América", tipo: "seleccion", categoria: "continental", confederacion: "CONMEBOL", trofeoImagen: "copa-america.png", partidosMinimos: 3, partidosExtra: 3 },
+    { id: "eurocopa", nombre: "Eurocopa", tipo: "seleccion", categoria: "continental", confederacion: "UEFA", trofeoImagen: "eurocopa.png", partidosMinimos: 3, partidosExtra: 3 },
+    { id: "copa-oro", nombre: "Copa Oro", tipo: "seleccion", categoria: "continental", confederacion: "CONCACAF", trofeoImagen: "copa-oro.png", partidosMinimos: 3, partidosExtra: 3 },
+    { id: "copa-africana-de-naciones", nombre: "Copa Africana de Naciones", tipo: "seleccion", categoria: "continental", confederacion: "CAF", trofeoImagen: "copa-africana-de-naciones.png", partidosMinimos: 3, partidosExtra: 3 },
+    { id: "copa-asiatica", nombre: "Copa Asiática", tipo: "seleccion", categoria: "continental", confederacion: "AFC", trofeoImagen: "copa-asiatica.png", partidosMinimos: 3, partidosExtra: 3 },
   ],
 };

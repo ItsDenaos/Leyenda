@@ -85,6 +85,17 @@ function buscarCompeticionInternacional(confederacion, categoria) {
   return GameDatabase.competiciones.find((c) => c.tipo === "internacional" && c.categoria === categoria && c.confederacion === confederacion) ?? null;
 }
 
+// Torneos de SELECCIÓN (Mundial/continental) — a diferencia de los de
+// club, no se juegan ronda por ronda entre tramos: se resuelven enteros
+// de un saque al aceptar la convocatoria (ver resolverParticipacionSeleccion).
+function buscarCompeticionSeleccion(confederacion, tipoAno) {
+  if (tipoAno === "mundial") return GameDatabase.competiciones.find((c) => c.tipo === "seleccion" && c.categoria === "mundial") ?? null;
+  return GameDatabase.competiciones.find((c) => c.tipo === "seleccion" && c.categoria === "continental" && c.confederacion === confederacion) ?? null;
+}
+function nombreTorneoSeleccion(confederacion, tipoAno) {
+  return buscarCompeticionSeleccion(confederacion, tipoAno)?.nombre ?? "competición";
+}
+
 // Reparte `total` en `partes` enteras que suman exactamente `total`
 // (la última parte absorbe el resto del redondeo).
 function repartirEnPartes(total, partes) {
@@ -136,6 +147,13 @@ function inicializarCompeticionesTemporada(equipoId, clasificacionInternacional)
 // guardado persistente (juego web, sin partida guardada).
 // ============================================================
 function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionInternacional) {
+  // Selección nacional: se resuelve una vez por temporada, igual que Alto
+  // Impacto (ver más abajo) — si el roll pasa, se sortea en qué pausa cae
+  // (buildDecisionBatch la muestra ahí, reemplazando el slot deportivo).
+  const seleccion = GameDatabase.selecciones.find((s) => s.pais === player.pais) ?? null;
+  const tipoAnoSeleccion = GameConfig.tipoAnoTorneoSeleccion(numero);
+  const convocado = Boolean(seleccion) && Math.random() < GameConfig.probConvocatoria(ovr, seleccion.fuerza);
+
   return {
     numero,
     anio: String(new Date().getFullYear() + (numero - 1)),
@@ -159,6 +177,11 @@ function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionIntern
     // Máximo 1 evento de Alto Impacto por temporada, con 30% de chance:
     // se sortea acá mismo en qué pausa de evento caerá, si es que cae.
     altoImpactoPausa: Math.random() < 0.3 ? GameConfig.randomInt(0, GameConfig.TOTAL_TRAMOS_TEMPORADA - 1) : null,
+    seleccion,
+    tipoAnoSeleccion,
+    convocatoriaPausa: convocado ? GameConfig.randomInt(0, GameConfig.TOTAL_TRAMOS_TEMPORADA - 1) : null,
+    seleccionPartidos: 0,
+    seleccionGoles: 0,
     lesionActiva: null, // { nivel, nombre, descripcion, tramosRestantes, ovrPerdido, bloqueaForma } | null
     loteActual: [],
     bufferRendimiento: 0, // efecto acumulado del tramo actual (aún sin aplicar)
@@ -430,14 +453,41 @@ function mapearEventoACard(evento, esAltoImpacto) {
     id: evento.id,
     tipo: evento.tipo, // "personal" | "deportivo"
     altoImpacto: esAltoImpacto,
-    personajes: evento.personajes,
     desc: evento.pregunta,
     opciones: evento.opciones.map((op, i) => ({
       label: op.texto,
       variant: i === 0 ? "accept" : "ghost",
-      outcome: op.resultado,
       efectos: op.efectos,
     })),
+  };
+}
+
+// Convocatoria a la selección: mismo mecanismo de reemplazo de slot que
+// Alto Impacto (ver crearTemporada), siempre sobre el slot "deportivo".
+// No es un evento del banco — se arma acá mismo con la misma forma que
+// mapearEventoACard() para que crearDecisionCard/resolveDecisionEvento no
+// necesiten un camino aparte. Ninguna opción es gratis: priorizar la
+// selección te da protagonismo internacional a costa de tu club, cuidar
+// el club te lo agradece pero te perdés la ventana por completo.
+function construirCardConvocatoria() {
+  const seleccion = temporadaActual.seleccion;
+  const tipoAno = temporadaActual.tipoAnoSeleccion;
+  const desc = tipoAno === "mundial"
+    ? `Te convocan a la selección de ${seleccion.pais} para el Mundial.`
+    : tipoAno === "continental"
+    ? `Te convocan a la selección de ${seleccion.pais} para la ${nombreTorneoSeleccion(seleccion.confederacion, tipoAno)}.`
+    : `Te convocan a la selección de ${seleccion.pais} para la doble fecha FIFA.`;
+
+  return {
+    id: `seleccion-${temporadaActual.numero}`,
+    tipo: "deportivo",
+    altoImpacto: false,
+    seleccion: true,
+    desc,
+    opciones: [
+      { label: "Priorizar la convocatoria", variant: "accept", prioriza: true, efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 } },
+      { label: "Cuidar tu lugar en el club", variant: "ghost", prioriza: false, efectos: { rendimiento: 0, forma: "desanimado", equipo: 1 } },
+    ],
   };
 }
 
@@ -451,13 +501,23 @@ function buildDecisionBatch(edadActual) {
   const eventoPersonal = eventoAltoImpacto && eventoAltoImpacto.tipo === "personal"
     ? eventoAltoImpacto
     : elegirEventoPorTipo(edadActual, "personal");
-  const eventoDeportivo = eventoAltoImpacto && eventoAltoImpacto.tipo === "deportivo"
-    ? eventoAltoImpacto
-    : elegirEventoPorTipo(edadActual, "deportivo");
+
+  // La convocatoria también reemplaza el slot deportivo, así que si Alto
+  // Impacto ya lo ocupó esta pausa puntual, la convocatoria simplemente no
+  // se muestra esa vez (caso raro: requiere que ambos coincidan de pausa).
+  const altoImpactoEsDeportivo = Boolean(eventoAltoImpacto) && eventoAltoImpacto.tipo === "deportivo";
+  const esPausaConvocatoria = !altoImpactoEsDeportivo && temporadaActual.convocatoriaPausa === temporadaActual.tramoIndex;
+
+  const cardDeportivo = esPausaConvocatoria
+    ? construirCardConvocatoria()
+    : mapearEventoACard(
+        altoImpactoEsDeportivo ? eventoAltoImpacto : elegirEventoPorTipo(edadActual, "deportivo"),
+        altoImpactoEsDeportivo
+      );
 
   return [
     mapearEventoACard(eventoPersonal, eventoPersonal === eventoAltoImpacto),
-    mapearEventoACard(eventoDeportivo, eventoDeportivo === eventoAltoImpacto),
+    cardDeportivo,
   ];
 }
 
@@ -560,6 +620,21 @@ function animarAnilloProgreso(desde, hasta, duracionMs) {
   requestAnimationFrame(frame);
 }
 
+// Barra de progreso de la versión mobile: a diferencia del anillo (que se
+// re-dibuja a mano cuadro a cuadro), acá alcanza con una transición CSS
+// sobre `width` (ver .spotlight-mobile__bar-fill) — solo hay que dejarla
+// en el valor "antes" y forzar un reflow antes de moverla al valor final,
+// para que el navegador sí anime el cambio en vez de saltar directo.
+function animarBarraMobile(desde, hasta) {
+  const barra = document.querySelector("[data-bar-mobile]");
+  if (!barra) return;
+  barra.style.transition = "none";
+  barra.style.width = `${desde}%`;
+  barra.offsetHeight; // fuerza el reflow
+  barra.style.transition = "";
+  barra.style.width = `${hasta}%`;
+}
+
 // Deja el spotlight ya renderizado con los valores finales, pero arranca
 // los números desde `antes` y los anima hasta el valor actual de la temporada.
 function animarSpotlightDesde(antes) {
@@ -571,16 +646,26 @@ function animarSpotlightDesde(antes) {
   Object.entries({ partidos: antes.partidos, goles: antes.goles, asistencias: antes.asistencias, mvp: antes.mvp }).forEach(([stat, valor]) => {
     const el = document.querySelector(`[data-stat="${stat}"]`);
     if (el) el.textContent = valor;
+    const elMobile = document.querySelector(`[data-stat-mobile="${stat}"]`);
+    if (elMobile) elMobile.textContent = valor;
   });
   const promedioEl = document.querySelector('[data-stat="promedio"]');
   if (promedioEl) promedioEl.textContent = antes.promedio.toFixed(1);
+  const promedioElMobile = document.querySelector('[data-stat-mobile="promedio"]');
+  if (promedioElMobile) promedioElMobile.textContent = antes.promedio.toFixed(1);
 
   animarAnilloProgreso(antes.progreso, temporadaActual.progreso, ANIMACION_TRAMO_MS);
+  animarBarraMobile(antes.progreso, temporadaActual.progreso);
   animarNumero(document.querySelector('[data-stat="partidos"]'), antes.partidos, temporadaActual.partidos, ANIMACION_TRAMO_MS);
   animarNumero(document.querySelector('[data-stat="goles"]'), antes.goles, temporadaActual.goles, ANIMACION_TRAMO_MS);
   animarNumero(document.querySelector('[data-stat="asistencias"]'), antes.asistencias, temporadaActual.asistencias, ANIMACION_TRAMO_MS);
   animarNumero(document.querySelector('[data-stat="mvp"]'), antes.mvp, temporadaActual.mvp, ANIMACION_TRAMO_MS);
   animarNumero(document.querySelector('[data-stat="promedio"]'), antes.promedio, temporadaActual.promedio, ANIMACION_TRAMO_MS, 1);
+  animarNumero(document.querySelector('[data-stat-mobile="partidos"]'), antes.partidos, temporadaActual.partidos, ANIMACION_TRAMO_MS);
+  animarNumero(document.querySelector('[data-stat-mobile="goles"]'), antes.goles, temporadaActual.goles, ANIMACION_TRAMO_MS);
+  animarNumero(document.querySelector('[data-stat-mobile="asistencias"]'), antes.asistencias, temporadaActual.asistencias, ANIMACION_TRAMO_MS);
+  animarNumero(document.querySelector('[data-stat-mobile="mvp"]'), antes.mvp, temporadaActual.mvp, ANIMACION_TRAMO_MS);
+  animarNumero(document.querySelector('[data-stat-mobile="promedio"]'), antes.promedio, temporadaActual.promedio, ANIMACION_TRAMO_MS, 1);
 }
 
 // Partidos de LIGA que tocan en este tramo: el total de la temporada
@@ -936,6 +1021,7 @@ function renderSpotlight() {
         <div>
           <span class="spotlight-card__season">Temporada ${s.numero} · ${s.anio}</span>
           <span class="spotlight-card__team">con ${equipo.nombre} ${GameConfig.ligaCrestHtml(liga, "team-crest team-crest--xs")}<span>${liga.nombre}</span></span>
+          ${s.seleccionPartidos > 0 ? `<span class="spotlight-card__seleccion">${GameConfig.flagHtml(s.seleccion.paisCode, "flag-img", s.seleccion.paisFlag)} Selección: ${s.seleccionPartidos} PJ · ${s.seleccionGoles} G</span>` : ""}
         </div>
         <div class="spotlight-card__status">
           <span class="current-tag">EN CURSO</span>
@@ -964,9 +1050,11 @@ function renderSpotlight() {
       ${trophiesHtml(s.trofeos)}
     </article>
 
-    <!-- Versión móvil: tarjeta chica y plana, sin anillo animado ni
-         iconos decorativos — se redibuja entera en cada tramo con los
-         valores finales (sin la cuenta animada de la versión desktop). -->
+    <!-- Versión móvil: tarjeta chica y plana, sin anillo ni iconos
+         decorativos — pero la barra de progreso y los números sí se
+         animan igual que en desktop (ver animarBarraMobile/animarNumero
+         en animarSpotlightDesde), solo que con una barra lineal en vez
+         de un anillo. -->
     <article class="spotlight-mobile">
       <div class="spotlight-mobile__top">
         <span class="spotlight-mobile__season">T${s.numero} · ${s.anio}</span>
@@ -977,15 +1065,16 @@ function renderSpotlight() {
         <span class="spotlight-mobile__clubname">${equipo.nombre}</span>
         <span class="lineup-tag lineup-tag--${s.titular ? "titular" : "suplente"}">${s.titular ? "Titular" : "Suplente"}</span>
       </div>
+      ${s.seleccionPartidos > 0 ? `<div class="spotlight-mobile__seleccion">${GameConfig.flagHtml(s.seleccion.paisCode, "flag-img", s.seleccion.paisFlag)} Selección: ${s.seleccionPartidos} PJ · ${s.seleccionGoles} G</div>` : ""}
       <div class="spotlight-mobile__bar" title="${progreso}% de la temporada">
-        <div class="spotlight-mobile__bar-fill" style="width:${progreso}%"></div>
+        <div class="spotlight-mobile__bar-fill" data-bar-mobile style="width:${progreso}%"></div>
       </div>
       <div class="spotlight-mobile__stats">
-        <span><b>${s.partidos}</b>PJ</span>
-        <span><b>${s.goles}</b>Goles</span>
-        <span><b>${s.asistencias}</b>Asist.</span>
-        <span><b>${s.mvp}</b>MVP</span>
-        <span><b>${s.promedio.toFixed(1)}</b>Prom.</span>
+        <span><b data-stat-mobile="partidos">${s.partidos}</b>PJ</span>
+        <span><b data-stat-mobile="goles">${s.goles}</b>Goles</span>
+        <span><b data-stat-mobile="asistencias">${s.asistencias}</b>Asist.</span>
+        <span><b data-stat-mobile="mvp">${s.mvp}</b>MVP</span>
+        <span><b data-stat-mobile="promedio">${s.promedio.toFixed(1)}</b>Prom.</span>
       </div>
       ${trofeosMobileHtml ? `<div class="spotlight-mobile__trophies">${trofeosMobileHtml}</div>` : ""}
     </article>
@@ -1032,6 +1121,7 @@ function renderTimeline() {
         ${trofeosHtml}
         <span class="ovr-badge ovr-badge--sm" style="--ovr-color:${color}"><span>${s.ovr}</span><span class="ovr-badge__label">OVR</span></span>
         <span class="timeline-item__stats">${s.partidos} PJ · ${s.goles} G · ${s.asistencias} A · ${s.promedio.toFixed(1)} prom</span>
+        ${s.seleccionPartidos > 0 ? `<span class="timeline-item__seleccion" title="Con la selección: ${s.seleccionPartidos} partidos, ${s.seleccionGoles} goles">${GameConfig.flagHtml(s.seleccion.paisCode, "flag-img", s.seleccion.paisFlag)} ${s.seleccionPartidos} PJ · ${s.seleccionGoles} G</span>` : ""}
       </div>
 
       <div class="timeline-item__mobile">
@@ -1040,6 +1130,7 @@ function renderTimeline() {
           <div class="timeline-item__mid">
             <span class="timeline-item__mteam">${equipo.nombre}</span>
             <span class="timeline-item__mmeta">T${s.numero} · ${s.anio} · ${edadEsaTemporada} años · ${s.partidos} PJ · ${s.goles} G</span>
+            ${s.seleccionPartidos > 0 ? `<span class="timeline-item__mmeta timeline-item__seleccion">${GameConfig.flagHtml(s.seleccion.paisCode, "flag-img", s.seleccion.paisFlag)} Selección: ${s.seleccionPartidos} PJ · ${s.seleccionGoles} G</span>` : ""}
           </div>
           <span class="ovr-badge ovr-badge--sm" style="--ovr-color:${color}">${s.ovr}</span>
         </div>
@@ -1144,7 +1235,8 @@ function crearDecisionCard(d) {
 
   card.innerHTML = `
     ${d.altoImpacto ? '<span class="decision-card__impacto" title="Evento de alto impacto">⚠️</span>' : ""}
-    <span class="decision-card__tag">${d.tipo === "deportivo" ? "Deportivo" : "Personal"}</span>
+    ${d.seleccion ? '<span class="decision-card__impacto" title="Convocatoria a la selección">🌍</span>' : ""}
+    <span class="decision-card__tag">${d.seleccion ? "Selección" : d.tipo === "deportivo" ? "Deportivo" : "Personal"}</span>
     <p class="decision-card__desc">${d.desc}</p>
     <div class="decision-card__actions">${buttonsHtml}</div>
   `;
@@ -1236,6 +1328,22 @@ function capturarPosicionesCards(track) {
 }
 
 function animarReacomodoCards(track, posicionesPrevias) {
+  // En mobile las tarjetas viven en un carrusel con scroll-snap (una a la
+  // vez, ver la media query de 640px en carrera.css): la que sobrevive
+  // pasa a ocupar el único slot visible, pero su posición "antes" solía
+  // estar bien afuera del viewport (era la segunda tarjeta, apenas
+  // asomada). Trasladarla en X con la técnica FLIP de acá abajo chocaba
+  // con el scroll-snap nativo de iOS y producía un rebote raro al
+  // terminar la transición. En mobile alcanza con un fundido simple, sin
+  // tocar la posición real de la tarjeta.
+  if (window.matchMedia("(max-width: 640px)").matches) {
+    track.querySelectorAll(".decision-card").forEach((el) => {
+      el.classList.add("decision-card--entrando");
+      el.addEventListener("animationend", () => el.classList.remove("decision-card--entrando"), { once: true });
+    });
+    return;
+  }
+
   track.querySelectorAll(".decision-card").forEach((el) => {
     const antes = posicionesPrevias[el.dataset.id];
     if (!antes) return; // tarjeta nueva: no había posición previa que respetar
@@ -1256,6 +1364,71 @@ function animarReacomodoCards(track, posicionesPrevias) {
   });
 }
 
+// Resuelve, en un solo golpe, lo que jugaste con la selección esta
+// ventana. Si elegiste cuidar el club, no jugás nada (0 partidos). Si
+// priorizaste la convocatoria, cuánto jugás depende de si es año de gran
+// torneo (Mundial/copa continental, ver GameConfig.tipoAnoTorneoSeleccion)
+// o solo amistosos/eliminatorias — y en año de torneo, cuánto avanzás
+// depende de la fuerza de tu selección, resuelto ronda por ronda con la
+// misma curva que usan las copas de club (GameConfig.probAvanzarRonda).
+// Los goles reutilizan GameConfig.simularTramo tal cual usa el club, para
+// que la sensación de gol con la selección no se sienta "de otro juego".
+function resolverParticipacionSeleccion(prioriza) {
+  const seleccion = temporadaActual.seleccion;
+  if (!prioriza || !seleccion) return null;
+
+  const tipoAno = temporadaActual.tipoAnoSeleccion;
+  const calidad = GameConfig.calidadSeleccion(seleccion.fuerza, temporadaActual.forma);
+
+  let partidos;
+  let mensaje;
+
+  if (!tipoAno) {
+    partidos = GameConfig.PARTIDOS_AMISTOSO_SELECCION;
+    mensaje = `Jugaste ${partidos} amistosos con ${seleccion.pais}.`;
+  } else {
+    const nombreTorneo = nombreTorneoSeleccion(seleccion.confederacion, tipoAno);
+    const clasifico = Math.random() < GameConfig.probClasificarTorneoSeleccion(calidad);
+    if (!clasifico) {
+      partidos = GameConfig.PARTIDOS_ELIMINATORIAS_SELECCION;
+      mensaje = `${seleccion.pais} no logró clasificarse a la ${nombreTorneo} esta vez, pero sumaste minutos en las eliminatorias.`;
+    } else {
+      partidos = GameConfig.PARTIDOS_FASE_DE_GRUPOS_SELECCION;
+      const avanzaGrupos = Math.random() < GameConfig.probAvanzarFaseDeGruposSeleccion(calidad);
+      if (!avanzaGrupos) {
+        mensaje = `Quedaste eliminado en la fase de grupos de la ${nombreTorneo} con ${seleccion.pais}.`;
+      } else {
+        const totalRondas = tipoAno === "mundial" ? GameConfig.RONDAS_KO_MUNDIAL : GameConfig.RONDAS_KO_CONTINENTAL;
+        const rondas = GameConfig.NOMBRES_RONDA_KO[totalRondas];
+        let rondasSuperadas = 0;
+        while (rondasSuperadas < rondas.length && Math.random() < GameConfig.probAvanzarRonda(calidad)) {
+          rondasSuperadas++;
+          partidos++;
+        }
+        if (rondasSuperadas === rondas.length) {
+          const competicion = buscarCompeticionSeleccion(seleccion.confederacion, tipoAno);
+          if (competicion) temporadaActual.trofeos.push({ nombre: competicion.nombre, imagen: competicion.trofeoImagen });
+          mensaje = `¡Campeón de la ${nombreTorneo} con ${seleccion.pais}!`;
+        } else if (rondasSuperadas === rondas.length - 1) {
+          mensaje = `Fuiste subcampeón de la ${nombreTorneo} con ${seleccion.pais}.`;
+        } else {
+          mensaje = `Quedaste eliminado en ${rondas[rondasSuperadas]} de la ${nombreTorneo} con ${seleccion.pais}.`;
+        }
+      }
+    }
+  }
+
+  const grupo = GameConfig.GRUPOS_POSICION[player.posicion] ?? "medio";
+  const { goles } = GameConfig.simularTramo({
+    partidos, grupo, ovr: temporadaActual.ovr, rendimientoAcumulado: temporadaActual.bufferRendimiento,
+  });
+  temporadaActual.seleccionPartidos += partidos;
+  temporadaActual.seleccionGoles += goles;
+  if (goles > 0) mensaje += ` Anotaste ${goles} gol${goles === 1 ? "" : "es"}.`;
+
+  return { mensaje };
+}
+
 function resolveDecisionEvento(id, optionIdx) {
   const decision = temporadaActual.loteActual.find((d) => d.id === id);
   if (!decision) return;
@@ -1269,6 +1442,11 @@ function resolveDecisionEvento(id, optionIdx) {
   }
   temporadaActual.bufferRendimiento += option.efectos.rendimiento;
   temporadaActual.bufferEquipo += option.efectos.equipo;
+
+  if (decision.seleccion) {
+    const resultado = resolverParticipacionSeleccion(option.prioriza);
+    if (resultado) showToast(resultado.mensaje);
+  }
 
   const cardEl = document.querySelector(`.decision-card[data-id="${id}"]`);
   if (cardEl) cardEl.classList.add("decision-card--resolved");
@@ -1451,6 +1629,7 @@ function construirResumenCarrera() {
   });
 
   let partidos = 0, goles = 0, asistencias = 0, mvp = 0, sumaRating = 0;
+  let seleccionPartidos = 0, seleccionGoles = 0;
   let mayorOvr = 0, mayorValor = 0;
   const trofeosPorNombre = new Map();
   const numerosTemporada = new Set();
@@ -1464,6 +1643,8 @@ function construirResumenCarrera() {
     asistencias += s.asistencias;
     mvp += s.mvp;
     sumaRating += s.sumaRating;
+    seleccionPartidos += s.seleccionPartidos || 0;
+    seleccionGoles += s.seleccionGoles || 0;
     if (s.ovr > mayorOvr) mayorOvr = s.ovr;
     if (s.valorMercado > mayorValor) mayorValor = s.valorMercado;
     numerosTemporada.add(s.numero);
@@ -1478,6 +1659,7 @@ function construirResumenCarrera() {
     clubes,
     partidos, goles, asistencias, mvp,
     promedio: partidos > 0 ? sumaRating / partidos : 0,
+    seleccionPartidos, seleccionGoles,
     mayorOvr,
     mayorValor,
     ovrDebut: serieOvr.length > 0 ? serieOvr[0].ovr : 0,
@@ -1588,6 +1770,16 @@ function renderResumenCarrera() {
       <div class="resumen__clubs">${journeyHtml}</div>
     </div>
 
+    ${r.seleccionPartidos > 0 ? `
+    <div class="resumen__section">
+      <h5 class="resumen__section-title">Con la selección</h5>
+      <div class="resumen__seleccion">
+        ${GameConfig.flagHtml(player.paisCode, "resumen__seleccion-flag flag-img", player.flag)}
+        <span class="resumen__seleccion-pais">${player.pais}</span>
+        <span class="resumen__seleccion-stats">${r.seleccionPartidos} partido${r.seleccionPartidos === 1 ? "" : "s"} · ${r.seleccionGoles} gol${r.seleccionGoles === 1 ? "" : "es"}</span>
+      </div>
+    </div>` : ""}
+
     <div class="resumen__section">
       <h5 class="resumen__section-title">Trofeos (${totalTrofeos})</h5>
       ${trofeosResumenHtml(r.trofeos)}
@@ -1601,6 +1793,295 @@ function abrirResumenModal() {
 }
 function cerrarResumenModal() {
   document.getElementById("resumenModal").hidden = true;
+}
+
+// ---------- TARJETA DE RESUMEN PARA COMPARTIR ----------
+// No es una captura del popup (eso necesitaría una librería externa que
+// este proyecto no usa) — es una tarjeta propia, dibujada a mano en un
+// <canvas> con los mismos datos, pensada para copiarse como imagen.
+
+// Carga una imagen sin romper el dibujo si falla (escudo no disponible,
+// sin internet, etc.) — se resuelve con `null` en vez de rechazar.
+function cargarImagenSegura(src) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+// Recorta el contexto actual a un círculo o a un rectángulo redondeado
+// antes de dibujar adentro — mismo criterio que .team-crest--avatar
+// (círculo) vs .team-crest--md (esquinas redondeadas) en el CSS real.
+function recortarForma(ctx, x, y, size, forma) {
+  ctx.beginPath();
+  if (forma === "circulo") {
+    ctx.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+  } else {
+    ctx.roundRect(x, y, size, size, size * 0.22);
+  }
+  ctx.closePath();
+  ctx.clip();
+}
+
+// Dibuja un escudo de club: la imagen real si cargó, o el mismo respaldo
+// que usa el juego (degradado de los colores del club + iniciales).
+function dibujarEscudoCanvas(ctx, equipo, img, x, y, size, forma = "circulo") {
+  ctx.save();
+  recortarForma(ctx, x, y, size, forma);
+  if (img) {
+    ctx.drawImage(img, x, y, size, size);
+  } else {
+    const grad = ctx.createLinearGradient(x, y, x + size, y + size);
+    grad.addColorStop(0, equipo.a);
+    grad.addColorStop(1, equipo.b);
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, size, size);
+    ctx.fillStyle = "#fff";
+    ctx.font = `900 ${Math.round(size * 0.34)}px "Segoe UI", sans-serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(equipo.initials, x + size / 2, y + size / 2 + size * 0.02);
+  }
+  ctx.restore();
+}
+
+// Trunca un texto con "…" si no entra en el ancho disponible, en vez de
+// desbordarse o ajustar el layout — mismo criterio que el line-clamp CSS
+// del popup real, pero a mano porque canvas no tiene texto multilínea.
+function truncarTexto(ctx, texto, anchoMax) {
+  if (ctx.measureText(texto).width <= anchoMax) return texto;
+  let recortado = texto;
+  while (recortado.length > 1 && ctx.measureText(recortado + "…").width > anchoMax) {
+    recortado = recortado.slice(0, -1);
+  }
+  return recortado + "…";
+}
+
+async function generarTarjetaResumenCanvas() {
+  const r = construirResumenCarrera();
+  const ultimoClub = r.clubes[r.clubes.length - 1];
+  const colorPico = ovrTierColor(r.mayorOvr);
+  const totalTrofeos = r.trofeos.reduce((suma, t) => suma + t.cantidad, 0);
+
+  const imgUltimoClub = await cargarImagenSegura(GameConfig.rutaEscudoEquipo(ultimoClub));
+  const imgsClubes = await Promise.all(r.clubes.map((e) => cargarImagenSegura(GameConfig.rutaEscudoEquipo(e))));
+
+  const W = 1080, H = 1350;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d");
+
+  // Fondo: mismo lenguaje que el hero/banner real (degradado del último
+  // club, oscurecido para que el texto blanco siga siendo legible).
+  const fondo = ctx.createLinearGradient(0, 0, W, H);
+  fondo.addColorStop(0, ultimoClub.a);
+  fondo.addColorStop(1, ultimoClub.b);
+  ctx.fillStyle = fondo;
+  ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "rgba(13, 17, 32, 0.86)";
+  ctx.fillRect(0, 0, W, H);
+
+  // Marca
+  ctx.fillStyle = "#ffb703";
+  ctx.font = '800 30px "Segoe UI", sans-serif';
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText("⚽ LEYENDA", 60, 70);
+
+  // Encabezado: escudo + nombre + subtítulo, badge de pico de OVR a la derecha
+  dibujarEscudoCanvas(ctx, ultimoClub, imgUltimoClub, 60, 110, 130, "circulo");
+  ctx.fillStyle = "#ffffff";
+  ctx.font = '900 52px "Segoe UI", sans-serif';
+  ctx.fillText(player.apellido, 216, 175);
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.font = '400 26px "Segoe UI", sans-serif';
+  const posicion = POSITION_NAMES[player.posicion] ?? player.posicion;
+  ctx.fillText(`${posicion} · ${r.temporadasJugadas} temporada${r.temporadasJugadas === 1 ? "" : "s"}`, 216, 212);
+  ctx.fillText(`Retirado a los ${r.edadRetiro} años`, 216, 244);
+
+  // Badge de pico de OVR (círculo con el color de su gema/metal)
+  const ovrCx = W - 140, ovrCy = 175, ovrR = 78;
+  ctx.beginPath();
+  ctx.arc(ovrCx, ovrCy, ovrR, 0, Math.PI * 2);
+  ctx.fillStyle = "rgba(0,0,0,0.25)";
+  ctx.fill();
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = colorPico;
+  ctx.stroke();
+  ctx.fillStyle = colorPico;
+  ctx.textAlign = "center";
+  ctx.font = '900 46px "Segoe UI", sans-serif';
+  ctx.fillText(String(r.mayorOvr), ovrCx, ovrCy + 8);
+  ctx.fillStyle = "rgba(255,255,255,0.65)";
+  ctx.font = '700 16px "Segoe UI", sans-serif';
+  ctx.fillText("PICO OVR", ovrCx, ovrCy + 40);
+
+  // ---- Tarjeta: evolución de OVR ----
+  let y = 300;
+  dibujarTarjetaFondo(ctx, 60, y, W - 120, 220);
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#9aa3c2";
+  ctx.font = '700 20px "Segoe UI", sans-serif';
+  ctx.fillText("EVOLUCIÓN DE OVR", 90, y + 40);
+  ctx.textAlign = "right";
+  ctx.fillText(`De ${r.ovrDebut} a ${r.mayorOvr}`, W - 90, y + 40);
+  dibujarArcoOvr(ctx, r.serieOvr, colorPico, 90, y + 60, W - 180, 130);
+
+  // ---- Tarjeta: estadísticas ----
+  y += 260;
+  dibujarTarjetaFondo(ctx, 60, y, W - 120, 190);
+  const stats = [
+    [r.partidos, "Partidos"], [r.goles, "Goles"], [r.asistencias, "Asistencias"],
+    [r.mvp, "MVP"], [r.promedio.toFixed(1), "Promedio"], [formatMarketValue(r.mayorValor), "Mayor valor"],
+  ];
+  const colAncho = (W - 120) / 3;
+  stats.forEach(([valor, label], i) => {
+    const cx = 60 + colAncho * (i % 3) + colAncho / 2;
+    const cy = y + (i < 3 ? 65 : 140);
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#eef1fb";
+    ctx.font = '800 40px "Segoe UI", sans-serif';
+    ctx.fillText(String(valor), cx, cy);
+    ctx.fillStyle = "#9aa3c2";
+    ctx.font = '600 18px "Segoe UI", sans-serif';
+    ctx.fillText(label, cx, cy + 28);
+  });
+
+  // ---- Clubes ----
+  y += 250;
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#9aa3c2";
+  ctx.font = '700 20px "Segoe UI", sans-serif';
+  ctx.fillText(`CLUBES (${r.clubes.length})`, 60, y);
+  y += 30;
+  const escudoSize = 84;
+  const espacioEntre = 46;
+  const totalAncho = r.clubes.length * escudoSize + (r.clubes.length - 1) * espacioEntre;
+  let cx = 60 + Math.max(0, ((W - 120) - totalAncho) / 2);
+  r.clubes.forEach((e, i) => {
+    dibujarEscudoCanvas(ctx, e, imgsClubes[i], cx, y, escudoSize, "redondeado");
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#9aa3c2";
+    ctx.font = '600 15px "Segoe UI", sans-serif';
+    ctx.fillText(truncarTexto(ctx, e.nombre, escudoSize + espacioEntre - 10), cx + escudoSize / 2, y + escudoSize + 24);
+    if (i < r.clubes.length - 1) {
+      ctx.fillStyle = "#9aa3c2";
+      ctx.font = '600 28px "Segoe UI", sans-serif';
+      ctx.fillText("›", cx + escudoSize + espacioEntre / 2, y + escudoSize / 2 + 10);
+    }
+    cx += escudoSize + espacioEntre;
+  });
+
+  // ---- Trofeos ----
+  y += 170;
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#9aa3c2";
+  ctx.font = '700 20px "Segoe UI", sans-serif';
+  ctx.fillText(`TROFEOS (${totalTrofeos})`, 60, y);
+  y += 40;
+  if (r.trofeos.length === 0) {
+    ctx.fillStyle = "#9aa3c2";
+    ctx.font = '400 20px "Segoe UI", sans-serif';
+    ctx.fillText("No ganaste trofeos en esta carrera — pero la viviste a fondo.", 60, y + 20);
+  } else {
+    let fx = 60, fy = y;
+    const maxAncho = W - 60;
+    r.trofeos.forEach((t) => {
+      const etiqueta = `🏆 ${t.nombre}${t.cantidad > 1 ? ` ×${t.cantidad}` : ""}`;
+      ctx.font = '700 20px "Segoe UI", sans-serif';
+      const anchoChip = ctx.measureText(etiqueta).width + 36;
+      if (fx + anchoChip > maxAncho) { fx = 60; fy += 52; }
+      ctx.beginPath();
+      ctx.roundRect(fx, fy, anchoChip, 40, 999);
+      ctx.fillStyle = "rgba(212, 175, 55, 0.2)";
+      ctx.fill();
+      ctx.strokeStyle = "#d4af37";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = "#d4af37";
+      ctx.textAlign = "left";
+      ctx.fillText(etiqueta, fx + 18, fy + 27);
+      fx += anchoChip + 14;
+    });
+  }
+
+  return canvas;
+}
+
+function dibujarTarjetaFondo(ctx, x, y, w, h) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, 18);
+  ctx.fillStyle = "rgba(23, 31, 56, 0.7)";
+  ctx.fill();
+  ctx.strokeStyle = "rgba(255,255,255,0.08)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+}
+
+// Réplica del gráfico SVG de ovrArcoSvg, pero dibujada directo en canvas.
+function dibujarArcoOvr(ctx, serie, color, x, y, w, h) {
+  if (!serie || serie.length === 0) return;
+  const ovrs = serie.map((s) => s.ovr);
+  const min = Math.min(...ovrs), max = Math.max(...ovrs);
+  const rango = Math.max(1, max - min);
+  const n = serie.length;
+  const padX = 10;
+  const px = (i) => x + (n === 1 ? w / 2 : padX + (i * (w - padX * 2)) / (n - 1));
+  const py = (ovr) => y + h - ((ovr - min) / rango) * h * 0.85 - h * 0.05;
+
+  ctx.beginPath();
+  ctx.moveTo(px(0), y + h);
+  serie.forEach((s, i) => ctx.lineTo(px(i), py(s.ovr)));
+  ctx.lineTo(px(n - 1), y + h);
+  ctx.closePath();
+  ctx.fillStyle = color + "29"; // ~16% opacidad, mismo criterio que el SVG
+  ctx.fill();
+
+  ctx.beginPath();
+  serie.forEach((s, i) => (i === 0 ? ctx.moveTo(px(i), py(s.ovr)) : ctx.lineTo(px(i), py(s.ovr))));
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 4;
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.stroke();
+
+  serie.forEach((s, i) => {
+    ctx.beginPath();
+    ctx.arc(px(i), py(s.ovr), 6, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+  });
+}
+
+async function copiarResumenComoImagen() {
+  const btn = document.getElementById("resumenModalCompartir");
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "⏳";
+  try {
+    const canvas = await generarTarjetaResumenCanvas();
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+    if (!blob) throw new Error("No se pudo generar la imagen");
+
+    if (navigator.clipboard && window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      showToast("Resumen copiado como imagen — pegalo donde quieras.");
+    } else {
+      // Navegador sin soporte para copiar imágenes: se abre en una
+      // pestaña nueva para que el usuario la guarde a mano (mantener
+      // apretado / clic derecho → guardar imagen).
+      window.open(canvas.toDataURL("image/png"), "_blank");
+      showToast("Tu navegador no permite copiar la imagen directo — se abrió aparte para que la guardes.");
+    }
+  } catch (err) {
+    showToast("No se pudo generar la imagen del resumen.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
 }
 
 // ---------- TOAST ----------
@@ -1618,6 +2099,7 @@ document.getElementById("numeroModalCancelar").addEventListener("click", cerrarM
 document.getElementById("numeroModalConfirmar").addEventListener("click", confirmarCambioNumero);
 
 document.getElementById("resumenModalCerrar").addEventListener("click", cerrarResumenModal);
+document.getElementById("resumenModalCompartir").addEventListener("click", copiarResumenComoImagen);
 document.getElementById("resumenModal").addEventListener("click", (e) => {
   if (e.target.id === "resumenModal") cerrarResumenModal();
 });

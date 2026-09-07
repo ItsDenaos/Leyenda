@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.4.1-alpha",
-  FECHA_PUBLICACION: "6 de septiembre de 2026 · 18:32",
+  VERSION: "0.5.0-Beta",
+  FECHA_PUBLICACION: "6 de septiembre de 2026 · 21:10",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
@@ -43,7 +43,6 @@ const GameConfig = {
   // ver `poder`/`poderLiga`/`calidadFuerzaClub`/`valorScoreClub` abajo,
   // que separan qué eje alimenta cada mecánica en vez de mezclar todo
   // en un solo número.
-  EJE_MIN: 0,
   EJE_MAX: 100,
 
   // Peso de cada eje al combinarlos en un "poder" único — para todo lo
@@ -869,6 +868,82 @@ const GameConfig = {
   UMBRAL_CLASIFICA_SEGUNDO_NIVEL: 0.45,
 
   // ============================================================
+  // SELECCIÓN NACIONAL
+  // Convocatoria: cada país tiene un "OVR de referencia" (umbralOvrConvocatoria)
+  // que le da a un jugador un 50/50 de ser llamado — cuanto más grande la
+  // selección, más alto ese OVR (a Francia, fuerza 94, hay que llegarle con
+  // un OVR de élite; a Bolivia, fuerza 35, con un OVR medio ya empareja).
+  // Por encima o debajo de ese umbral, la probabilidad sube o baja de forma
+  // lineal, no de golpe — hay una franja real de incertidumbre, no un corte
+  // seco. Se sortea una vez por temporada, igual que Alto Impacto.
+  UMBRAL_OVR_CONVOCATORIA_BASE: 50,
+  UMBRAL_OVR_CONVOCATORIA_FACTOR: 0.35,
+  PROB_CONVOCATORIA_PENDIENTE_OVR: 0.04,
+  PROB_CONVOCATORIA_MIN: 0.03,
+  PROB_CONVOCATORIA_MAX: 0.95,
+
+  umbralOvrConvocatoria(fuerzaSeleccion) {
+    return GameConfig.UMBRAL_OVR_CONVOCATORIA_BASE + fuerzaSeleccion * GameConfig.UMBRAL_OVR_CONVOCATORIA_FACTOR;
+  },
+
+  probConvocatoria(ovr, fuerzaSeleccion) {
+    const umbral = GameConfig.umbralOvrConvocatoria(fuerzaSeleccion);
+    return GameConfig.clamp(
+      0.5 + (ovr - umbral) * GameConfig.PROB_CONVOCATORIA_PENDIENTE_OVR,
+      GameConfig.PROB_CONVOCATORIA_MIN,
+      GameConfig.PROB_CONVOCATORIA_MAX
+    );
+  },
+
+  // "Calidad de campaña" de la selección (0-1, mismo formato que
+  // calcularFuerzaCampana de club): la fuerza fija del país pesa la
+  // enorme mayoría — un solo jugador no decide el destino de un
+  // seleccionado — con un empujón chico según tu forma del momento.
+  SELECCION_PESO_JUGADOR: 0.15,
+
+  calidadSeleccion(fuerzaSeleccion, forma) {
+    const base = fuerzaSeleccion / GameConfig.EJE_MAX;
+    const calidadForma = GameConfig.FORMA_CALIDAD[forma] ?? 0.5;
+    return GameConfig.clamp(base + (calidadForma - 0.5) * GameConfig.SELECCION_PESO_JUGADOR, 0, 1);
+  },
+
+  // Clasificar al torneo grande (Mundial/continental) esa ventana — más
+  // parejo que ganarlo, ver probGanarCopa como referencia de curva.
+  probClasificarTorneoSeleccion(calidad) {
+    return GameConfig.clamp(0.15 + 0.8 * calidad, 0.05, 0.97);
+  },
+
+  // Sobrevivir la fase de grupos, ya clasificado — bastante generoso,
+  // como en la vida real donde caer en fase de grupos es la excepción.
+  probAvanzarFaseDeGruposSeleccion(calidad) {
+    return GameConfig.clamp(0.35 + 0.6 * calidad, 0.15, 0.95);
+  },
+  // Cada ronda eliminatoria en adelante reutiliza probAvanzarRonda tal
+  // cual (misma escala 0-1 que la fuerza de campaña de un club).
+
+  PARTIDOS_AMISTOSO_SELECCION: 2, // ventana FIFA fuera de año de torneo
+  PARTIDOS_ELIMINATORIAS_SELECCION: 2, // no clasificó, pero jugó las eliminatorias
+  PARTIDOS_FASE_DE_GRUPOS_SELECCION: 3,
+  RONDAS_KO_MUNDIAL: 4, // octavos, cuartos, semifinal, final
+  RONDAS_KO_CONTINENTAL: 3, // cuartos, semifinal, final
+  NOMBRES_RONDA_KO: {
+    4: ["octavos de final", "cuartos de final", "semifinal", "la final"],
+    3: ["cuartos de final", "semifinal", "la final"],
+  },
+
+  // Calendario real, sin estado adicional que guardar: Mundial y copa
+  // continental (Copa América/Eurocopa/Copa Oro/Copa Africana/Copa
+  // Asiática, según tu confederación) caen cada 4 temporadas, alternados
+  // — igual que en la vida real, donde ambos torneos van cada 4 años
+  // desfasados 2 entre sí.
+  tipoAnoTorneoSeleccion(numeroTemporada) {
+    const ciclo = numeroTemporada % 4;
+    if (ciclo === 1) return "mundial";
+    if (ciclo === 3) return "continental";
+    return null;
+  },
+
+  // ============================================================
   // PARTICIPACIÓN DEL JUGADOR
   // Los partidos calculados arriba son los del CLUB — cuántos de esos
   // juegas tú depende de tu OVR relativo, cómo vienen tus decisiones
@@ -942,10 +1017,10 @@ const GameConfig = {
     return GameConfig.clamp(GameConfig.PROB_LESION_BASE + extra, 0, GameConfig.PROB_LESION_MAX);
   },
 
-  // Pesos del sorteo de nivel (deben sumar 1): grave es raro a propósito.
+  // Pesos del sorteo de nivel1/nivel2 (nivel3 es el resto, ~0.55): grave
+  // es raro a propósito.
   PESO_LESION_NIVEL1: 0.10,
   PESO_LESION_NIVEL2: 0.35,
-  PESO_LESION_NIVEL3: 0.55,
 
   elegirNivelLesion() {
     const r = Math.random();

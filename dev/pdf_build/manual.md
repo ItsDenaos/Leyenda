@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 0.4.0-alpha — publicada el 6 de septiembre de 2026 · 18:14**
+**Versión 0.5.0-Beta — publicada el 6 de septiembre de 2026 · 21:10**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -15,16 +15,17 @@ Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesio
 5. [Cómo avanza una temporada](#5-cómo-avanza-una-temporada)
 6. [Las decisiones: personales y deportivas](#6-las-decisiones-personales-y-deportivas)
 7. [Eventos de Alto Impacto](#7-eventos-de-alto-impacto)
-8. [Tu forma y tu rendimiento](#8-tu-forma-y-tu-rendimiento)
-9. [Lesiones](#9-lesiones)
-10. [Cómo crece (y decae) tu nivel](#10-cómo-crece-y-decae-tu-nivel)
-11. [Trofeos y competiciones](#11-trofeos-y-competiciones)
-12. [Tu valor de mercado](#12-tu-valor-de-mercado)
-13. [El mercado de fichajes](#13-el-mercado-de-fichajes)
-14. [Pedir un cambio de dorsal](#14-pedir-un-cambio-de-dorsal)
-15. [El retiro y el resumen de tu carrera](#15-el-retiro-y-el-resumen-de-tu-carrera)
-16. [Consejos para tu primera carrera](#16-consejos-para-tu-primera-carrera)
-17. [Preguntas frecuentes](#17-preguntas-frecuentes)
+8. [Tu selección nacional](#8-tu-selección-nacional)
+9. [Tu forma y tu rendimiento](#9-tu-forma-y-tu-rendimiento)
+10. [Lesiones](#10-lesiones)
+11. [Cómo crece (y decae) tu nivel](#11-cómo-crece-y-decae-tu-nivel)
+12. [Trofeos y competiciones](#12-trofeos-y-competiciones)
+13. [Tu valor de mercado](#13-tu-valor-de-mercado)
+14. [El mercado de fichajes](#14-el-mercado-de-fichajes)
+15. [Pedir un cambio de dorsal](#15-pedir-un-cambio-de-dorsal)
+16. [El retiro y el resumen de tu carrera](#16-el-retiro-y-el-resumen-de-tu-carrera)
+17. [Consejos para tu primera carrera](#17-consejos-para-tu-primera-carrera)
+18. [Preguntas frecuentes](#18-preguntas-frecuentes)
 
 ---
 
@@ -41,7 +42,7 @@ Es un juego de una sola sesión: **no hay botón de guardar**. Mientras la pesta
 La primera pantalla te pide 3 cosas, en 3 pasos:
 
 - **¿Quién eres?** — tu apellido (va impreso en tu camiseta), tu edad de debut (entre 16 y 19 años) y tu pierna hábil.
-- **¿De dónde eres?** — tu país. Esto importa: si tu país tiene una liga real cargada en el juego (por ahora: Argentina, Brasil, México, Estados Unidos o Colombia), vas a arrancar tu carrera ahí. Si tu país no tiene liga propia, vas a debutar "de extranjero" en una de las 5 grandes ligas de Europa (Premier League, La Liga, Serie A, Bundesliga o Ligue 1), sorteada al azar.
+- **¿De dónde eres?** — tu país. Esto importa: si tu país tiene una liga real cargada en el juego (23 de los 46 países disponibles, de Argentina y España a Bolivia, Costa Rica o Paraguay), vas a arrancar tu carrera ahí. Si tu país no tiene liga propia, vas a debutar "de extranjero" en una de las 5 grandes ligas de Europa (Premier League, La Liga, Serie A, Bundesliga o Ligue 1), sorteada al azar.
 - **¿Dónde juegas?** — tu posición en la cancha, entre las 12 clásicas (arquero, defensores, mediocampistas y delanteros).
 
 A medida que completás los pasos, tu ficha (a la izquierda en escritorio, al final en el celular) se va llenando en vivo, con tu camiseta y tus datos. Tu número de camiseta te lo asigna el club al debutar — no se elige acá.
@@ -103,7 +104,24 @@ De vez en cuando (no en todas las temporadas) una de las 2 tarjetas va a estar m
 
 ---
 
-## 8. Tu forma y tu rendimiento
+## 8. Tu selección nacional
+
+Además de tu club, con el tiempo vas a empezar a sumar partidos con la **selección de tu país** — es un camino aparte, en paralelo a tu carrera de club.
+
+Cada tanto (nunca en todas las temporadas) se sortea si te convocan, y si te llaman vas a ver una tarjeta marcada con un 🌍 en vez de la deportiva de siempre. Cuanto más grande futbolísticamente sea tu país, más alto tiene que ser tu nivel para que te llamen — a una potencia como Brasil o Francia hay que llegarle con un nivel de élite; a una selección más chica, con un buen nivel medio ya alcanza.
+
+En esa tarjeta elegís entre 2 caminos, y ninguno es gratis:
+
+- **Priorizar la convocatoria** — jugás con tu selección (amistosos, eliminatorias, o el torneo grande si te toca ese ciclo), sumando partidos, goles y hasta trofeos — pero tu club nota que volviste con menos frecura, y eso le resta un poco al equipo.
+- **Cuidar tu lugar en el club** — tu club te lo agradece, pero esa ventana con la selección la perdés por completo.
+
+Cada 4 temporadas te toca el **Mundial**; 2 temporadas después de cada Mundial, la **copa continental** de tu confederación (Copa América, Eurocopa, Copa Oro, Copa Africana o Copa Asiática, según tu país). Si tu selección clasifica y vas avanzando ronda a ronda, podés terminar siendo campeón — y ese trofeo se suma a los mismos que ya ganaste con tu club, mezclado en la misma fila.
+
+Tus partidos y goles con la selección se ven aparte de los de club, nunca sumados a ellos — en la tarjeta de tu temporada actual, en tu historial, y en el resumen final de tu carrera vas a ver una línea con la bandera de tu país específicamente para eso.
+
+---
+
+## 9. Tu forma y tu rendimiento
 
 Tu **forma** (visible como una píldora de color en el panel de temporada) va desde "Inspirado" 🔥 en el mejor de los casos hasta "Tocado físicamente" 🤕 en el peor — pasando por "En plenitud", "Animado", "Regular", "Desanimado" y "Bajo de forma". Se actualiza con cada decisión que tomás, y afecta directamente cuántos minutos vas a tener: en buena forma jugás más partidos y rendís mejor; en mala forma, te quedás afuera más seguido.
 
@@ -111,7 +129,7 @@ Ser **titular** en un bloque de partidos también suma minutos reales — no es 
 
 ---
 
-## 9. Lesiones
+## 10. Lesiones
 
 Cada tanto, en una pausa de decisiones, en vez de las 2 tarjetas de siempre vas a ver un **parte médico**: te lesionaste. No hay nada que decidir ahí — lo leés y tocás "Continuar" cuando quieras seguir. Hay 3 niveles:
 
@@ -125,7 +143,7 @@ La buena noticia: el OVR que perdés por una lesión **no es para siempre**. Cua
 
 ---
 
-## 10. Cómo crece (y decae) tu nivel
+## 11. Cómo crece (y decae) tu nivel
 
 Tu **OVR** es tu nivel general — el número que decide qué tan bien rendís y qué clubes se pueden interesar en vos. Sube solo, de a poco, en cada bloque de partidos, más rápido cuanto mejor te vaya (buen rendimiento en tus decisiones = crecimiento más fuerte).
 
@@ -139,23 +157,23 @@ Además, cada jugador que creás tiene un **ritmo de desarrollo propio**, que nu
 
 ---
 
-## 11. Trofeos y competiciones
+## 12. Trofeos y competiciones
 
 Cada temporada jugás, según tu club: tu **liga doméstica** siempre, tu **copa nacional** siempre, y una **competición internacional** (Champions/Libertadores o su segundo nivel) **solo si clasificaste** la temporada anterior por haber tenido una gran campaña.
 
 Al cierre de cada temporada te enterás si saliste campeón — cuanto mejor le haya ido a tu club (tu nivel, tu forma, y cómo vinieron tus decisiones "de equipo" en el año), más chances tenés. Ganar la liga es difícil y reservado casi siempre a los grandes; la copa nacional es bastante más pareja, con chances reales incluso para un club chico en un buen año.
 
-Todos los trofeos que ganás quedan guardados en tu historial, con su escudo real.
+Todos los trofeos que ganás quedan guardados en tu historial, con su escudo real — incluidos los que ganes con tu selección nacional (ver [sección 8](#8-tu-selección-nacional)), mezclados junto a los de club.
 
 ---
 
-## 12. Tu valor de mercado
+## 13. Tu valor de mercado
 
 Es cuánto "valés" en el mercado de fichajes — sube con tu OVR (cada punto extra vale cada vez más, sobre todo cerca de la cima) y con la plata y el prestigio de tu club/liga actual (no con qué tan bien le esté yendo en la cancha esa temporada — eso es otra cosa). Lo vas a ver siempre en tu header, y es lo que determina si un club puede ofrecerte sin que la oferta se sienta un despropósito.
 
 ---
 
-## 13. El mercado de fichajes
+## 14. El mercado de fichajes
 
 En la única ventana de fichajes de cada temporada vas a ver hasta 4 tarjetas: normalmente **3 ofertas de otros clubes** + la carta de tu club actual (**"Quedarme"**). Esa carta de tu club siempre va **primera**, así la encontrás siempre en el mismo lugar; si en algún momento podés elegir retirarte, esa opción va **segunda**. Un solo clic resuelve toda la pausa.
 
@@ -172,24 +190,26 @@ Cosas para tener en cuenta:
 
 ---
 
-## 14. Pedir un cambio de dorsal
+## 15. Pedir un cambio de dorsal
 
 Al cerrar cada temporada, se habilita un botón (el lápiz ✎ al lado de tu número, en el header) para pedirle al club un dorsal nuevo. Podés pedirlo en el momento o guardarlo para más adelante — queda disponible hasta que lo uses. El club lo acepta o no según tu peso en el plantel (tu nivel y cómo le fue al equipo esa temporada) — no importa qué número pidas en sí, ni "cuán codiciado" sea.
 
 ---
 
-## 15. El retiro y el resumen de tu carrera
+## 16. El retiro y el resumen de tu carrera
 
 Tu carrera termina cuando aceptás una carta de retiro — sea porque vos lo elegiste, porque tu club ya no te renovó, o porque llegaste a una edad (entre 41 y 45 años, distinta en cada carrera) en la que ya nadie te oferta nada más. Ese final no llega de un día para el otro: en tus últimas 2 temporadas antes de esa edad vas a notar que cada vez menos clubes se interesan en vos, hasta quedarte con una sola oferta — una carrera que se apaga de a poco, no un corte de un año a otro.
 
 Al retirarte vas a ver 2 botones:
 
-- **"Ver resumen de mi carrera"** — abre una pantalla con todo lo que hiciste: un gráfico con la evolución de tu OVR temporada a temporada (de tu debut a tu pico), tus estadísticas combinadas de punta a punta (partidos, goles, asistencias, MVP, promedio, mayor valor de mercado), el recorrido completo de los clubes en los que jugaste (en orden), y todos los trofeos que ganaste — si repetiste alguno, vas a ver un "×N" al lado en vez de verlo repetido.
+- **"Ver resumen de mi carrera"** — abre una pantalla con todo lo que hiciste: un gráfico con la evolución de tu OVR temporada a temporada (de tu debut a tu pico), tus estadísticas combinadas de punta a punta (partidos, goles, asistencias, MVP, promedio, mayor valor de mercado), el recorrido completo de los clubes en los que jugaste (en orden), cuánto jugaste con tu selección si te tocó convocatoria alguna vez, y todos los trofeos que ganaste — si repetiste alguno, vas a ver un "×N" al lado en vez de verlo repetido.
 - **"Aceptar"** — te lleva de vuelta al inicio, listo para empezar una carrera nueva.
+
+Junto a la ✕ para cerrar ese resumen hay un botón **"C"**: lo tocás y te copia todo el resumen como una imagen lista para pegar donde quieras (redes, chat, donde sea) — no hace falta sacarle captura de pantalla.
 
 ---
 
-## 16. Consejos para tu primera carrera
+## 17. Consejos para tu primera carrera
 
 - **No tengas miedo de arrancar en un club chico.** Es más fácil ganarte un lugar, y las ofertas de mejores clubes van a ir llegando a medida que subís de nivel.
 - **Prestá atención a tu forma.** Una racha de malas decisiones te puede dejar afuera del equipo justo cuando más necesitás minutos para crecer.
@@ -200,7 +220,7 @@ Al retirarte vas a ver 2 botones:
 
 ---
 
-## 17. Preguntas frecuentes
+## 18. Preguntas frecuentes
 
 **¿Puedo guardar mi carrera y seguir otro día?**
 No — es un juego de una sola sesión. Cerrar la pestaña o recargar la página reinicia la carrera desde la Temporada 1.
@@ -213,6 +233,9 @@ Los clubes top del mundo solo entran en juego con un nivel muy alto — si tu ca
 
 **Mi jugador se lesionó justo antes de una ventana de fichajes — ¿me afecta las ofertas?**
 Sí, una lesión resta OVR de una y puede achicar por un tiempo el nivel de club al que podés aspirar — pero no es un golpe para siempre: al darte de alta recuperás una parte de ese OVR, y el resto se recupera con el tiempo si seguís rindiendo bien.
+
+**¿Puedo elegir jugar siempre para mi selección, todas las temporadas?**
+No — la convocatoria se sortea, no se pide. Cuanto más alto tu nivel para lo que exige tu país, más seguido te va a tocar, pero nunca es garantizado.
 
 **¿La pierna hábil que elegí en la creación afecta algo?**
 No — es puramente parte de tu ficha de jugador, no cambia ningún resultado dentro del juego.

@@ -406,7 +406,6 @@ body {
   gap: 0.4rem;
 }
 .field--grow { flex: 1; }
-.field--narrow { flex: 0 0 110px; }
 .field__label {
   font-size: 0.8rem;
   color: var(--text-dim);

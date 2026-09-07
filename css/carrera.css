@@ -275,6 +275,15 @@
 }
 .resumen__empty { margin: 0; font-size: 0.85rem; color: var(--text-dim); }
 
+.resumen__seleccion {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.resumen__seleccion-pais { font-size: 0.85rem; font-weight: 600; }
+.resumen__seleccion-stats { font-size: 0.8rem; color: var(--text-dim); }
+
 /* El recorrido de clubes se banca cualquier cantidad sin romper el diseño
    con scroll horizontal propio en vez de pasar a una segunda línea — así
    las flechas entre escudos siempre quedan alineadas con sus vecinos. */
@@ -478,6 +487,14 @@
   font-size: 0.82rem;
   color: var(--text-dim);
   margin-top: 0.15rem;
+}
+.spotlight-card__seleccion {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 0.3rem;
 }
 
 .spotlight-card__status {
@@ -720,6 +737,19 @@
      quede siempre a la misma altura en todas las filas del historial. */
   flex: 0 0 190px;
   text-align: right;
+}
+/* Solo aparece en temporadas con convocatoria — al ser opcional, se le da
+   su propia línea completa (flex-basis 100%) en vez de competir por lugar
+   en la fila principal, para no correr el resto de columnas de un lado a
+   otro según si esa temporada tuvo selección o no. */
+.timeline-item__desktop .timeline-item__seleccion {
+  flex: 1 0 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--text-dim);
 }
 .timeline-item__notrophy { font-size: 0.78rem; color: var(--text-dim); }
 /* Mismo motivo: el bloque de trofeos (o "Sin trofeos") va justo antes
@@ -1097,6 +1127,13 @@
   }
   .forma-pill--sm { font-size: 0.6rem; padding: 0.14rem 0.5rem; }
   .spotlight-mobile__club { display: flex; align-items: center; gap: 0.45rem; }
+  .spotlight-mobile__seleccion {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.68rem;
+    color: var(--text-dim);
+  }
   .spotlight-mobile__clubname {
     flex: 1;
     min-width: 0;
@@ -1116,6 +1153,7 @@
     height: 100%;
     background: var(--accent);
     border-radius: inherit;
+    transition: width 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
   }
   .spotlight-mobile__stats {
     display: flex;
@@ -1220,6 +1258,15 @@
   .decision-option__efectos { gap: 0.25rem; }
   .efecto { font-size: 0.6rem; padding: 0.14rem 0.45rem; }
   .btn { padding: 0.7rem 0.5rem; font-size: 0.82rem; }
+
+  /* Fundido de entrada al re-render del carrusel (ver animarReacomodoCards
+     en carrera.js) — sin transform:translate en X, para no pelearse con
+     el scroll-snap nativo del navegador. */
+  @keyframes decisionCardEntrando {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .decision-card--entrando { animation: decisionCardEntrando 0.3s ease; }
 
   /* El parte médico ocupa todo el ancho también en móvil — sin esto, la
      regla genérica de arriba (88%) le gana por venir después en la
