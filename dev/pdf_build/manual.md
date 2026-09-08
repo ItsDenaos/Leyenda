@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 0.7.0-Beta — publicada el 7 de septiembre de 2026 · 23:48**
+**Versión 0.8.0-Beta — publicada el 8 de septiembre de 2026 · 09:41**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -167,6 +167,14 @@ Al cierre de cada temporada te enterás si saliste campeón — cuanto mejor le 
 
 Todos los trofeos que ganás quedan guardados en tu historial, con su escudo real — incluidos los que ganes con tu selección nacional (ver [sección 8](#8-tu-selección-nacional)), mezclados junto a los de club.
 
+**Premios individuales a nivel mundial**: además de los títulos de club y selección, al cierre de cada temporada podés ganar hasta 3 reconocimientos individuales, comparando tu año contra los mejores futbolistas del mundo esa temporada:
+
+- **Bota de Oro** 🥾 — al máximo goleador del mundo, sin importar tu posición.
+- **Once Ideal** ⭐ — al mejor jugador del año en tu propia posición.
+- **Balón de Oro** 🏆 — el más difícil de los tres: hace falta estar entre los mejores en rendimiento, en producción goleadora, **y** haber ganado algo esa temporada — ninguna de las tres cosas alcanza sola.
+
+Si quedás cerca sin ganar la Bota de Oro, un mensaje te va a avisar en qué puesto terminaste. Estos tres premios se guardan igual que cualquier otro trofeo, en tu historial y en el resumen final de tu carrera.
+
 ---
 
 ## 13. Tu valor de mercado
@@ -188,7 +196,7 @@ Cosas para tener en cuenta:
 - Vas a ver "Te valoran en €X" en cada oferta — es una referencia de cuánto te valora ESE club en particular, puede variar un poco de una oferta a otra aunque el nivel del club sea parecido.
 - **Recién fichado a un club, tenés 2 temporadas de tranquilidad**: por más que tu nivel no termine de convencer, ese club no te va a dejar ir hasta que hayas tenido esas 2 temporadas completas para demostrar algo.
 - **Desde los 36 años** podés elegir **retirarte voluntariamente** aunque tu club te siga queriendo — ocupa una de las 4 cartas.
-- Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de "Quedarme" se reemplaza por una de retiro forzoso — todavía podés fichar por otro club en esa misma pausa, si hay ofertas.
+- Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de "Quedarme" se reemplaza por una de retiro forzoso — todavía podés fichar por otro club en esa misma pausa, si hay ofertas. Igual, si veniste de cerrar una temporada realmente brillante (muchos goles/asistencias, gran promedio), eso puede salvarte el contrato aunque el número de OVR no haya llegado del todo — el club no te evalúa solo por un número, también por cómo jugaste de verdad.
 
 ---
 

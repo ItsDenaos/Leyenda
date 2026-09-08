@@ -729,6 +729,10 @@ body {
 
   .flow-step { padding: 1.15rem; gap: 0.9rem; }
   .flow-step.card--done { box-shadow: none; }
+
+  /* En pantallas chicas el toast quedaba angosto, ajustado al texto —
+     con casi todo el ancho disponible se lee mucho más cómodo. */
+  .toast { width: calc(100vw - 1.5rem); max-width: calc(100vw - 1.5rem); box-sizing: border-box; text-align: center; }
 }
 
 /* TOAST */

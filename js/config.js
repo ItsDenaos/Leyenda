@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.7.0-Beta",
-  FECHA_PUBLICACION: "7 de septiembre de 2026 · 23:48",
+  VERSION: "0.8.0-Beta",
+  FECHA_PUBLICACION: "8 de septiembre de 2026 · 09:41",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
@@ -601,9 +601,26 @@ const GameConfig = {
   // se resetea cada vez que cambiás de club, sea el inicial o no.
   TEMPORADAS_GRACIA_CONTRATO: 2,
 
-  contratoDebeTerminar(equipo, liga, ovr) {
+  // Rating de rendimiento (mismo dato que ya usa calcularFuerzaCampana
+  // para trofeos) por encima del cual una temporada se considera
+  // "realmente buena" — suficiente para salvarte el contrato aunque el
+  // OVR crudo se haya quedado corto de la ventana del club.
+  CONTRATO_RENDIMIENTO_SALVAVIDAS: 7.5,
+
+  // El OVR decide primero — pero si te quedaste corto, una temporada
+  // estadísticamente muy buena (promedioTemporadaAnterior) puede salvar
+  // el contrato igual. Antes esto se decidía SOLO por el número de OVR,
+  // sin mirar para nada cómo jugaste — se podía cerrar una temporada
+  // brillante en goles/asistencias/rating y que el club te cortara
+  // igual, porque el OVR (que crece con su propia curva de edad/techo,
+  // no 1 a 1 con las estadísticas del año) no llegó a tiempo.
+  contratoDebeTerminar(equipo, liga, ovr, promedioTemporadaAnterior = null) {
     const ventana = GameConfig.ventanaOvrOferta(equipo, liga);
-    return ovr < ventana.min;
+    if (ovr >= ventana.min) return false;
+    if (promedioTemporadaAnterior && promedioTemporadaAnterior >= GameConfig.CONTRATO_RENDIMIENTO_SALVAVIDAS) {
+      return false;
+    }
+    return true;
   },
 
   // ============================================================
@@ -699,13 +716,14 @@ const GameConfig = {
     EI: "ataque", ED: "ataque", DC: "ataque",
   },
 
-  // Propensiones altas a propósito: el objetivo no es el realismo,
-  // es que el jugador se sienta cada vez más habilidoso. Perfil por
-  // posición: delanteros dominan en goles; medios y laterales reparten
-  // más asistencias que goles (los laterales, bastante más); centrales
-  // suman goles ocasionales de pelota parada y casi no asisten.
-  PROPENSION_GOL: { arquero: 0.005, central: 0.07, lateral: 0.05, medio: 0.16, ataque: 0.48 },
-  PROPENSION_ASISTENCIA: { arquero: 0.005, central: 0.05, lateral: 0.20, medio: 0.28, ataque: 0.20 },
+  // Estas son las propensiones en el punto NEUTRAL de la curva de OVR
+  // (factor ×1, ver ESTADISTICAS_OVR_* más abajo — hoy cae en un OVR de
+  // profesional sólido, ~75-78, no en uno mediocre). Perfil por posición:
+  // delanteros dominan en goles; medios y laterales reparten más
+  // asistencias que goles (los laterales, bastante más); centrales suman
+  // goles ocasionales de pelota parada y casi no asisten.
+  PROPENSION_GOL: { arquero: 0.003, central: 0.03, lateral: 0.02, medio: 0.07, ataque: 0.20 },
+  PROPENSION_ASISTENCIA: { arquero: 0.003, central: 0.02, lateral: 0.09, medio: 0.12, ataque: 0.09 },
   PROBABILIDAD_MVP_BASE: 0.09,
 
   // Cuánto suma un gol/asistencia a la chance de MVP y al rating de ESE
@@ -722,14 +740,16 @@ const GameConfig = {
 
   // Escala de estadísticas por OVR: antes era una recta suave (0.85 a
   // ~1.83 de piso a techo, apenas 2.15x de diferencia) — un crack de 95
-  // rendía casi igual que un jugador mediocre de 65. Ahora es una curva
-  // (exponente > 1): se mantiene parecida en el tramo bajo/medio pero se
-  // dispara en el tramo alto, para que el OVR realmente se note en la
-  // cancha. En el mínimo absoluto de carrera (45) el factor es 0.5; en el
-  // máximo (99), 2.8 — más de 5x de diferencia de punta a punta.
-  ESTADISTICAS_OVR_BASE: 0.5,
-  ESTADISTICAS_OVR_EXPONENTE: 1.6,
-  ESTADISTICAS_OVR_RANGO: 2.3,
+  // rendía casi igual que un jugador mediocre de 65. Un primer intento
+  // con exponente 1.6 arregló eso, pero el punto NEUTRAL (factor ×1)
+  // seguía cayendo cerca de OVR 65 — un jugador mediocre rendía como un
+  // profesional decente. Ahora el neutral está en ~75-78 (profesional
+  // sólido de verdad) y el piso (OVR 45) es bastante más flojo (0.15 en
+  // vez de 0.5) — un jugador de 65 rinde claramente por debajo de la
+  // media, no casi igual. En el máximo (99) el factor es 3.0.
+  ESTADISTICAS_OVR_BASE: 0.15,
+  ESTADISTICAS_OVR_EXPONENTE: 2.2,
+  ESTADISTICAS_OVR_RANGO: 2.85,
 
   factorEstadisticoPorOvr(ovr) {
     const rango = GameConfig.OVR_CARRERA_MAX - GameConfig.OVR_CARRERA_MIN;
@@ -1073,6 +1093,68 @@ const GameConfig = {
   // pisos mínimos por nivel de liga.
   UMBRAL_CLASIFICA_PRIMER_NIVEL: 0.72,
   UMBRAL_CLASIFICA_SEGUNDO_NIVEL: 0.45,
+
+  // ============================================================
+  // PREMIOS MUNDIALES (Bota de Oro, Once Ideal, Balón de Oro)
+  // No hay miles de jugadores rivales simulados en este juego — al
+  // cierre de cada temporada (ver generarCandidatosPremiosMundiales en
+  // carrera.js) se genera un pool de ~24 candidatos de nivel élite
+  // usando LA MISMA fórmula que ya usa tu propio jugador (simularTramo),
+  // repartidos entre las ligas de GameDatabase con más peso en las más
+  // fuertes. Así la comparación es justa: si tus números se sienten
+  // inflados o flojos, los del pool se sienten exactamente igual.
+  // ============================================================
+  PREMIOS_CANDIDATOS_N: 24,
+  PREMIOS_OVR_MIN: 82,
+  PREMIOS_OVR_MAX: 99,
+  // La Bota de Oro es casi siempre un delantero, pero un mediocampista o
+  // lateral prolífico compite de vez en cuando — nunca un arquero o
+  // central (P. ej. Van Dijk no gana la Bota de Oro), así que esos dos
+  // grupos quedan afuera del sorteo de candidatos.
+  PREMIOS_PESO_GRUPO: { ataque: 0.55, medio: 0.25, lateral: 0.12, central: 0.08 },
+
+  // OVR sesgado hacia el centro del rango (82-99) promediando 3 tiradas
+  // en vez de una sola uniforme — son candidatos genuinos al premio, no
+  // una muestra pareja de "cualquier nivel élite".
+  sortearOvrCandidatoPremio() {
+    const t = (Math.random() + Math.random() + Math.random()) / 3;
+    return Math.round(GameConfig.PREMIOS_OVR_MIN + t * (GameConfig.PREMIOS_OVR_MAX - GameConfig.PREMIOS_OVR_MIN));
+  },
+
+  sortearGrupoCandidatoPremio() {
+    const r = Math.random();
+    let acumulado = 0;
+    for (const [grupo, peso] of Object.entries(GameConfig.PREMIOS_PESO_GRUPO)) {
+      acumulado += peso;
+      if (r < acumulado) return grupo;
+    }
+    return "ataque";
+  },
+
+  // Margen de tolerancia para el Once Ideal (ver evaluarPremiosMundiales
+  // en carrera.js): desde OVR ~95 el rating de cada partido queda
+  // clampeado al tope (10.0) sin variación posible, así que comparar el
+  // promedio exacto dejaba el premio reservado casi solo a quien pisa
+  // ese umbral — con este colchón, un promedio de élite real (9.5-9.9)
+  // también tiene una chance genuina.
+  ONCE_IDEAL_MARGEN_PROMEDIO: 0.4,
+
+  // Balón de Oro: ninguna pata sola alcanza — hace falta rendimiento de
+  // élite (rating), producción goleadora real, Y haber ganado algo esa
+  // temporada, los tres a la vez.
+  BALON_ORO_PESO_RATING: 0.4,
+  BALON_ORO_PESO_GOLEADOR: 0.35,
+  BALON_ORO_PESO_TROFEOS: 0.25,
+  BALON_ORO_REFERENCIA_GOLES: 40, // goles + asistencias de una temporada de ensueño
+
+  calcularCalidadBalonDeOro(promedio, golesMasAsistencias, ganoTrofeo) {
+    const calidadRating = GameConfig.clamp((promedio - 7.0) / 2.5, 0, 1);
+    const calidadGoleador = GameConfig.clamp(golesMasAsistencias / GameConfig.BALON_ORO_REFERENCIA_GOLES, 0, 1);
+    const calidadTrofeos = ganoTrofeo ? 1 : 0;
+    return GameConfig.BALON_ORO_PESO_RATING * calidadRating
+      + GameConfig.BALON_ORO_PESO_GOLEADOR * calidadGoleador
+      + GameConfig.BALON_ORO_PESO_TROFEOS * calidadTrofeos;
+  },
 
   // ============================================================
   // SELECCIÓN NACIONAL

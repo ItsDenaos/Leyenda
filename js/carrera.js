@@ -237,7 +237,7 @@ function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionIntern
 // importa el nivel del club actual ni el OVR, la única carta es
 // retirarte. Es la única parte de esto que no depende de qué tan bien
 // te haya ido.
-function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
+function generarLoteOfertas(equipoActualId, ovr, edad, valorActual, promedioTemporadaAnterior = null) {
   const equipoActual = GameDatabase.equipos.find((e) => e.id === equipoActualId);
   const ligaActual = ligaDe(equipoActual);
 
@@ -258,7 +258,7 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
   // traspasos, antes de tener una sola temporada para demostrar algo
   // (un novato jamás arranca con el OVR de un jugador hecho).
   const enGraciaDeContrato = temporadasEnClubActual < GameConfig.TEMPORADAS_GRACIA_CONTRATO;
-  const contratoTerminado = !enGraciaDeContrato && GameConfig.contratoDebeTerminar(equipoActual, ligaActual, ovr);
+  const contratoTerminado = !enGraciaDeContrato && GameConfig.contratoDebeTerminar(equipoActual, ligaActual, ovr, promedioTemporadaAnterior);
   const puedeElegirRetiro = !contratoTerminado && edad >= GameConfig.EDAD_RETIRO_OFERTA;
 
   const disponibles = GameDatabase.equipos.filter((e) => e.id !== equipoActualId);
@@ -375,7 +375,7 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual) {
         tipoOferta: "retiro",
         equipo: equipoActual,
         liga: ligaActual,
-        desc: `${equipoActual.nombre} no te renueva: tu nivel ya no alcanza para seguir en ${ligaActual.nombre}.`,
+        desc: `${equipoActual.nombre} decide no renovarte para la próxima temporada.`,
       }
     : {
         id: `quedarme-${Math.random().toString(36).slice(2, 8)}`,
@@ -581,7 +581,15 @@ function iniciarCheckpoint() {
   if (!checkpoint) return;
 
   if (checkpoint.tipo === "oferta") {
-    temporadaActual.loteActual = generarLoteOfertas(temporadaActual.equipoId, temporadaActual.ovr, getEdadActual(), temporadaActual.valorMercado);
+    // Con qué promedio de rating cerró la temporada anterior (no la
+    // actual, que recién arranca con 0 partidos) — ver
+    // GameConfig.contratoDebeTerminar: una gran temporada estadística
+    // puede salvar el contrato aunque el OVR se haya quedado corto.
+    const temporadaCerrada = temporadasFinalizadas[temporadasFinalizadas.length - 1];
+    const promedioTemporadaAnterior = temporadaCerrada && temporadaCerrada.partidos > 0 ? temporadaCerrada.promedio : null;
+    temporadaActual.loteActual = generarLoteOfertas(
+      temporadaActual.equipoId, temporadaActual.ovr, getEdadActual(), temporadaActual.valorMercado, promedioTemporadaAnterior
+    );
   } else {
     const lesion = intentarGenerarLesion(getEdadActual());
     temporadaActual.loteActual = lesion
@@ -860,6 +868,108 @@ function simularTramoYAvanzar() {
   setTimeout(avanzarCheckpoint, ANIMACION_TRAMO_MS + 150);
 }
 
+// ---------- PREMIOS MUNDIALES (Bota de Oro, Once Ideal, Balón de Oro) ----------
+// Genera el pool de candidatos de nivel élite de esta temporada (ver
+// GameConfig, sección PREMIOS MUNDIALES para la explicación completa).
+function generarCandidatosPremiosMundiales() {
+  const ligasConCompeticion = GameDatabase.ligas
+    .map((liga) => ({
+      liga,
+      competicion: GameDatabase.competiciones.find((c) => c.tipo === "domestica" && c.categoria === "liga" && c.ligaId === liga.id),
+    }))
+    .filter((x) => x.competicion);
+  if (ligasConCompeticion.length === 0) return [];
+
+  const candidatos = [];
+  for (let i = 0; i < GameConfig.PREMIOS_CANDIDATOS_N; i++) {
+    const { liga, competicion } = GameConfig.elegirPonderado(ligasConCompeticion, (x) => x.liga.fuerza, 1)[0];
+    const equiposLiga = GameDatabase.equipos.filter((e) => e.ligaId === liga.id);
+    const equipo = equiposLiga.length > 0 ? GameConfig.elegirPonderado(equiposLiga, (e) => e.fuerza, 1)[0] : null;
+    if (!equipo) continue;
+
+    const grupo = GameConfig.sortearGrupoCandidatoPremio();
+    const ovr = GameConfig.sortearOvrCandidatoPremio();
+    const resultado = GameConfig.simularTramo({ partidos: competicion.partidosMinimos, grupo, ovr, rendimientoAcumulado: 0 });
+    // Si el club del candidato es fuerte, también compite por títulos ese
+    // año — reutiliza la misma curva que decide si TU club gana la liga,
+    // para no inventar una probabilidad aparte.
+    const ganoTrofeo = Math.random() < GameConfig.probGanarLiga(GameConfig.calidadFuerzaClub(equipo, liga));
+
+    candidatos.push({
+      liga, equipo, grupo, ovr,
+      goles: resultado.goles,
+      asistencias: resultado.asistencias,
+      promedio: competicion.partidosMinimos > 0 ? resultado.sumaRating / competicion.partidosMinimos : 0,
+      ganoTrofeo,
+    });
+  }
+  return candidatos;
+}
+
+// Compara la temporada que se acaba de cerrar contra el pool de
+// candidatos y devuelve los mensajes de los premios que se ganaron (los
+// trofeos ya quedan cargados en temporadaActual.trofeos, junto a los de
+// liga/copa). Sin partidos jugados no hay nada que comparar.
+function evaluarPremiosMundiales(candidatos) {
+  const mensajes = [];
+  if (temporadaActual.partidos === 0 || candidatos.length === 0) return mensajes;
+
+  const grupoJugador = GameConfig.GRUPOS_POSICION[player.posicion] ?? "medio";
+
+  // ---- Bota de Oro: máximo goleador del mundo, sin importar posición ----
+  // >= en vez de > en las 3 comparaciones: a partir de OVR ~95 el rating
+  // de cada partido queda saturado en el tope (10.0) de forma
+  // determinística (ver BONUS_RATING_POR_GOL/ratingPartido) — con varios
+  // candidatos de ese nivel en el pool, un empate exacto en el promedio
+  // es común, y no tendría sentido que ese empate SIEMPRE lo pierda el
+  // jugador.
+  const mejorGoleador = candidatos.reduce((mejor, c) => (c.goles > mejor.goles ? c : mejor));
+  if (temporadaActual.goles >= mejorGoleador.goles) {
+    temporadaActual.trofeos.push({ nombre: "Bota de Oro", imagen: "bota-de-oro.png" });
+    mensajes.push("¡Ganaste la Bota de Oro como máximo goleador del mundo!");
+  } else {
+    const puesto = candidatos.filter((c) => c.goles > temporadaActual.goles).length + 1;
+    if (puesto <= 3) {
+      mensajes.push(`Terminaste ${puesto}° en la Bota de Oro, detrás de un delantero de ${mejorGoleador.equipo.nombre} con ${mejorGoleador.goles} goles.`);
+    }
+  }
+
+  // ---- Once Ideal: mejor promedio de TU grupo de posición ----
+  // Con margen en vez de comparar el decimal exacto: desde OVR ~95 cada
+  // partido queda clampeado al tope (10.0) sin variación posible (ver
+  // ratingPartido), así que sin este colchón, Once Ideal quedaba
+  // reservado casi únicamente a quien PISA ese umbral exacto — un
+  // jugador buenísimo pero por debajo (9.5-9.9 de promedio, un nivel ya
+  // de élite real) nunca tenía chance real contra ese tope determinístico.
+  const candidatosMismoGrupo = candidatos.filter((c) => c.grupo === grupoJugador);
+  if (candidatosMismoGrupo.length > 0) {
+    const mejorDelGrupo = candidatosMismoGrupo.reduce((mejor, c) => (c.promedio > mejor.promedio ? c : mejor));
+    if (temporadaActual.promedio >= mejorDelGrupo.promedio - GameConfig.ONCE_IDEAL_MARGEN_PROMEDIO) {
+      // TODO: falta el ícono real (imagen: "once-ideal.png") — el archivo
+      // que había en Temp no es una silueta de trofeo como las otras dos,
+      // sino un logo con texto. Sin `imagen`, trofeoIconHtml cae sola al
+      // 🏆 genérico (no se rompe nada, solo se ve menos distintivo).
+      temporadaActual.trofeos.push({ nombre: "Once Ideal", imagen: null });
+      mensajes.push("¡Entraste al Once Ideal del año!");
+    }
+  }
+
+  // ---- Balón de Oro: puntaje combinado contra TODO el pool ----
+  const calidadJugador = GameConfig.calcularCalidadBalonDeOro(
+    temporadaActual.promedio, temporadaActual.goles + temporadaActual.asistencias, temporadaActual.trofeos.length > 0
+  );
+  const mejorCalidad = candidatos.reduce((mejor, c) => {
+    const calidad = GameConfig.calcularCalidadBalonDeOro(c.promedio, c.goles + c.asistencias, c.ganoTrofeo);
+    return calidad > mejor ? calidad : mejor;
+  }, -1);
+  if (calidadJugador >= mejorCalidad) {
+    temporadaActual.trofeos.push({ nombre: "Balón de Oro", imagen: "balon-de-oro.png" });
+    mensajes.push("¡Ganaste el Balón de Oro, el mejor jugador del mundo esta temporada!");
+  }
+
+  return mensajes;
+}
+
 function finalizarTemporada() {
   const equipo = equipoDe(temporadaActual);
   const liga = ligaDe(equipo);
@@ -897,6 +1007,12 @@ function finalizarTemporada() {
       mensajesFinales.push(`Fuiste subcampeón de la ${copaInternacional.competicion.nombre}.`);
     }
   }
+
+  // Premios mundiales — después de los trofeos de club (el Balón de Oro
+  // mira si YA ganaste algo esta temporada) y antes de archivar la
+  // temporada, para que los trofeos ganados queden en el mismo historial.
+  const candidatosPremios = generarCandidatosPremiosMundiales();
+  mensajesFinales.push(...evaluarPremiosMundiales(candidatosPremios));
 
   // Clasificación a competición internacional para la PRÓXIMA temporada.
   // Si la confederación no tiene ese nivel de competición (ej. CONCACAF
@@ -1568,11 +1684,8 @@ function resolveOferta(item) {
     temporadaActual.pesoTitular = GameConfig.PESO_TITULAR_INICIAL;
     temporadaActual.forma = "regular";
     temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, item.equipo, item.liga);
-    showToast(`Fichaste por ${item.equipo.nombre}.`);
     renderHero();
     renderSpotlight();
-  } else {
-    showToast(`Decidiste quedarte en ${item.equipo.nombre}.`);
   }
 
   temporadaActual.loteActual = [];
@@ -1953,11 +2066,52 @@ async function generarTarjetaResumenCanvas() {
   // los emoji de bandera no se dibujan ni en HTML, mucho menos en canvas.
   const imgBanderaSeleccion = r.seleccionPartidos > 0 ? await cargarImagenSeguraCrossOrigin(`${GameConfig.RUTA_BANDERAS}${player.paisCode}.png`) : null;
 
-  const W = 1080, H = r.seleccionPartidos > 0 ? 1450 : 1350;
+  const W = 1080;
   const canvas = document.createElement("canvas");
   canvas.width = W;
-  canvas.height = H;
+  canvas.height = 100; // alto provisorio — se ajusta abajo antes de dibujar nada
   const ctx = canvas.getContext("2d");
+
+  // El recorrido de clubes y los chips de trofeos son de alto variable
+  // (pasan a una fila/línea nueva si no entran) — antes SIEMPRE se
+  // dibujaban en una sola fila centrada, así que una carrera con muchos
+  // clubes (7+) terminaba con escudos fuera de la tarjeta. Se mide cuánto
+  // van a ocupar ANTES de fijar el alto real del canvas.
+  const escudoSize = 84;
+  const espacioEntre = 46;
+  const anchoDisponible = W - 120;
+  const porFilaClubes = Math.max(1, Math.floor((anchoDisponible + espacioEntre) / (escudoSize + espacioEntre)));
+  const filasClubes = Math.ceil(r.clubes.length / porFilaClubes);
+  const alturaFilaClubes = escudoSize + 40;
+
+  let filasTrofeos = 1;
+  if (r.trofeos.length > 0) {
+    ctx.font = '700 20px "Segoe UI", sans-serif';
+    let fxMedido = 60;
+    const maxAncho = W - 60;
+    r.trofeos.forEach((t) => {
+      const etiqueta = `🏆 ${t.nombre}${t.cantidad > 1 ? ` ×${t.cantidad}` : ""}`;
+      const anchoChip = ctx.measureText(etiqueta).width + 36;
+      if (fxMedido + anchoChip > maxAncho) { fxMedido = 60; filasTrofeos++; }
+      fxMedido += anchoChip + 14;
+    });
+  }
+  const alturaFilaTrofeos = 52;
+
+  // Alto pensado para 1 fila de clubes y 1 línea de trofeos — el resto se
+  // suma según haga falta.
+  const H = (r.seleccionPartidos > 0 ? 1450 : 1350)
+    + Math.max(0, filasClubes - 1) * alturaFilaClubes
+    + Math.max(0, filasTrofeos - 1) * alturaFilaTrofeos;
+  canvas.height = H; // limpia el buffer y resetea el estado del contexto
+
+  // Por defecto los navegadores reescalan imágenes en canvas con calidad
+  // "low" (pensado para animaciones a 60fps, no para una sola exportación
+  // estática) — los escudos fuente son de 1500×1500px, de sobra para
+  // verse nítidos, pero con la calidad por defecto salían borrosos al
+  // reducirlos a ~84-130px. Se fija DESPUÉS del último resize del canvas
+  // porque cambiar width/height resetea todo el estado del contexto.
+  ctx.imageSmoothingQuality = "high";
 
   // Fondo: mismo lenguaje que el hero/banner real (degradado del último
   // club, oscurecido para que el texto blanco siga siendo legible).
@@ -1974,7 +2128,7 @@ async function generarTarjetaResumenCanvas() {
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
   if (imgLogo) {
-    const logoH = 56;
+    const logoH = 70;
     const logoW = logoH * (imgLogo.width / imgLogo.height);
     ctx.drawImage(imgLogo, 60, 30, logoW, logoH);
   } else {
@@ -2043,32 +2197,39 @@ async function generarTarjetaResumenCanvas() {
   });
 
   // ---- Clubes ----
+  // Se agrupan en filas de porFilaClubes elementos (calculado arriba,
+  // antes de fijar el alto del canvas) — cada fila se centra por su
+  // cuenta, así que una carrera con muchos clubes pasa prolijamente a la
+  // línea siguiente en vez de salirse de la tarjeta.
   y += 250;
   ctx.textAlign = "left";
   ctx.fillStyle = "#9aa3c2";
   ctx.font = '700 20px "Segoe UI", sans-serif';
   ctx.fillText(`CLUBES (${r.clubes.length})`, 60, y);
   y += 30;
-  const escudoSize = 84;
-  const espacioEntre = 46;
-  const totalAncho = r.clubes.length * escudoSize + (r.clubes.length - 1) * espacioEntre;
-  let cx = 60 + Math.max(0, ((W - 120) - totalAncho) / 2);
   r.clubes.forEach((e, i) => {
-    dibujarEscudoCanvas(ctx, e, imgsClubes[i], cx, y, escudoSize, "redondeado");
+    const fila = Math.floor(i / porFilaClubes);
+    const col = i % porFilaClubes;
+    const enEstaFila = Math.min(porFilaClubes, r.clubes.length - fila * porFilaClubes);
+    const anchoFila = enEstaFila * escudoSize + (enEstaFila - 1) * espacioEntre;
+    const filaX = 60 + Math.max(0, (anchoDisponible - anchoFila) / 2);
+    const cx = filaX + col * (escudoSize + espacioEntre);
+    const cy = y + fila * alturaFilaClubes;
+    dibujarEscudoCanvas(ctx, e, imgsClubes[i], cx, cy, escudoSize, "redondeado");
     ctx.textAlign = "center";
     ctx.fillStyle = "#9aa3c2";
     ctx.font = '600 15px "Segoe UI", sans-serif';
-    ctx.fillText(truncarTexto(ctx, e.nombre, escudoSize + espacioEntre - 10), cx + escudoSize / 2, y + escudoSize + 24);
-    if (i < r.clubes.length - 1) {
+    ctx.fillText(truncarTexto(ctx, e.nombre, escudoSize + espacioEntre - 10), cx + escudoSize / 2, cy + escudoSize + 24);
+    if (col < enEstaFila - 1) {
       ctx.fillStyle = "#9aa3c2";
       ctx.font = '600 28px "Segoe UI", sans-serif';
-      ctx.fillText("›", cx + escudoSize + espacioEntre / 2, y + escudoSize / 2 + 10);
+      ctx.fillText("›", cx + escudoSize + espacioEntre / 2, cy + escudoSize / 2 + 10);
     }
-    cx += escudoSize + espacioEntre;
   });
+  y += filasClubes * alturaFilaClubes;
 
   // ---- Con la selección (si hubo alguna convocatoria en la carrera) ----
-  y += 170;
+  y += 46;
   if (r.seleccionPartidos > 0) {
     ctx.textAlign = "left";
     ctx.fillStyle = "#9aa3c2";

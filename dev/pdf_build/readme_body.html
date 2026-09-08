@@ -1,6 +1,6 @@
 ﻿<h1>Leyenda ⚽</h1>
 <p>Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.</p>
-<p><strong>Versión:</strong> 0.7.0-Beta — publicada el 7 de septiembre de 2026 · 23:48.</p>
+<p><strong>Versión:</strong> 0.8.0-Beta — publicada el 8 de septiembre de 2026 · 09:41.</p>
 <blockquote>
 <p>Este documento describe <strong>absolutamente toda la lógica del juego</strong>: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás &quot;cómo se juega&quot; en términos de jugador, ver el <em>Manual de Juego</em> aparte.</p>
 </blockquote>
@@ -314,37 +314,38 @@ recortado entre 0.15 y 1
 </thead>
 <tbody><tr>
 <td>Arquero</td>
-<td>0.5%</td>
-<td>0.5%</td>
+<td>0.3%</td>
+<td>0.3%</td>
 </tr>
 <tr>
 <td>Central (DFC)</td>
-<td>7%</td>
-<td>5%</td>
+<td>3%</td>
+<td>2%</td>
 </tr>
 <tr>
 <td>Lateral (LI/LD)</td>
-<td>5%</td>
-<td>20%</td>
+<td>2%</td>
+<td>9%</td>
 </tr>
 <tr>
 <td>Medio (MCD/MC/MI/MD/MCO)</td>
-<td>16%</td>
-<td>28%</td>
+<td>7%</td>
+<td>12%</td>
 </tr>
 <tr>
 <td>Ataque (EI/ED/DC)</td>
-<td>48%</td>
 <td>20%</td>
+<td>9%</td>
 </tr>
 </tbody></table>
+<p>Estas son las propensiones en el punto <strong>neutral</strong> de la curva de OVR de abajo (factor ×1) — no en el piso de carrera. Una primera versión de la curva tenía ese punto neutral en ~OVR 65 (un jugador mediocre rendía casi como uno &quot;decente&quot;), lo que dejaba estadísticas infladas — un delantero de 65 OVR llegaba a ~26 goles en 38 partidos. Recalibrado, el neutral quedó en ~OVR 75-78 (profesional sólido de verdad) y esos mismos 65 OVR rinden bastante por debajo de la media.</p>
 <p><strong>Factor de forma general del tramo</strong>:</p>
 <pre><code>factorOvr(ovr) = ESTADISTICAS_OVR_BASE + progreso^ESTADISTICAS_OVR_EXPONENTE × ESTADISTICAS_OVR_RANGO
-                 (progreso = (ovr − 45) / 54, recortado a 0-1; BASE=0.5, EXPONENTE=1.6, RANGO=2.3)
+                 (progreso = (ovr − 45) / 54, recortado a 0-1; BASE=0.15, EXPONENTE=2.2, RANGO=2.85)
 factorForma    = 1 + clamp(rendimientoAcumulado, −12, 12) × 0.05
 factor         = max(0.3, factorOvr × factorForma)
 </code></pre>
-<p>Es una curva (exponente &gt; 1), no una recta: en el OVR mínimo (45) el factor es 0.5, en el máximo (99) es 2.8 — más de 5x de diferencia de punta a punta, contra apenas 2.15x de la fórmula anterior (una recta suave que hacía que un crack de 95 rindiera casi igual que un jugador mediocre de 65).</p>
+<p>Curva (exponente &gt; 1), no una recta: en el OVR mínimo (45) el factor es 0.15, en el máximo (99) es 3.0 — un delantero de 65 OVR (mediocre) promedia ~5 goles en 38 partidos, uno de 75 (profesional sólido) ~10, uno de 90 (estrella) ~23, y solo en el techo absoluto (99) aparecen las temporadas de 30+ goles.</p>
 <p><strong>Goles por partido, sin techo real</strong> — <code>golesEnPartido(probGol)</code> (<a href="js/config.js:750">config.js:750-758</a>), con <code>probGol = clamp(propensiónGol × factor, 0, 0.9)</code>:</p>
 <pre><code>si no sale (prob. 1 − probGol):           0 goles
 si sale:                                   1 gol
@@ -543,6 +544,27 @@ fuerza = 0.4 × calidadClub + 0.15 × calidadForma + 0.2 × calidadEquipoAcum + 
 </ul>
 <p>Las confederaciones con liga(s) cargada(s) son <code>UEFA</code> / <code>CONMEBOL</code> / <code>CONCACAF</code> / <code>AFC</code> (<code>CAF</code> todavía no tiene ninguna liga doméstica propia, solo selecciones — ver <a href="#">sección 19</a>). Si tu confederación no tiene competición de un nivel dado (el caso de CONCACAF sin segundo nivel), simplemente no clasificás a nada en ese nivel — no hay error ni sustituto.</p>
 <p>Los partidos de cada competición (mínimos garantizados + extra por ronda) salen de <code>GameDatabase.competiciones</code> — ver <a href="#">sección 21</a>.</p>
+<h3>14.2 Premios mundiales: Bota de Oro, Once Ideal y Balón de Oro</h3>
+<p>Este juego no simula miles de jugadores rivales por el mundo — solo existe tu propio personaje. Para que &quot;sos el mejor del mundo&quot; signifique algo real, al cierre de cada temporada (<code>generarCandidatosPremiosMundiales</code>, <a href="js/carrera.js">carrera.js</a>, llamado desde <code>finalizarTemporada</code> después de resolver liga/copa/copa internacional) se genera un pool de <strong>24 candidatos fantasma</strong> de nivel élite, simulados con <strong>la misma fórmula que usa tu propio jugador</strong> (<code>GameConfig.simularTramo</code>) — así la comparación es justa: si tus números se sienten inflados o flojos, los del pool se sienten exactamente igual.</p>
+<p><strong>Generación de cada candidato</strong> (<code>PREMIOS_CANDIDATOS_N = 24</code>, <a href="js/config.js">config.js</a>):</p>
+<ul>
+<li><strong>Liga</strong>: sorteada con <code>elegirPonderado</code> ponderado por <code>liga.fuerza</code> (más candidatos en las ligas top, como en la vida real) entre las que tienen competición doméstica cargada.</li>
+<li><strong>Club</strong>: dentro de esa liga, ponderado por <code>equipo.fuerza</code> — sirve además para narrar el mensaje (&quot;un delantero de Bayern Múnich...&quot;).</li>
+<li><strong>Grupo de posición</strong>: <code>sortearGrupoCandidatoPremio()</code> — 55% ataque / 25% medio / 12% lateral / 8% central (<code>PREMIOS_PESO_GRUPO</code>); nunca arquero, nadie gana la Bota de Oro de arquero.</li>
+<li><strong>OVR</strong>: <code>sortearOvrCandidatoPremio()</code> — entre 82 y 99 (<code>PREMIOS_OVR_MIN/MAX</code>), promediando 3 tiradas uniformes para sesgar hacia el centro del rango (85-95) en vez de una muestra pareja — son candidatos genuinos al premio, no cualquier nivel élite.</li>
+<li><strong>Estadísticas</strong>: una sola llamada a <code>simularTramo({ partidos: partidosMinimos de su liga, grupo, ovr, rendimientoAcumulado: 0 })</code> (rendimiento neutro — no tiene decisiones propias que tomar).</li>
+<li><strong>Trofeos</strong>: <code>Math.random() &lt; probGanarLiga(calidadFuerzaClub(equipo, liga))</code> — reutiliza la misma curva que decide si TU club gana la liga, en vez de inventar una probabilidad aparte.</li>
+</ul>
+<p><strong>🥾 Bota de Oro</strong>: tu <code>goles</code> de la temporada contra el máximo del pool, sin filtrar por posición (un jugador de otro grupo con pocos goles nunca compite en la práctica, sin necesidad de un caso especial). Si no ganás pero quedás entre los 3 mejores, un mensaje aparte (&quot;Terminaste 2° en la Bota de Oro, detrás de un delantero de PSG con 34 goles&quot;).</p>
+<p><strong>⭐ Once Ideal</strong>: tu <code>promedio</code> de rating contra los candidatos de <strong>tu mismo grupo de posición</strong> — no simula quién ocupa los otros 10 puestos, igual que el juego no simula las otras 31 selecciones en un Mundial. Con un margen de tolerancia (<code>ONCE_IDEAL_MARGEN_PROMEDIO = 0.4</code>): desde OVR ~95 el rating de cada partido queda clampeado al tope (10.0) sin variación posible (ver <a href="#">sección 10</a>), así que comparar el promedio exacto dejaba el premio reservado casi solo a quien pisa ese umbral literal — con el margen, un promedio de élite real un poco por debajo (9.5-9.9) también tiene una chance genuina, no solo cero o cien por ciento.</p>
+<p><strong>🏆 Balón de Oro</strong>: un puntaje combinado contra TODO el pool, sin importar posición — <code>calcularCalidadBalonDeOro(promedio, goles + asistencias, ganoTrofeo)</code> (<a href="js/config.js">config.js</a>):</p>
+<pre><code>calidadRating    = clamp((promedio − 7.0) / 2.5, 0, 1)
+calidadGoleador  = clamp((goles + asistencias) / 40, 0, 1)     (BALON_ORO_REFERENCIA_GOLES)
+calidadTrofeos   = ganaste algo esta temporada ? 1 : 0
+calidad = 0.4 × calidadRating + 0.35 × calidadGoleador + 0.25 × calidadTrofeos
+</code></pre>
+<p>Ninguna pata sola alcanza — hace falta rendimiento de élite <strong>y</strong> producción goleadora <strong>y</strong> haber ganado algo, las tres a la vez. Es el más difícil de los tres.</p>
+<p>Los tres empates (<code>&gt;=</code> en vez de <code>&gt;</code> en las tres comparaciones) los gana el jugador — dado el clampeo de rating de arriba, un empate exacto contra el pool es común en el tramo alto, y no tendría sentido que ese empate SIEMPRE lo pierda el jugador. Los trofeos ganados se guardan en el mismo array <code>temporadaActual.trofeos</code> que los de liga/copa/selección — reutilizan toda la UI existente sin cambios (badge, historial, resumen, tarjeta para compartir). <strong>Pendiente</strong>: el Once Ideal todavía usa el ícono genérico 🏆 de respaldo (<code>imagen: null</code>) en vez de uno propio — ver <a href="assets/escudos/trofeos/">assets/escudos/trofeos/</a> para <code>bota-de-oro.png</code> y <code>balon-de-oro.png</code>, que sí tienen ícono real.</p>
 <hr>
 <h2 id="15-valor-de-mercado">15. Valor de mercado</h2>
 <p><code>calcularValorMercado(ovr, equipo, liga)</code> (<a href="js/config.js:255">config.js:255-260</a>) — curva exponencial sobre el OVR (cada punto extra cerca del techo vale desproporcionadamente más, como en la vida real), multiplicada por la economía y el prestigio del club/liga actual (a propósito, <strong>no</strong> por su fuerza — ver <a href="#">sección 14.0</a>):</p>
@@ -568,7 +590,7 @@ valor = round(valorPorOvr × multiplicadorClub / 1000) × 1000    (redondeado al
 </code></pre>
 <p>Mientras estés en gracia (tus primeras <strong>2 temporadas completas</strong> en el club actual, sea el inicial o uno fichado después), tu club <strong>nunca</strong> puede &quot;no renovarte&quot; — sin este colchón, cualquier club de nivel medio/alto para arriba te dejaría ir en tu primerísima ventana de fichajes, porque ningún novato arranca con el OVR de un jugador hecho (ver <a href="#">sección 5</a>: tope de 65 vs. ventanas de OVR que fácilmente piden 70+). El contador se resetea a 0 cada vez que fichás por otro club y sube +1 en cada cierre de temporada en el mismo club.</p>
 <h3>16.3 ¿Tu club actual te renueva?</h3>
-<p>Pasado el período de gracia, <code>contratoDebeTerminar(equipo, liga, ovr)</code> (<a href="js/config.js:575">config.js:575-578</a>) compara tu OVR contra la &quot;ventana de OVR&quot; de tu propio club (ver 16.5 más abajo): si caíste por debajo del mínimo que ese club tolera, no te renuevan — la carta de &quot;Quedarme&quot; se reemplaza por una de retiro (no forzoso, con el texto &quot;tu nivel ya no alcanza&quot;).</p>
+<p>Pasado el período de gracia, <code>contratoDebeTerminar(equipo, liga, ovr, promedioTemporadaAnterior)</code> (<a href="js/config.js:617">config.js:617-624</a>) compara primero tu OVR contra la &quot;ventana de OVR&quot; de tu propio club (ver 16.5 más abajo): si llegás al mínimo, seguís sin más vueltas. Si no llegás, todavía hay una salida: si el <strong>promedio de rating con el que cerraste la temporada anterior</strong> fue realmente bueno (<code>≥ 7.5</code>, <code>CONTRATO_RENDIMIENTO_SALVAVIDAS</code>, muy por encima del neutral de 6.5) el club te renueva igual — antes esto se decidía solo por el número de OVR crudo, sin mirar cómo jugaste, así que se podía cerrar una temporada brillante en goles/asistencias/rating y que el club te cortara igual, porque el OVR (que crece con su propia curva de edad/techo, no 1 a 1 con las estadísticas del año) no llegó a tiempo. Si ninguna de las dos te salva, no te renuevan — la carta de &quot;Quedarme&quot; se reemplaza por una de retiro (no forzoso, con el texto &quot;decide no renovarte para la próxima temporada&quot;).</p>
 <h3>16.4 Retiro voluntario</h3>
 <pre><code class="language-js">puedeElegirRetiro = !contratoTerminado &amp;&amp; edad &gt;= 36     (EDAD_RETIRO_OFERTA)
 </code></pre>
@@ -627,8 +649,9 @@ peso = 1 / (1 + distancia)^2.2
 <ul>
 <li><strong>Retiro</strong> → cierra la carrera (<a href="#">sección 17</a>).</li>
 <li><strong>Fichar por un club nuevo</strong> → la ventana única de fichajes (ver <a href="#">sección 7</a>) cae siempre en pretemporada, así que el traspaso arranca la temporada entera de cero con el club nuevo (nunca parte un año en dos filas de historial): se actualiza club, liga, valor de mercado, se reinician <code>competiciones</code> desde cero (la clasificación internacional no se hereda — es del club, no tuya), se resetea <code>temporadasEnClubActual</code> a 0 y la forma vuelve a &quot;regular&quot;.</li>
-<li><strong>Quedarme</strong> → sin cambios, solo un mensaje de confirmación.</li>
+<li><strong>Quedarme</strong> → sin cambios.</li>
 </ul>
+<p>Ninguna de las dos dispara un toast — el nuevo hero/spotlight (o, si te quedás, la ausencia de cambios) ya lo comunica solo; antes un mensaje de &quot;Fichaste por X&quot;/&quot;Decidiste quedarte en X&quot; se sentía redundante, la única pausa del juego donde SIEMPRE hay un toast aunque no haya nada nuevo que contar.</p>
 <hr>
 <h2 id="17-fin-de-carrera-retiro-y-resumen">17. Fin de carrera: retiro y resumen</h2>
 <p>Al aceptar una carta de retiro (<code>finalizarCarrera</code>, <a href="js/carrera.js:1402">carrera.js:1402-1434</a>):</p>
@@ -639,7 +662,7 @@ peso = 1 / (1 + distancia)^2.2
 <li><strong>Banner</strong> con el degradado de colores del último club (mismo lenguaje visual que el hero de <code>carrera.html</code>, vía <code>--rb-a</code>/<code>--rb-b</code>): escudo, nombre, posición, temporadas jugadas, edad de retiro, y el <strong>badge de pico de OVR</strong> (<code>ovr-badge--hero</code>, coloreado con <code>ovrTierColor</code> — ver <a href="#">sección 22</a>) a un costado.</li>
 <li><strong>Gráfico de evolución de OVR</strong>: un SVG de área + línea (<code>ovrArcoSvg</code>, <a href="js/carrera.js:1494">carrera.js:1494-1512</a>) con el OVR de cada temporada de punta a punta, coloreado con el mismo color de gema/metal que el badge de pico — la caption de al lado indica &quot;De X a Y&quot; (OVR de la Temporada 1 al pico alcanzado).</li>
 <li><strong>Estadísticas combinadas</strong> de <strong>toda</strong> la carrera (todas las filas de <code>temporadasFinalizadas</code>): partidos, goles, asistencias, MVP, promedio de rating y mayor valor de mercado, cada una con su ícono.</li>
-<li><strong>Clubes</strong>, como un recorrido horizontal con flechas entre escudos (en el orden en que los fichaste, sin repetir) en vez de una grilla suelta — con scroll propio si fueron muchos.</li>
+<li><strong>Clubes</strong>, como un recorrido horizontal con flechas entre escudos (en el orden en que los fichaste, sin repetir) en vez de una grilla suelta — con scroll propio si fueron muchos. El nombre debajo de cada escudo va alineado a la izquierda (<code>.resumen__club</code>, <a href="css/carrera.css">css/carrera.css</a>), igual que el resto del texto del resumen — antes quedaba centrado bajo el escudo, inconsistente con todo lo demás.</li>
 <li><strong>Trofeos</strong>, agrupados por tipo (un solo ícono por trofeo distinto, con un contador &quot;×N&quot; si lo ganaste más de una vez).</li>
 </ul>
 </li>
@@ -1077,8 +1100,10 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </li>
 <li><p><strong>Línea de diseño móvil independiente</strong>: por debajo de los 640px, <code>carrera.css</code> no solo achica la versión de escritorio — el hero, el spotlight y el historial tienen su propio HTML más chato (generado aparte en <code>carrera.js</code>, oculto/mostrado por CSS), y el panel de decisiones pasa a un carrusel de una tarjeta a la vez con scroll-snap, sin JavaScript adicional para eso.</p>
 </li>
-<li><p><strong>Tarjeta para compartir el resumen de carrera</strong>: el botón &quot;C&quot; junto a la ✕ del modal de resumen (<code>#resumenModalCompartir</code>) genera una imagen propia con los mismos datos del resumen — no es una captura del popup (eso pediría una librería externa que el proyecto no usa), es una tarjeta de 1080×1350 (1450 si hubo selección) dibujada a mano en un <code>&lt;canvas&gt;</code> (<code>generarTarjetaResumenCanvas</code>, <a href="js/carrera.js">carrera.js</a>): el logo real del juego (<code>assets/logo/logo_leyenda_transparent.png</code>) en la esquina, escudo del último club, degradado con sus colores, badge de pico de OVR, gráfico de evolución de OVR, grid de estadísticas, recorrido de clubes, sección &quot;Con la selección&quot; (bandera + país + partidos/goles, si aplica) y trofeos — y se copia al portapapeles con la Clipboard API (<code>navigator.clipboard.write</code>), con un <code>window.open</code> de respaldo si el navegador no la soporta.</p>
+<li><p><strong>Tarjeta para compartir el resumen de carrera</strong>: el botón &quot;C&quot; junto a la ✕ del modal de resumen (<code>#resumenModalCompartir</code>) genera una imagen propia con los mismos datos del resumen — no es una captura del popup (eso pediría una librería externa que el proyecto no usa), es una tarjeta de 1080px de ancho dibujada a mano en un <code>&lt;canvas&gt;</code> (<code>generarTarjetaResumenCanvas</code>, <a href="js/carrera.js">carrera.js</a>): el logo real del juego (<code>assets/logo/logo_leyenda_transparent.png</code>, 70px de alto) en la esquina, escudo del último club, degradado con sus colores, badge de pico de OVR, gráfico de evolución de OVR, grid de estadísticas, recorrido de clubes, sección &quot;Con la selección&quot; (bandera + país + partidos/goles, si aplica) y trofeos — y se copia al portapapeles con la Clipboard API (<code>navigator.clipboard.write</code>), con un <code>window.open</code> de respaldo si el navegador no la soporta.</p>
 <ul>
+<li><strong>Alto dinámico</strong>: el recorrido de clubes y los chips de trofeos pasan a una fila/línea nueva cuando no entran en el ancho disponible (una carrera larga puede tener 7+ clubes) — antes SIEMPRE se dibujaban en una sola fila centrada, así que los escudos de más quedaban fuera de la tarjeta. Antes de dibujar nada se mide cuántas filas va a necesitar cada sección variable y se fija el alto real del canvas en base a eso (entre 1350px y bastante más, según haga falta) — nunca un número fijo.</li>
+<li><strong>Nitidez de los escudos</strong>: por defecto el canvas reescala imágenes con <code>imageSmoothingQuality: &quot;low&quot;</code> (pensado para animaciones a 60fps, no para una sola exportación estática) — con escudos fuente de 1500×1500px, de sobra para verse nítidos, esto los dejaba borrosos al reducirlos a ~84-130px. Se fija en <code>&quot;high&quot;</code> justo después del último resize del canvas (cambiar <code>width</code>/<code>height</code> resetea todo el estado del contexto, así que tiene que ir después, no antes).</li>
 <li><strong>Imágenes cross-origin en el canvas</strong>: la bandera del país sale de <a href="https://flagcdn.com">flagcdn.com</a>, un origen distinto al del juego. Dibujar una imagen así en el canvas sin marcarla <code>crossOrigin = &quot;anonymous&quot;</code> lo deja &quot;tainted&quot; (contaminado) y el navegador bloquea después cualquier intento de exportarlo (<code>toBlob</code>/<code>toDataURL</code>) con un <code>SecurityError</code> — rompía la tarjeta entera apenas la carrera incluía convocatorias a la selección. La bandera se carga ahora con <code>cargarImagenSeguraCrossOrigin</code> en vez de la función genérica <code>cargarImagenSegura</code> (reservada para assets propios del sitio); si el servidor remoto no coopera con CORS, cae sola al respaldo de emoji sin romper nada.</li>
 </ul>
 </li>
@@ -1088,7 +1113,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </li>
 <li><p><strong>Altura real de viewport en mobile (<code>--vh-real</code>)</strong>: el layout de <code>carrera.html</code> (hero fijo / centro scrolleable / footer de decisiones fijo) depende de conocer la altura visible real de la pantalla. <code>100dvh</code> la calcula bien en Safari/iOS, pero varios navegadores mobile (Chrome/Firefox en Android, algunos in-app browsers) la calculan mal al cargar la página y dejan una franja del footer tapada. <code>actualizarAlturaViewport()</code> (<a href="js/carrera.js">carrera.js</a>, tope del archivo) mide <code>window.innerHeight</code> por JS al cargar y en cada resize/orientationchange, y esa variable pisa a <code>100dvh</code> en <code>.body--career</code> como última palabra — <code>100vh</code> y <code>100dvh</code> quedan como respaldo en cascada para cuando el JS todavía no corrió.</p>
 </li>
-<li><p><strong>Toast</strong> (<code>showToast</code>, definido igual en <code>carrera.js</code>/<code>equipo.js</code>/<code>script.js</code>): en <code>carrera.html</code> aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones.</p>
+<li><p><strong>Toast</strong> (<code>showToast</code>, definido igual en <code>carrera.js</code>/<code>equipo.js</code>/<code>script.js</code>): en <code>carrera.html</code> aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones. En mobile (<code>@media (max-width: 640px)</code> de <a href="css/style.css">css/style.css</a> y <a href="css/carrera.css">css/carrera.css</a>) ocupa casi todo el ancho de pantalla (<code>calc(100vw - 1.5rem)</code>) en vez de ajustarse solo al texto — más fácil de leer en una pantalla chica.</p>
 </li>
 <li><p><strong>Pie de versión</strong> (<code>GameConfig.VERSION</code>, <code>GameConfig.FECHA_PUBLICACION</code>, <code>GameConfig.footerHtml()</code> — <a href="js/config.js:11">config.js:11-19</a>): un único punto de verdad para el número de versión y la fecha de publicación, mostrado en las 3 pantallas (<code>#appFooter</code>). En <code>index.html</code>/<code>equipo.html</code> es el último elemento de la página (scroll normal); en <code>carrera.html</code> va dentro de <code>.career</code>, después del historial, para no restarle alto fijo al hero/spotlight/decisiones.</p>
 </li>
@@ -1252,6 +1277,11 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <td>Temporadas de gracia antes de que tu club pueda &quot;no renovarte&quot;</td>
 </tr>
 <tr>
+<td><code>CONTRATO_RENDIMIENTO_SALVAVIDAS</code></td>
+<td>7.5</td>
+<td>Promedio de rating de la temporada anterior que salva el contrato aunque el OVR no llegue a la ventana del club</td>
+</tr>
+<tr>
 <td><code>EDAD_POTENCIAL_BONUS_MAX</code></td>
 <td>8</td>
 <td>Bono máx. de &quot;potencial&quot; para un jugador de 17 años</td>
@@ -1288,8 +1318,8 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </tr>
 <tr>
 <td><code>ESTADISTICAS_OVR_BASE</code> / <code>_EXPONENTE</code> / <code>_RANGO</code></td>
-<td>0.5 / 1.6 / 2.3</td>
-<td>Curva de escalado de estadísticas por OVR (factor 0.5 en el piso de carrera, 2.8 en el techo)</td>
+<td>0.15 / 2.2 / 2.85</td>
+<td>Curva de escalado de estadísticas por OVR (factor 0.15 en el piso de carrera, 3.0 en el techo; punto neutral ×1 en ~OVR 75-78)</td>
 </tr>
 <tr>
 <td><code>PROB_SEGUNDO_GOL_FACTOR</code> / <code>_TERCER_GOL_FACTOR</code></td>
@@ -1435,6 +1465,36 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <td><code>FUERZA_RENDIMIENTO_PROMEDIO_PISO</code> / <code>_RANGO</code></td>
 <td>6.0 / 3.0</td>
 <td>Normaliza el promedio de rating del jugador a 0-1 para la fuerza de campaña</td>
+</tr>
+<tr>
+<td><code>PREMIOS_CANDIDATOS_N</code></td>
+<td>24</td>
+<td>Candidatos fantasma generados por temporada para los premios mundiales — ver <a href="#">sección 14.2</a></td>
+</tr>
+<tr>
+<td><code>PREMIOS_OVR_MIN</code> / <code>_MAX</code></td>
+<td>82 / 99</td>
+<td>Rango de OVR (sesgado al centro) de los candidatos a premio</td>
+</tr>
+<tr>
+<td><code>PREMIOS_PESO_GRUPO</code></td>
+<td>ataque 55% / medio 25% / lateral 12% / central 8%</td>
+<td>Reparto de grupo de posición entre los candidatos (nunca arquero)</td>
+</tr>
+<tr>
+<td><code>BALON_ORO_PESO_RATING</code> / <code>_GOLEADOR</code> / <code>_TROFEOS</code></td>
+<td>0.4 / 0.35 / 0.25</td>
+<td>Pesos del puntaje combinado del Balón de Oro</td>
+</tr>
+<tr>
+<td><code>BALON_ORO_REFERENCIA_GOLES</code></td>
+<td>40</td>
+<td>Goles + asistencias de una temporada de ensueño, para normalizar <code>calidadGoleador</code> a 0-1</td>
+</tr>
+<tr>
+<td><code>ONCE_IDEAL_MARGEN_PROMEDIO</code></td>
+<td>0.4</td>
+<td>Tolerancia contra el mejor promedio del pool en tu posición, para no depender del empate exacto en el tope de rating</td>
 </tr>
 <tr>
 <td><code>UMBRAL_CLASIFICA_PRIMER_NIVEL</code> / <code>_SEGUNDO_NIVEL</code></td>
