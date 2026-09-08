@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 0.8.0-Beta — publicada el 8 de septiembre de 2026 · 09:41**
+**Versión 0.9.0-Beta — publicada el 8 de septiembre de 2026 · 11:46**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -138,6 +138,8 @@ Cada tanto, en una pausa de decisiones, en vez de las 2 tarjetas de siempre vas 
 - **Grave** — puede dejarte afuera el resto de la temporada, con una baja más importante de OVR.
 
 El riesgo de lesionarte sube un poco con la edad. No hay forma de evitarlo del todo (las decisiones que tomás no lo previenen), es parte del riesgo de cualquier carrera — pero las graves son mucho menos frecuentes que las leves.
+
+Mientras estás de baja, las pausas de decisión siguen llegando con normalidad (familia, prensa, vestuario) — lo único que no vas a ver es una decisión que dé por hecho que estás jugando en ese momento (pedir un penal, pelear un lugar en el equipo titular), algo que no tendría sentido con vos afuera de la cancha.
 
 Mientras estés lesionado, tu tarjeta de temporada se marca con un borde y un resplandor rojo — para que de un vistazo sepas que hay algo importante pasando, incluso si no llegaste a leer el parte médico.
 

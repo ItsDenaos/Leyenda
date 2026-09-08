@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.
 
-**Versión:** 0.8.0-Beta — publicada el 8 de septiembre de 2026 · 09:41.
+**Versión:** 0.9.0-Beta — publicada el 8 de septiembre de 2026 · 11:46.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -130,7 +130,7 @@ Formulario de 3 pasos (acordeón en móvil, los 3 siempre abiertos en escritorio
 | 2. ¿De dónde eres? | País | 46 países (`COUNTRIES`, [script.js:4-51](js/script.js:4)), con buscador. Define bandera y, en el paso siguiente, el pool de clubes iniciales. |
 | 3. ¿Dónde juegas? | Posición | 12 posiciones sobre una cancha ([index.html:158-196](index.html:158)): POR, DFC, LI, LD, MCD, MC, MI, MD, MCO, EI, ED, DC. |
 
-El **dorsal** se asigna solo al azar entre 1 y 99 (`GameConfig.randomInt(1, 99)`, [script.js:58](js/script.js:58)) — no se elige. Recién se puede pedir cambiarlo al cerrar la primera temporada (ver [sección 18](#18-solicitud-de-cambio-de-dorsal)).
+El **dorsal** se asigna solo al azar, no se elige — pero no parejo entre 1 y 99 (así, un debutante tenía la misma chance de arrancar con el 7 que con el 87, nada realista). `sortearDorsalInicial()` ([config.js:37-41](js/config.js:37), llamado desde [script.js:60](js/script.js:60)) sortea por bandas: **70%** de las carreras arranca con un número común (**1-30**), **20%** con uno menos común (**31-50**), y solo el **10%** restante con uno alto (**51-99**) — el caso ocasional, no la norma. Recién se puede pedir cambiarlo al cerrar la primera temporada (ver [sección 18](#18-solicitud-de-cambio-de-dorsal)).
 
 Al completar los 3 pasos y tocar "Comenzar carrera", se guarda en `localStorage["leyendaPlayer"]` ([script.js:264-282](js/script.js:264)):
 
@@ -163,7 +163,7 @@ El **OVR inicial** con el que arrancarías en cada club se calcula recién al el
 
 El jugador nunca ve estos números crudos: en la tarjeta de oferta solo se muestra el nombre del club/liga, su escudo y su bandera — sin ninguna etiqueta de "qué tan grande es", a diferencia de versiones anteriores.
 
-Al elegir un club se guarda `equipoId` y `ovrInicial` en el mismo objeto de `localStorage`, y se pasa a `carrera.html`.
+Al elegir un club se guarda `equipoId` y `ovrInicial` en el mismo objeto de `localStorage`, y se pasa a `carrera.html` — sin ningún toast de confirmación de por medio ("Fichaste por X, OVR inicial: Y") — la propia transición de pantalla ya comunica que la elección se hizo, y la sección 4 (creación de personaje) es la única que sí sigue mostrando un toast de bienvenida.
 
 ---
 
@@ -779,6 +779,8 @@ Cada temporada guarda su propio `seleccionPartidos`/`seleccionGoles` (independie
 
 **Eventos de debut**: 2 eventos de `porEdad.novato` (`nov-08`, `nov-32`) están escritos sobre el debut profesional en sí ("un defensor te marca en tu debut", "debutás en un estadio gigante") — un momento que ocurre una única vez. Quedan marcados con `debut: true` y `esElegibleParaDebut(evento)` ([carrera.js:392-395](js/carrera.js:392)) los excluye del sorteo salvo que sea, literal, la primera pausa de decisión de toda la carrera (Temporada 1, antes de simular el primer tramo) — antes solo se filtraba por rango de edad, así que podían salir en la Temporada 3 con el jugador ya afianzado en el club.
 
+**Eventos incompatibles con estar lesionado**: 14 eventos (12 normales + `ai-16`/`ai-17` de `altoImpacto`) presuponen que el jugador está jugando en ese momento — pedir un penal, ganarse minutos, marcar al goleador rival, jugar con una molestia, recibir una crítica post-partido — algo contradictorio si está lesionado y sin sumar minutos. Quedan marcados con `noDuranteLesion: true` y `esElegibleDuranteLesion(evento)` ([carrera.js:435-439](js/carrera.js:435)) los excluye del sorteo mientras `temporadaActual.lesionActiva` esté activo (ver [sección 13](#13-lesiones)) — el resto del banco (familia, prensa, vestuario, eventos que solo mencionan un partido próximo sin requerir que el jugador esté en cancha) sigue funcionando igual durante la baja.
+
 **Sin decisiones "gratis"**: cada opción de cada evento normal (no aplica a `altoImpacto`, ver el porqué debajo) tiene siempre **al menos una señal positiva y una negativa** entre `rendimiento`/`forma`/`equipo` — ninguna opción es pura-positiva ni pura-negativa, y ninguna queda neutra-plana. La idea no es que una opción "gane" a la otra en todo, sino que el jugador elija cuál le conviene más, cuál le hace perder más o cuál le hace perder menos. Un segundo pase completo sobre las 452 opciones del banco (238 modificadas) eliminó los últimos casos de "opción comprometida en las tres dimensiones vs. opción pasiva floja" que todavía quedaban del primer ajuste — siempre inyectando la señal que falta en un eje que esa opción tenía en cero, nunca pisando la única señal que ya tenía. La única excepción a propósito sigue siendo un evento de `altoImpacto` sobre aceptar un soborno para arreglar un partido (`ai-17`) — ahí rechazar la propuesta debe ser, sí, objetivamente mejor en todo: no es un dilema de números, es una cuestión de integridad.
 
 **Eventos de Alto Impacto**: sin restricción de edad, efectos mucho más fuertes (hasta ±6 de rendimiento, ±4 de equipo — contra ±3/±2 de los eventos normales), y algunos tienen **las dos opciones en negativo a propósito** (elegir el mal menor, no "ganar"). Se identifican con un ⚠️ en la tarjeta. Se sortea al crear la temporada si va a haber uno (30% de probabilidad) y en qué tramo; si sale, reemplaza al evento del tipo que corresponda en esa pausa — mismo mecanismo de reemplazo que usa la convocatoria a la selección nacional ([sección 19](#19-selección-nacional)), que compite por el mismo slot "deportivo".
@@ -877,7 +879,7 @@ Todos los números de partidos (mínimos garantizados + rondas extra) son una re
 - **Con la selección**: cuando hubo convocatoria esa temporada, el spotlight y el historial muestran una línea aparte con la bandera del país + partidos/goles con la selección (ver [sección 19](#19-selección-nacional)) — nunca mezclada con los números de club.
 - **Chips del hero** (edad, país, valor de mercado): los 3 comparten el mismo estilo neutro (texto blanco, borde translúcido) — el de valor de mercado (`.value-badge`) usaba antes el celeste `--accent-2`, distinto de los otros dos sin motivo aparente; ahora los 3 son visualmente el mismo tipo de dato.
 - **Altura real de viewport en mobile (`--vh-real`)**: el layout de `carrera.html` (hero fijo / centro scrolleable / footer de decisiones fijo) depende de conocer la altura visible real de la pantalla. `100dvh` la calcula bien en Safari/iOS, pero varios navegadores mobile (Chrome/Firefox en Android, algunos in-app browsers) la calculan mal al cargar la página y dejan una franja del footer tapada. `actualizarAlturaViewport()` ([carrera.js](js/carrera.js), tope del archivo) mide `window.innerHeight` por JS al cargar y en cada resize/orientationchange, y esa variable pisa a `100dvh` en `.body--career` como última palabra — `100vh` y `100dvh` quedan como respaldo en cascada para cuando el JS todavía no corrió.
-- **Toast** (`showToast`, definido igual en `carrera.js`/`equipo.js`/`script.js`): en `carrera.html` aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones. En mobile (`@media (max-width: 640px)` de [css/style.css](css/style.css) y [css/carrera.css](css/carrera.css)) ocupa casi todo el ancho de pantalla (`calc(100vw - 1.5rem)`) en vez de ajustarse solo al texto — más fácil de leer en una pantalla chica.
+- **Toast** (`showToast`, definido igual en `carrera.js`/`script.js` — `equipo.js` ya no lo usa ni lo define, ver [sección 5](#5-elección-de-club-inicial-equipohtml--jsequipojs)): en `carrera.html` aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones. En mobile (`@media (max-width: 640px)` de [css/style.css](css/style.css) y [css/carrera.css](css/carrera.css)) ocupa casi todo el ancho de pantalla (`calc(100vw - 1.5rem)`) en vez de ajustarse solo al texto — más fácil de leer en una pantalla chica.
 - **Pie de versión** (`GameConfig.VERSION`, `GameConfig.FECHA_PUBLICACION`, `GameConfig.footerHtml()` — [config.js:11-19](js/config.js:11)): un único punto de verdad para el número de versión y la fecha de publicación, mostrado en las 3 pantallas (`#appFooter`). En `index.html`/`equipo.html` es el último elemento de la página (scroll normal); en `carrera.html` va dentro de `.career`, después del historial, para no restarle alto fijo al hero/spotlight/decisiones.
 
 ---
@@ -897,6 +899,7 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | Constante | Valor | Qué controla |
 |---|---|---|
 | `EDAD_MIN` / `EDAD_MAX` | 16 / 19 | Rango de edad al crear personaje |
+| `DORSAL_INICIAL_PROB_BAJO` / `_MEDIO` | 0.7 / 0.2 | Reparto por bandas del dorsal inicial: 70% 1-30, 20% 31-50, 10% (resto) 51-99 |
 | `RANGO_EDAD_NOVATO_MAX` | 21 | Techo de edad para el banco de eventos "novato" |
 | `RANGO_EDAD_PROMEDIO_MAX` | 32 | Techo de edad para el banco "promedio" (arriba, "veterano") |
 | `EJE_MAX` | 100 | Techo de la escala oculta de los 3 ejes de clasificación (fuerza/prestigio/economía) de cada club, liga y selección — el piso es 0, implícito en cada `clamp` |

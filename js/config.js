@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.8.0-Beta",
-  FECHA_PUBLICACION: "8 de septiembre de 2026 · 09:41",
+  VERSION: "0.9.0-Beta",
+  FECHA_PUBLICACION: "8 de septiembre de 2026 · 11:46",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
@@ -23,6 +23,23 @@ const GameConfig = {
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
   EDAD_MAX: 19,
+
+  // Dorsal inicial: antes era GameConfig.randomInt(1, 99) parejo — un
+  // debutante tenía la misma chance de arrancar con el 7 que con el 87,
+  // nada realista (los números altos casi no se usan, salvo excepción).
+  // Por niveles en vez de una curva continua, para controlar la
+  // proporción exacta: 70% de las carreras arranca con un número común
+  // (1-30), 20% con uno menos común (31-50), y solo 10% con uno alto
+  // (51-99) — el caso ocasional, no la norma.
+  DORSAL_INICIAL_PROB_BAJO: 0.7, // 1-30
+  DORSAL_INICIAL_PROB_MEDIO: 0.2, // 31-50 (acumulado con el de arriba: 90% — el 10% restante es 51-99)
+
+  sortearDorsalInicial() {
+    const r = Math.random();
+    if (r < GameConfig.DORSAL_INICIAL_PROB_BAJO) return GameConfig.randomInt(1, 30);
+    if (r < GameConfig.DORSAL_INICIAL_PROB_BAJO + GameConfig.DORSAL_INICIAL_PROB_MEDIO) return GameConfig.randomInt(31, 50);
+    return GameConfig.randomInt(51, 99);
+  },
 
   // ---------------- RANGOS DE EDAD (para eventos de temporada) ----------------
   // novato: edad <= RANGO_EDAD_NOVATO_MAX
@@ -757,6 +774,28 @@ const GameConfig = {
     return GameConfig.ESTADISTICAS_OVR_BASE + Math.pow(progreso, GameConfig.ESTADISTICAS_OVR_EXPONENTE) * GameConfig.ESTADISTICAS_OVR_RANGO;
   },
 
+  // Competitividad de la liga (o selección): hasta acá, un jugador de 65
+  // OVR rendía exactamente igual jugando en la liga de Colombia (fuerza
+  // ~55) que en La Liga española (fuerza ~93) — el mismo OVR absoluto,
+  // sin importar contra qué nivel de rivales compite. `referenciaLiga`
+  // mapea la fuerza (0-100) de la liga al mismo rango de OVR de carrera:
+  // una liga de fuerza 93 "espera" un nivel de jugador cercano al techo
+  // (95), una de fuerza 55 espera un nivel bastante más modesto (~75).
+  // La diferencia entre tu OVR y esa referencia (`ventaja`) empuja el
+  // factor para arriba o para abajo — el mismo 65 OVR rinde notoriamente
+  // mejor en una liga floja (donde está por encima de la media) que en
+  // una top (donde queda muy por debajo).
+  FACTOR_LIGA_COEFICIENTE: 0.015,
+  FACTOR_LIGA_MIN: 0.5,
+  FACTOR_LIGA_MAX: 1.8,
+
+  factorPorFuerzaLiga(ovr, fuerzaLiga) {
+    if (fuerzaLiga == null) return 1;
+    const referenciaLiga = GameConfig.OVR_CARRERA_MIN + (fuerzaLiga / 100) * (GameConfig.OVR_CARRERA_MAX - GameConfig.OVR_CARRERA_MIN);
+    const ventaja = ovr - referenciaLiga;
+    return GameConfig.clamp(1 + ventaja * GameConfig.FACTOR_LIGA_COEFICIENTE, GameConfig.FACTOR_LIGA_MIN, GameConfig.FACTOR_LIGA_MAX);
+  },
+
   // Goles de UN partido: normalmente 0 o 1, pero sin techo real — antes
   // era un booleano puro (como mucho 1 gol por partido), así que la
   // temporada entera JAMÁS podía superar la cantidad de partidos jugados,
@@ -777,10 +816,11 @@ const GameConfig = {
     return goles;
   },
 
-  simularTramo({ partidos, grupo, ovr, rendimientoAcumulado }) {
+  simularTramo({ partidos, grupo, ovr, rendimientoAcumulado, fuerzaLiga = null }) {
     const factorOvr = GameConfig.factorEstadisticoPorOvr(ovr);
     const factorForma = 1 + GameConfig.clamp(rendimientoAcumulado, -12, 12) * 0.05;
-    const factor = Math.max(0.3, factorOvr * factorForma);
+    const factorLiga = GameConfig.factorPorFuerzaLiga(ovr, fuerzaLiga);
+    const factor = Math.max(0.3, factorOvr * factorForma * factorLiga);
     const probGol = GameConfig.clamp(GameConfig.PROPENSION_GOL[grupo] * factor, 0, 0.9);
     const probAsistencia = GameConfig.clamp(GameConfig.PROPENSION_ASISTENCIA[grupo] * factor, 0, 0.9);
 

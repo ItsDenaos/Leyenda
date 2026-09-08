@@ -69,7 +69,7 @@ const GameEvents = {
   // No dependen de la edad del jugador.
   generales: [
     {
-      id: "gen-01", tipo: "deportivo", personajes: ["entrenador"],
+      id: "gen-01", tipo: "deportivo", personajes: ["entrenador"], noDuranteLesion: true,
       pregunta: "El entrenador te pide jugar una posición distinta a la habitual para el próximo partido.",
       opciones: [
         { texto: "Aceptar el cambio", efectos: { rendimiento: -1, forma: "animado", equipo: 1 }, resultado: "Te adaptas al nuevo rol y el equipo gana flexibilidad." },
@@ -102,6 +102,7 @@ const GameEvents = {
     },
     {
       id: "gen-05", tipo: "deportivo", personajes: ["rival"],
+      noDuranteLesion: true,
       pregunta: "Un rival te provoca verbalmente durante el calentamiento previo al partido.",
       opciones: [
         { texto: "Ignorarlo y concentrarte", efectos: { rendimiento: 1, forma: "animado", equipo: -2 }, resultado: "Mantienes la calma y entras al partido con la cabeza fría." },
@@ -246,6 +247,7 @@ const GameEvents = {
     },
     {
       id: "gen-23", tipo: "deportivo", personajes: ["entrenador"],
+      noDuranteLesion: true,
       pregunta: "El entrenador te da a elegir entre descansar un partido de poca exigencia o sumar minutos.",
       opciones: [
         { texto: "Pedir sumar minutos igual", efectos: { rendimiento: 1, forma: "desanimado", equipo: 1 }, resultado: "Ganas ritmo de competencia, aunque el desgaste físico se acumula." },
@@ -278,6 +280,7 @@ const GameEvents = {
     },
     {
       id: "gen-27", tipo: "deportivo", personajes: ["companeros"],
+      noDuranteLesion: true,
       pregunta: "Se genera competencia interna por un puesto titular en el próximo partido.",
       opciones: [
         { texto: "Redoblar el esfuerzo en cada entrenamiento", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Tu nivel en los entrenamientos convence al cuerpo técnico." },
@@ -390,6 +393,7 @@ const GameEvents = {
     },
     {
       id: "gen-41", tipo: "deportivo", personajes: ["entrenador", "companeros"],
+      noDuranteLesion: true,
       pregunta: "El entrenador te pide asumir la cinta de capitán en un partido por ausencia del titular.",
       opciones: [
         { texto: "Aceptar la responsabilidad", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Lideras al equipo con solvencia en un momento clave." },
@@ -486,6 +490,7 @@ const GameEvents = {
     },
     {
       id: "gen-53", tipo: "deportivo", personajes: ["companeros"],
+      noDuranteLesion: true,
       pregunta: "Un compañero te acusa de no pasarle la pelota lo suficiente en los partidos.",
       opciones: [
         { texto: "Hablarlo cara a cara y aclarar el malentendido", efectos: { rendimiento: -1, forma: "animado", equipo: 2 }, resultado: "La charla sincera mejora la conexión dentro de la cancha." },
@@ -518,6 +523,7 @@ const GameEvents = {
     },
     {
       id: "gen-57", tipo: "deportivo", personajes: ["entrenador"],
+      noDuranteLesion: true,
       pregunta: "El entrenador te pide jugar con una molestia física menor en un partido decisivo.",
       opciones: [
         { texto: "Jugar igual por el equipo", efectos: { rendimiento: 1, forma: "lesionado", equipo: 1 }, resultado: "Ayudas al equipo, pero la molestia se agrava un poco." },
@@ -892,6 +898,7 @@ const GameEvents = {
       },
       {
         id: "nov-03", tipo: "deportivo", personajes: ["entrenador"],
+        noDuranteLesion: true,
         pregunta: "El entrenador te da minutos en un partido importante antes de lo esperado.",
         opciones: [
           { texto: "Asumir el desafío con decisión", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Respondes a la altura y ganas la confianza del cuerpo técnico." },
@@ -972,6 +979,7 @@ const GameEvents = {
       },
       {
         id: "nov-13", tipo: "personal", personajes: ["prensa"],
+        noDuranteLesion: true,
         pregunta: "Recibes tu primera crítica dura de un periodista tras un partido flojo.",
         opciones: [
           { texto: "Tomarla como aprendizaje y seguir adelante", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Usas la crítica como combustible para mejorar cada día." },
@@ -996,6 +1004,7 @@ const GameEvents = {
       },
       {
         id: "nov-16", tipo: "deportivo", personajes: ["companeros"],
+        noDuranteLesion: true,
         pregunta: "Te dan la oportunidad de patear un penal decisivo en tu segundo partido como profesional.",
         opciones: [
           { texto: "Asumir la responsabilidad de patear", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Conviertes y ganas una confianza enorme de cara al futuro." },
@@ -1028,6 +1037,7 @@ const GameEvents = {
       },
       {
         id: "nov-20", tipo: "deportivo", personajes: ["rival"],
+        noDuranteLesion: true,
         pregunta: "En un partido de reserva, un rival mucho mayor te trata con dureza física.",
         opciones: [
           { texto: "Responder con el juego, sin provocaciones", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Ganas experiencia valiosa sobre cómo manejar la intensidad." },
@@ -1272,6 +1282,7 @@ const GameEvents = {
       },
       {
         id: "prom-15", tipo: "deportivo", personajes: ["rival"],
+        noDuranteLesion: true,
         pregunta: "Te toca marcar al máximo goleador de la liga en el próximo partido.",
         opciones: [
           { texto: "Prepararte a fondo para el duelo individual", efectos: { rendimiento: 2, forma: "animado", equipo: -1 }, resultado: "Neutralizas bien a tu rival directo durante todo el partido." },
@@ -1841,7 +1852,7 @@ const GameEvents = {
       ],
     },
     {
-      id: "ai-16", tipo: "deportivo", personajes: ["medico", "entrenador"],
+      id: "ai-16", tipo: "deportivo", personajes: ["medico", "entrenador"], noDuranteLesion: true,
       pregunta: "Sufres una lesión grave e inesperada en pleno partido que pone en duda varios meses de tu carrera.",
       opciones: [
         { texto: "Seguir el proceso de rehabilitación al pie de la letra", efectos: { rendimiento: -4, forma: "lesionado", equipo: -2 }, resultado: "Te recuperas de forma completa, aunque tu ausencia prolongada genera malestar en el plantel." },
@@ -1850,6 +1861,7 @@ const GameEvents = {
     },
     {
       id: "ai-17", tipo: "deportivo", personajes: ["agente", "rival"],
+      noDuranteLesion: true,
       pregunta: "Una persona cercana al ambiente te ofrece dinero a cambio de bajar tu rendimiento en un partido clave.",
       opciones: [
         { texto: "Rechazar la propuesta y denunciarla al club", efectos: { rendimiento: 2, forma: "inspirado", equipo: 2 }, resultado: "Tu integridad queda por encima de todo y el club lo valora enormemente." },

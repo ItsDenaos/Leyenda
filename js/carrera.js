@@ -432,14 +432,24 @@ function esElegibleParaDebut(evento) {
   return temporadasFinalizadas.length === 0 && temporadaActual.tramoIndex === 0;
 }
 
+// Algunos eventos presuponen que el jugador está jugando en ese momento
+// (pedir un penal, ganarse minutos, marcar al goleador rival...), algo
+// contradictorio si está lesionado y sin sumar minutos. Quedan marcados
+// con `noDuranteLesion: true` y se excluyen mientras haya lesión activa;
+// el resto de eventos (familia, prensa, vestuario) sigue funcionando igual.
+function esElegibleDuranteLesion(evento) {
+  if (!evento.noDuranteLesion) return true;
+  return !temporadaActual.lesionActiva;
+}
+
 function elegirEventoPorTipo(edadActual, tipo) {
   const rango = GameConfig.rangoEdadDe(edadActual);
   const bancoPorEdad = GameEvents.porEdad[rango];
   const bancoElegido = Math.random() < 0.5 ? GameEvents.generales : bancoPorEdad;
   const bancoAlterno = bancoElegido === GameEvents.generales ? bancoPorEdad : GameEvents.generales;
 
-  const sinUsar = (banco) => banco.filter((e) => e.tipo === tipo && !eventosUsados.has(e.id) && esElegibleParaDebut(e));
-  const cualquiera = (banco) => banco.filter((e) => e.tipo === tipo && esElegibleParaDebut(e));
+  const sinUsar = (banco) => banco.filter((e) => e.tipo === tipo && !eventosUsados.has(e.id) && esElegibleParaDebut(e) && esElegibleDuranteLesion(e));
+  const cualquiera = (banco) => banco.filter((e) => e.tipo === tipo && esElegibleParaDebut(e) && esElegibleDuranteLesion(e));
 
   let candidatos = sinUsar(bancoElegido);
   if (candidatos.length === 0) candidatos = sinUsar(bancoAlterno);
@@ -455,8 +465,10 @@ function elegirEventoPorTipo(edadActual, tipo) {
 // entre TODOS los que todavía no se usaron en esta carrera (con el
 // mismo respaldo de "liberar el filtro" si alguna vez se agotaran).
 function elegirEventoAltoImpacto() {
-  const sinUsar = GameEvents.altoImpacto.filter((e) => !eventosUsados.has(e.id));
-  const candidatos = sinUsar.length > 0 ? sinUsar : GameEvents.altoImpacto;
+  const elegibles = GameEvents.altoImpacto.filter((e) => esElegibleDuranteLesion(e));
+  const bancoBase = elegibles.length > 0 ? elegibles : GameEvents.altoImpacto;
+  const sinUsar = bancoBase.filter((e) => !eventosUsados.has(e.id));
+  const candidatos = sinUsar.length > 0 ? sinUsar : bancoBase;
   const evento = GameConfig.randomFrom(candidatos);
   eventosUsados.add(evento.id);
   return evento;
@@ -797,6 +809,7 @@ function simularTramoYAvanzar() {
     grupo,
     ovr: temporadaActual.ovr,
     rendimientoAcumulado: temporadaActual.bufferRendimiento,
+    fuerzaLiga: liga.fuerza,
   });
 
   temporadaActual.partidos += partidosJugador;
@@ -889,7 +902,7 @@ function generarCandidatosPremiosMundiales() {
 
     const grupo = GameConfig.sortearGrupoCandidatoPremio();
     const ovr = GameConfig.sortearOvrCandidatoPremio();
-    const resultado = GameConfig.simularTramo({ partidos: competicion.partidosMinimos, grupo, ovr, rendimientoAcumulado: 0 });
+    const resultado = GameConfig.simularTramo({ partidos: competicion.partidosMinimos, grupo, ovr, rendimientoAcumulado: 0, fuerzaLiga: liga.fuerza });
     // Si el club del candidato es fuerte, también compite por títulos ese
     // año — reutiliza la misma curva que decide si TU club gana la liga,
     // para no inventar una probabilidad aparte.
@@ -1598,6 +1611,7 @@ function resolverParticipacionSeleccion(prioriza) {
   const grupo = GameConfig.GRUPOS_POSICION[player.posicion] ?? "medio";
   const { goles } = GameConfig.simularTramo({
     partidos, grupo, ovr: temporadaActual.ovr, rendimientoAcumulado: temporadaActual.bufferRendimiento,
+    fuerzaLiga: seleccion.fuerza,
   });
   temporadaActual.seleccionPartidos += partidos;
   temporadaActual.seleccionGoles += goles;

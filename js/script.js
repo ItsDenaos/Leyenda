@@ -57,7 +57,7 @@ const state = {
   // El dorso no se elige al crear el personaje: te lo asigna el club al
   // debutar. Recién a partir del cierre de temporada se puede pedir un
   // cambio (ver carrera.js), y el club lo acepta o no según cómo vengas.
-  numero: GameConfig.randomInt(1, 99),
+  numero: GameConfig.sortearDorsalInicial(),
   edad: GameConfig.EDAD_MIN,
   pierna: "derecha",
   pais: null,

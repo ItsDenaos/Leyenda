@@ -39,7 +39,6 @@ if (!player) {
 } else {
   const ofertas = generarOfertasInicialesParaJugador(player.pais);
   const grid = document.getElementById("offersGrid");
-  const toast = document.getElementById("toast");
 
   function renderOfertas() {
     grid.innerHTML = "";
@@ -80,15 +79,7 @@ if (!player) {
     const jugador = { ...player, equipoId: equipo.id, ovrInicial };
     localStorage.setItem("leyendaPlayer", JSON.stringify(jugador));
 
-    showToast(`Fichaste por ${equipo.nombre}. OVR inicial: ${ovrInicial}.`);
     setTimeout(() => { window.location.href = "carrera.html"; }, 900);
-  }
-
-  function showToast(message) {
-    toast.textContent = message;
-    toast.classList.add("toast--visible");
-    clearTimeout(showToast._t);
-    showToast._t = setTimeout(() => toast.classList.remove("toast--visible"), 3200);
   }
 
   renderOfertas();

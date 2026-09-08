@@ -110,15 +110,15 @@
   <h1>LEYENDA</h1>
   <p class="cover__sub">Documentación técnica completa del proyecto</p>
   <div class="cover__meta">
-    <div><strong>Versión:</strong> 0.8.0-Beta — publicada el 8 de septiembre de 2026</div>
+    <div><strong>Versión:</strong> 0.9.0-Beta — publicada el 8 de septiembre de 2026</div>
     <div><strong>Alcance:</strong> Cada fórmula, cada constante y dónde vive cada pieza en el código</div>
     <div><strong>Motor:</strong> HTML / CSS / JavaScript vanilla, sin dependencias ni build</div>
   </div>
 </div>
 
-﻿<h1>Leyenda ⚽</h1>
+<h1>Leyenda ⚽</h1>
 <p>Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.</p>
-<p><strong>Versión:</strong> 0.8.0-Beta — publicada el 8 de septiembre de 2026 · 09:41.</p>
+<p><strong>Versión:</strong> 0.9.0-Beta — publicada el 8 de septiembre de 2026 · 11:46.</p>
 <blockquote>
 <p>Este documento describe <strong>absolutamente toda la lógica del juego</strong>: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás &quot;cómo se juega&quot; en términos de jugador, ver el <em>Manual de Juego</em> aparte.</p>
 </blockquote>
@@ -252,7 +252,7 @@ Retiro (forzoso por edad, o elegido) → resumen de carrera → volver a index.h
 <td>12 posiciones sobre una cancha (<a href="index.html:158">index.html:158-196</a>): POR, DFC, LI, LD, MCD, MC, MI, MD, MCO, EI, ED, DC.</td>
 </tr>
 </tbody></table>
-<p>El <strong>dorsal</strong> se asigna solo al azar entre 1 y 99 (<code>GameConfig.randomInt(1, 99)</code>, <a href="js/script.js:58">script.js:58</a>) — no se elige. Recién se puede pedir cambiarlo al cerrar la primera temporada (ver <a href="#">sección 18</a>).</p>
+<p>El <strong>dorsal</strong> se asigna solo al azar, no se elige — pero no parejo entre 1 y 99 (así, un debutante tenía la misma chance de arrancar con el 7 que con el 87, nada realista). <code>sortearDorsalInicial()</code> (<a href="js/config.js:37">config.js:37-41</a>, llamado desde <a href="js/script.js:60">script.js:60</a>) sortea por bandas: <strong>70%</strong> de las carreras arranca con un número común (<strong>1-30</strong>), <strong>20%</strong> con uno menos común (<strong>31-50</strong>), y solo el <strong>10%</strong> restante con uno alto (<strong>51-99</strong>) — el caso ocasional, no la norma. Recién se puede pedir cambiarlo al cerrar la primera temporada (ver <a href="#">sección 18</a>).</p>
 <p>Al completar los 3 pasos y tocar &quot;Comenzar carrera&quot;, se guarda en <code>localStorage[&quot;leyendaPlayer&quot;]</code> (<a href="js/script.js:264">script.js:264-282</a>):</p>
 <pre><code class="language-json">{ &quot;apellido&quot;: &quot;...&quot;, &quot;numero&quot;: 42, &quot;pierna&quot;: &quot;derecha&quot;, &quot;edad&quot;: 17,
   &quot;pais&quot;: &quot;Argentina&quot;, &quot;flag&quot;: &quot;🇦🇷&quot;, &quot;paisCode&quot;: &quot;ar&quot;, &quot;posicion&quot;: &quot;DC&quot; }
@@ -278,7 +278,7 @@ Retiro (forzoso por edad, o elegido) → resumen de carrera → volver a index.h
 <li>Se le suma una &quot;suerte&quot; aleatoria de hasta ±4 puntos (<code>OVR_SUERTE_VARIACION</code>) y se redondea, recortado siempre entre 50 y 65.</li>
 </ol>
 <p>El jugador nunca ve estos números crudos: en la tarjeta de oferta solo se muestra el nombre del club/liga, su escudo y su bandera — sin ninguna etiqueta de &quot;qué tan grande es&quot;, a diferencia de versiones anteriores.</p>
-<p>Al elegir un club se guarda <code>equipoId</code> y <code>ovrInicial</code> en el mismo objeto de <code>localStorage</code>, y se pasa a <code>carrera.html</code>.</p>
+<p>Al elegir un club se guarda <code>equipoId</code> y <code>ovrInicial</code> en el mismo objeto de <code>localStorage</code>, y se pasa a <code>carrera.html</code> — sin ningún toast de confirmación de por medio (&quot;Fichaste por X, OVR inicial: Y&quot;) — la propia transición de pantalla ya comunica que la elección se hizo, y la sección 4 (creación de personaje) es la única que sí sigue mostrando un toast de bienvenida.</p>
 <hr>
 <h2 id="6-el-motor-de-carrera-visión-general-jscarrerajs">6. El motor de carrera — visión general (<code>js/carrera.js</code>)</h2>
 <p>Es el archivo más grande (2100+ líneas): mezcla el <strong>estado del juego</strong>, la <strong>simulación</strong> y <strong>todo el render de la UI</strong> de <code>carrera.html</code> (no hay separación de capas — es un único script).</p>
@@ -895,6 +895,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </tbody></table>
 <p><strong>Selección de un evento normal</strong> (<code>elegirEventoPorTipo</code>, <a href="js/carrera.js:397">carrera.js:397-414</a>): para cada pausa, 50/50 si sale del banco <code>generales</code> o del banco correspondiente a la edad actual; dentro de ese banco se filtra por tipo (<code>&quot;personal&quot;</code> o <code>&quot;deportivo&quot;</code> — cada pausa siempre muestra exactamente 1 de cada). <strong>Ningún evento se repite en la misma carrera</strong>: se recuerda cada id ya usado (<code>eventosUsados</code>, compartido entre bancos) y se excluye de futuros sorteos; si un banco se queda sin eventos sin usar de ese tipo (carrera muy larga), se libera el filtro para ese banco puntual antes que forzar una repetición.</p>
 <p><strong>Eventos de debut</strong>: 2 eventos de <code>porEdad.novato</code> (<code>nov-08</code>, <code>nov-32</code>) están escritos sobre el debut profesional en sí (&quot;un defensor te marca en tu debut&quot;, &quot;debutás en un estadio gigante&quot;) — un momento que ocurre una única vez. Quedan marcados con <code>debut: true</code> y <code>esElegibleParaDebut(evento)</code> (<a href="js/carrera.js:392">carrera.js:392-395</a>) los excluye del sorteo salvo que sea, literal, la primera pausa de decisión de toda la carrera (Temporada 1, antes de simular el primer tramo) — antes solo se filtraba por rango de edad, así que podían salir en la Temporada 3 con el jugador ya afianzado en el club.</p>
+<p><strong>Eventos incompatibles con estar lesionado</strong>: 14 eventos (12 normales + <code>ai-16</code>/<code>ai-17</code> de <code>altoImpacto</code>) presuponen que el jugador está jugando en ese momento — pedir un penal, ganarse minutos, marcar al goleador rival, jugar con una molestia, recibir una crítica post-partido — algo contradictorio si está lesionado y sin sumar minutos. Quedan marcados con <code>noDuranteLesion: true</code> y <code>esElegibleDuranteLesion(evento)</code> (<a href="js/carrera.js:435">carrera.js:435-439</a>) los excluye del sorteo mientras <code>temporadaActual.lesionActiva</code> esté activo (ver <a href="#">sección 13</a>) — el resto del banco (familia, prensa, vestuario, eventos que solo mencionan un partido próximo sin requerir que el jugador esté en cancha) sigue funcionando igual durante la baja.</p>
 <p><strong>Sin decisiones &quot;gratis&quot;</strong>: cada opción de cada evento normal (no aplica a <code>altoImpacto</code>, ver el porqué debajo) tiene siempre <strong>al menos una señal positiva y una negativa</strong> entre <code>rendimiento</code>/<code>forma</code>/<code>equipo</code> — ninguna opción es pura-positiva ni pura-negativa, y ninguna queda neutra-plana. La idea no es que una opción &quot;gane&quot; a la otra en todo, sino que el jugador elija cuál le conviene más, cuál le hace perder más o cuál le hace perder menos. Un segundo pase completo sobre las 452 opciones del banco (238 modificadas) eliminó los últimos casos de &quot;opción comprometida en las tres dimensiones vs. opción pasiva floja&quot; que todavía quedaban del primer ajuste — siempre inyectando la señal que falta en un eje que esa opción tenía en cero, nunca pisando la única señal que ya tenía. La única excepción a propósito sigue siendo un evento de <code>altoImpacto</code> sobre aceptar un soborno para arreglar un partido (<code>ai-17</code>) — ahí rechazar la propuesta debe ser, sí, objetivamente mejor en todo: no es un dilema de números, es una cuestión de integridad.</p>
 <p><strong>Eventos de Alto Impacto</strong>: sin restricción de edad, efectos mucho más fuertes (hasta ±6 de rendimiento, ±4 de equipo — contra ±3/±2 de los eventos normales), y algunos tienen <strong>las dos opciones en negativo a propósito</strong> (elegir el mal menor, no &quot;ganar&quot;). Se identifican con un ⚠️ en la tarjeta. Se sortea al crear la temporada si va a haber uno (30% de probabilidad) y en qué tramo; si sale, reemplaza al evento del tipo que corresponda en esa pausa — mismo mecanismo de reemplazo que usa la convocatoria a la selección nacional (<a href="#">sección 19</a>), que compite por el mismo slot &quot;deportivo&quot;.</p>
 <p>Cada opción define el texto del botón y sus <code>efectos</code> (<code>rendimiento</code> −3..+3 normal / −6..+6 alto impacto, <code>forma</code> nuevo estado fijo, <code>equipo</code> −2..+2 normal / −4..+4 alto impacto). También trae un texto de <code>resultado</code> en los datos — es contenido narrativo pensado para uso futuro (por ejemplo, un registro/historial de decisiones), pero <strong>hoy no se muestra en ningún lado de la interfaz</strong>: se sacó del toast que lo mostraba antes porque era pura redundancia con lo que ya decía el botón elegido.</p>
@@ -1231,7 +1232,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </li>
 <li><p><strong>Altura real de viewport en mobile (<code>--vh-real</code>)</strong>: el layout de <code>carrera.html</code> (hero fijo / centro scrolleable / footer de decisiones fijo) depende de conocer la altura visible real de la pantalla. <code>100dvh</code> la calcula bien en Safari/iOS, pero varios navegadores mobile (Chrome/Firefox en Android, algunos in-app browsers) la calculan mal al cargar la página y dejan una franja del footer tapada. <code>actualizarAlturaViewport()</code> (<a href="js/carrera.js">carrera.js</a>, tope del archivo) mide <code>window.innerHeight</code> por JS al cargar y en cada resize/orientationchange, y esa variable pisa a <code>100dvh</code> en <code>.body--career</code> como última palabra — <code>100vh</code> y <code>100dvh</code> quedan como respaldo en cascada para cuando el JS todavía no corrió.</p>
 </li>
-<li><p><strong>Toast</strong> (<code>showToast</code>, definido igual en <code>carrera.js</code>/<code>equipo.js</code>/<code>script.js</code>): en <code>carrera.html</code> aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones. En mobile (<code>@media (max-width: 640px)</code> de <a href="css/style.css">css/style.css</a> y <a href="css/carrera.css">css/carrera.css</a>) ocupa casi todo el ancho de pantalla (<code>calc(100vw - 1.5rem)</code>) en vez de ajustarse solo al texto — más fácil de leer en una pantalla chica.</p>
+<li><p><strong>Toast</strong> (<code>showToast</code>, definido igual en <code>carrera.js</code>/<code>script.js</code> — <code>equipo.js</code> ya no lo usa ni lo define, ver <a href="#">sección 5</a>): en <code>carrera.html</code> aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones. En mobile (<code>@media (max-width: 640px)</code> de <a href="css/style.css">css/style.css</a> y <a href="css/carrera.css">css/carrera.css</a>) ocupa casi todo el ancho de pantalla (<code>calc(100vw - 1.5rem)</code>) en vez de ajustarse solo al texto — más fácil de leer en una pantalla chica.</p>
 </li>
 <li><p><strong>Pie de versión</strong> (<code>GameConfig.VERSION</code>, <code>GameConfig.FECHA_PUBLICACION</code>, <code>GameConfig.footerHtml()</code> — <a href="js/config.js:11">config.js:11-19</a>): un único punto de verdad para el número de versión y la fecha de publicación, mostrado en las 3 pantallas (<code>#appFooter</code>). En <code>index.html</code>/<code>equipo.html</code> es el último elemento de la página (scroll normal); en <code>carrera.html</code> va dentro de <code>.career</code>, después del historial, para no restarle alto fijo al hero/spotlight/decisiones.</p>
 </li>
@@ -1258,6 +1259,11 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <td><code>EDAD_MIN</code> / <code>EDAD_MAX</code></td>
 <td>16 / 19</td>
 <td>Rango de edad al crear personaje</td>
+</tr>
+<tr>
+<td><code>DORSAL_INICIAL_PROB_BAJO</code> / <code>_MEDIO</code></td>
+<td>0.7 / 0.2</td>
+<td>Reparto por bandas del dorsal inicial: 70% 1-30, 20% 31-50, 10% (resto) 51-99</td>
 </tr>
 <tr>
 <td><code>RANGO_EDAD_NOVATO_MAX</code></td>
