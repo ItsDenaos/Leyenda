@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.
 
-**Versión:** 0.9.0-Beta — publicada el 8 de septiembre de 2026 · 11:46.
+**Versión:** 0.9.1-Beta — publicada el 8 de septiembre de 2026 · 13:28.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -317,10 +317,22 @@ Estas son las propensiones en el punto **neutral** de la curva de OVR de abajo (
 factorOvr(ovr) = ESTADISTICAS_OVR_BASE + progreso^ESTADISTICAS_OVR_EXPONENTE × ESTADISTICAS_OVR_RANGO
                  (progreso = (ovr − 45) / 54, recortado a 0-1; BASE=0.15, EXPONENTE=2.2, RANGO=2.85)
 factorForma    = 1 + clamp(rendimientoAcumulado, −12, 12) × 0.05
-factor         = max(0.3, factorOvr × factorForma)
+factorLiga     = factorPorFuerzaLiga(ovr, fuerzaLiga)   (ver más abajo)
+factor         = max(0.3, factorOvr × factorForma × factorLiga)
 ```
 
-Curva (exponente > 1), no una recta: en el OVR mínimo (45) el factor es 0.15, en el máximo (99) es 3.0 — un delantero de 65 OVR (mediocre) promedia ~5 goles en 38 partidos, uno de 75 (profesional sólido) ~10, uno de 90 (estrella) ~23, y solo en el techo absoluto (99) aparecen las temporadas de 30+ goles.
+Curva (exponente > 1), no una recta: en el OVR mínimo (45) el factor es 0.15, en el máximo (99) es 3.0 — un delantero de 65 OVR (mediocre) promedia ~5 goles en 38 partidos, uno de 75 (profesional sólido) ~10, uno de 90 (estrella) ~23, y solo en el techo absoluto (99) aparecen las temporadas de 30+ goles (estos números son con `factorLiga = 1`, es decir, en una liga de fuerza "neutral" — ver justo abajo cómo cambia según la liga real).
+
+**Competitividad de la liga (o selección)** — sin esto, un jugador de 65 OVR rendía exactamente igual jugando en la liga de Colombia (fuerza ~55) que en la Premier League (fuerza ~96): el mismo OVR absoluto, sin importar contra qué nivel de rivales compite. `factorPorFuerzaLiga(ovr, fuerzaLiga)` ([config.js:792-797](js/config.js:792)) lo corrige:
+
+```
+referenciaLiga = OVR_CARRERA_MIN + (fuerzaLiga / 100) × (OVR_CARRERA_MAX − OVR_CARRERA_MIN)
+ventaja        = ovr − referenciaLiga
+factorLiga     = clamp(1 + ventaja × FACTOR_LIGA_COEFICIENTE, FACTOR_LIGA_MIN, FACTOR_LIGA_MAX)
+                 (COEFICIENTE = 0.024, MIN = 0.35, MAX = 2.2)
+```
+
+`referenciaLiga` mapea la fuerza de la liga (0-100) al mismo rango de OVR de carrera: una liga de fuerza 96 "espera" un nivel cercano al techo (~97), una de fuerza 55 espera algo bastante más modesto (~75). La diferencia entre tu OVR y esa referencia empuja el factor para arriba o para abajo. Con estos valores, un delantero de **70 OVR en Chile** (fuerza 60) promedia ~4 goles en una temporada de 34 partidos; ese mismo 70 OVR en la **Premier League** (fuerza 96) promedia ~2.1 — casi la mitad, con idéntico nivel absoluto. Se aplica también a los partidos con la selección nacional (con la fuerza de la selección rival, no la de tu liga de club — ver [sección 19](#19-selección-nacional)).
 
 **Goles por partido, sin techo real** — `golesEnPartido(probGol)` ([config.js:750-758](js/config.js:750)), con `probGol = clamp(propensiónGol × factor, 0, 0.9)`:
 
@@ -397,6 +409,22 @@ Con estos números, el neto (crecimiento − desgaste) pasa de "todavía sumás 
 El crecimiento no se frena "acercándose" al techo (esa fue la primera versión probada — combinada con el freno de edad de la misma ventana 29-34, casi nadie llegaba cerca de un techo alto a tiempo). En cambio, actúa a pleno ritmo hasta el final, y `ajustarOvrTramo` solo recorta lo que un tramo puntual se pasaría de largo del techo, dejando pasar un resto (`POTENCIAL_TECHO_FACTOR_MIN = 0.08`, un 8%) — así una racha buenísima puede "sorprender" y pasarlo por uno o dos puntos en casos raros. Los rangos de la tabla de arriba no son directamente "dónde termina la carrera" (varias con techo alto se quedan cortas por el camino, sea por mala racha o por no alcanzar el límite superior del rango) — se calibraron corriendo ~3000 carreras simuladas contra la fórmula real hasta que el **pico final** de OVR quedara repartido ~10% por debajo de 80, ~60% entre 80-89, ~30% en 90+.
 
 Al fichar por un club nuevo se garantiza un mínimo margen de crecimiento sobre el OVR inicial (`potencialTecho = max(sorteo, ovrInicial + 5)`) — rarísimo que choquen, pero un debutante en un club grande puede arrancar con 65, y sin este piso una tirada floja del techo lo dejaría prácticamente congelado desde el primer tramo.
+
+### 11.3 Salto de calidad del arranque de carrera
+
+Sin esto, un debutante de club humilde (OVR ~50-55) tardaba **8-12 temporadas** —de una carrera de ~26-27— en cruzar el umbral de OVR 70, más de un tercio del juego entero rindiendo con números flojos por partida doble (poco OVR y, encima, poco `factorPorFuerzaLiga` de la sección anterior). `factorAprendizajeJoven(ovr, edad)` ([config.js:906-920](js/config.js:906)) acelera específicamente esa salida, sin tocar ninguna de las 3 etapas de `factorCrecimientoPorEdad` ni el declive por edad:
+
+```
+progreso            = clamp((UMBRAL_CRECIMIENTO_ACELERADO − ovr) / (UMBRAL_CRECIMIENTO_ACELERADO − OVR_CARRERA_MIN), 0, 1)
+factorAprendizaje   = 1 + progreso × (CRECIMIENTO_ACELERADO_FACTOR_MAX − 1)
+                      (UMBRAL = 72, FACTOR_MAX = 1.8 — solo si edad ≤ OVR_EDAD_PRIME_MAX)
+```
+
+Dos guardas para no romper el resto del sistema de crecimiento ([carrera.js:1001-1007](js/carrera.js:1001)):
+- **Solo aplica en Prime** (edad ≤ 28, donde el crecimiento ya es pleno) — un veterano que bajó de nivel en la meseta o el ocaso nunca lo activa, aunque su OVR haya caído por debajo del umbral. El "salto de calidad" es cosa de un jugador que recién arranca, no de alguien en decadencia.
+- **Solo multiplica el crecimiento cuando ya es positivo** — nunca agrava una racha floja de decisiones; una mala temporada declina exactamente igual que antes.
+
+Con esto, las mismas 8-12 temporadas para cruzar OVR 70 bajan a **~5-9**, según qué tan floja sea la liga/club inicial — la etapa de jugador limitado se acorta, no desaparece.
 
 ---
 
@@ -531,7 +559,9 @@ calidad = 0.4 × calidadRating + 0.35 × calidadGoleador + 0.25 × calidadTrofeo
 ```
 Ninguna pata sola alcanza — hace falta rendimiento de élite **y** producción goleadora **y** haber ganado algo, las tres a la vez. Es el más difícil de los tres.
 
-Los tres empates (`>=` en vez de `>` en las tres comparaciones) los gana el jugador — dado el clampeo de rating de arriba, un empate exacto contra el pool es común en el tramo alto, y no tendría sentido que ese empate SIEMPRE lo pierda el jugador. Los trofeos ganados se guardan en el mismo array `temporadaActual.trofeos` que los de liga/copa/selección — reutilizan toda la UI existente sin cambios (badge, historial, resumen, tarjeta para compartir). **Pendiente**: el Once Ideal todavía usa el ícono genérico 🏆 de respaldo (`imagen: null`) en vez de uno propio — ver [assets/escudos/trofeos/](assets/escudos/trofeos/) para `bota-de-oro.png` y `balon-de-oro.png`, que sí tienen ícono real.
+`ganoTrofeo` (para el jugador) es `ganasteTrofeoDeEquipoOSeleccion`, capturado en `finalizarTemporada` **antes** de otorgar la Bota de Oro o el Once Ideal ([carrera.js:1024-1030](js/carrera.js:1024), pasado como parámetro a `evaluarPremiosMundiales`) — no se lee en vivo desde `temporadaActual.trofeos.length > 0` dentro de la misma función que evalúa los tres premios. La razón: Bota de Oro y Once Ideal NO requieren haber ganado nada de equipo, y esta misma función los agrega a ese array un poco más abajo — si el Balón de Oro mirara el array en ese momento, ganar cualquiera de esos dos premios individuales "contaría como trofeo" para el propio Balón de Oro, volviendo casi automático un barrido de los tres sin haber ganado una sola liga, copa o título con la selección (medido: 70% de las veces con estadísticas de élite y cero trofeos reales, contra 0.15% ya corregido).
+
+Los tres empates (`>=` en vez de `>` en las tres comparaciones) los gana el jugador — dado el clampeo de rating de arriba, un empate exacto contra el pool es común en el tramo alto, y no tendría sentido que ese empate SIEMPRE lo pierda el jugador. Los trofeos ganados se guardan en el mismo array `temporadaActual.trofeos` que los de liga/copa/selección — reutilizan toda la UI existente sin cambios (badge, historial, resumen, tarjeta para compartir). Los tres premios ya tienen ícono propio en [assets/escudos/trofeos/](assets/escudos/trofeos/): `bota-de-oro.png`, `balon-de-oro.png` y `once-ideal.png`.
 
 ---
 
@@ -855,7 +885,9 @@ Todos los números de partidos (mínimos garantizados + rondas extra) son una re
 - **Escudos con fallback**: `crestHtml`/`ligaCrestHtml` ([config.js:283-310](js/config.js:283)) intentan cargar el PNG real; si falla (`onerror`), se reemplazan solas por un placeholder de iniciales + degradado de los colores del club (`crestFallback`). Los escudos de liga no llevan ese fondo — solo el logo (clase `team-crest--liga`).
 - **Banderas reales** vía [flagcdn.com](https://flagcdn.com) (los emoji de bandera no se dibujan en Windows), con el emoji como respaldo de texto si la imagen falla (`flagHtml`/`flagFallback`).
 - **Trofeos**: siluetas PNG en `assets/escudos/trofeos/`, pintadas vía `mask-image` con un dorado **propio** (`--trophy-gold: #d4af37`, [css/style.css](css/style.css)) — el color original del archivo no importa, solo su transparencia define la forma (`trofeoIconHtml`). Este dorado es deliberadamente distinto del `--accent` ámbar que usan los botones y el nivel "oro" del OVR: si el trofeo reutilizara ese mismo color, se perdería entre el resto de la interfaz en vez de leerse como un logro aparte.
-  - **Historial en mobile**: el nombre del trofeo va apilado y bien chico debajo de su ícono (no en un listado aparte) — oculto por default, se revela al tocar la tarjeta entera de esa temporada (`.timeline-item--expandida`, delegado sobre `#timelineList` en [carrera.js](js/carrera.js)). El texto aparece de golpe (`display: none`/`block`, sin transición) — antes tenía una animación de alto/opacidad que en algunos trofeos se veía como un pequeño salto del ícono, sin aportar nada. En desktop el nombre completo ya está disponible al pasar el mouse (`title`).
+  - **Historial en mobile**: el nombre del trofeo va apilado y bien chico debajo de su ícono (no en un listado aparte) — oculto por default, se revela al tocar la tarjeta entera de esa temporada (`.timeline-item--expandida`, delegado sobre `#timelineList` en [carrera.js](js/carrera.js)). El texto aparece de golpe (`display: none`/`block`, sin transición). En desktop el nombre completo ya está disponible al pasar el mouse (`title`).
+    - `.timeline-item__mtrophies` fija `align-items: flex-start` ([css/carrera.css:1235](css/carrera.css:1235)) — con el default (`stretch`), al revelar el nombre la tarjeta de ESE trofeo se alargaba y el resto de los íconos de la misma fila se re-centraban verticalmente para acompañar esa altura nueva, dando la sensación de que los trofeos "saltaban" o se agrandaban al tocar. Con `flex-start` los íconos quedan clavados arriba; solo crece el espacio de texto debajo.
+    - `.trophy-card__name-under` es más chico y un poco más ancho que antes (0.5rem / 4.4rem) — nombres largos ("Liga Premier Rusa", "UEFA Europa League") entraban en 2-3 líneas con las medidas viejas, agravando el salto de altura.
 - **Color del badge de OVR** (`ovrTierColor`, [carrera.js:58-65](js/carrera.js:58)) — 6 niveles fijos, de metal a gema, proporcionales al rango real de carrera (45–99):
 
   | OVR | Color |
@@ -936,6 +968,8 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `TOTAL_TRAMOS_TEMPORADA` | 3 | Bloques de partidos simulados por temporada |
 | `GRUPOS_POSICION` / `PROPENSION_GOL` / `PROPENSION_ASISTENCIA` | ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating) | Probabilidad base de gol/asistencia por posición (5 grupos: arquero/central/lateral/medio/ataque) |
 | `ESTADISTICAS_OVR_BASE` / `_EXPONENTE` / `_RANGO` | 0.15 / 2.2 / 2.85 | Curva de escalado de estadísticas por OVR (factor 0.15 en el piso de carrera, 3.0 en el techo; punto neutral ×1 en ~OVR 75-78) |
+| `FACTOR_LIGA_COEFICIENTE` | 0.024 | Cuánto empuja el factor de estadísticas por cada punto de diferencia entre tu OVR y el nivel que "espera" la liga/selección |
+| `FACTOR_LIGA_MIN` / `MAX` | 0.35 / 2.2 | Clamp del factor de competitividad de liga (ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)) |
 | `PROB_SEGUNDO_GOL_FACTOR` / `_TERCER_GOL_FACTOR` | 0.4 / 0.18 | Probabilidad (relativa a `probGol`) de que un gol se convierta en doblete/hat-trick en el mismo partido |
 | `PROBABILIDAD_MVP_BASE` | 0.09 | Probabilidad base de MVP por partido |
 | `BONUS_MVP_POR_GOL` / `_ASISTENCIA` | 0.14 / 0.08 | Bono de probabilidad de MVP por cada gol / por asistencia en el partido |
@@ -952,6 +986,8 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `OVR_EDAD_ACELERA_DECLIVE` | 37 | Edad desde la que el desgaste se acelera |
 | `OVR_EDAD_DECLIVE_TASA_BASE` / `_ACELERADA` | 0.06 / 0.22 | OVR perdido por tramo, por año, antes/después de acelerar |
 | `TALENTO_MIN` / `MAX` | 0.85 / 1.2 | Multiplicador de talento oculto por carrera (acelera el crecimiento, atenúa el desgaste) |
+| `UMBRAL_CRECIMIENTO_ACELERADO` | 72 | OVR por debajo del cual aplica el "salto de calidad" del arranque de carrera (solo en Prime, ver [sección 11.3](#113-salto-de-calidad-del-arranque-de-carrera)) |
+| `CRECIMIENTO_ACELERADO_FACTOR_MAX` | 1.8 | Multiplicador de crecimiento en el piso de ese rango (OVR 45), decreciendo a 1x en el umbral |
 | `POTENCIAL_TECHO_PROB_BAJO` / `_MEDIO` | 0.05 / 0.55 | Probabilidad de sortear un techo de potencial bajo (72-83) / medio (85-90) — el resto (40%) es alto (91-98) |
 | `POTENCIAL_TECHO_FACTOR_MIN` | 0.08 | Fracción de lo que un tramo se pasaría del techo que se deja pasar igual |
 | `FORMA_CALIDAD` | ver [sección 12](#12-estado-de-forma) | Calidad aportada por cada estado de forma a la fuerza de campaña |

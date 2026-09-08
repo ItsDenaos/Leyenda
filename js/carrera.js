@@ -923,7 +923,17 @@ function generarCandidatosPremiosMundiales() {
 // candidatos y devuelve los mensajes de los premios que se ganaron (los
 // trofeos ya quedan cargados en temporadaActual.trofeos, junto a los de
 // liga/copa). Sin partidos jugados no hay nada que comparar.
-function evaluarPremiosMundiales(candidatos) {
+//
+// `ganasteTrofeoDeEquipoOSeleccion` se recibe ya calculado desde afuera
+// (capturado en finalizarTemporada ANTES de llamar a esta función) en vez
+// de leerse acá mismo con `temporadaActual.trofeos.length > 0`: Bota de
+// Oro y Once Ideal no requieren haber ganado nada, y esta misma función
+// los empuja a ese mismo array un poco más abajo — si el Balón de Oro
+// mirara el array en ese momento, ganar cualquiera de esos dos premios
+// individuales "contaría como trofeo" para el propio Balón de Oro,
+// haciendo casi automático un barrido de los tres premios sin haber
+// ganado una sola liga, copa o título con la selección.
+function evaluarPremiosMundiales(candidatos, ganasteTrofeoDeEquipoOSeleccion) {
   const mensajes = [];
   if (temporadaActual.partidos === 0 || candidatos.length === 0) return mensajes;
 
@@ -958,18 +968,14 @@ function evaluarPremiosMundiales(candidatos) {
   if (candidatosMismoGrupo.length > 0) {
     const mejorDelGrupo = candidatosMismoGrupo.reduce((mejor, c) => (c.promedio > mejor.promedio ? c : mejor));
     if (temporadaActual.promedio >= mejorDelGrupo.promedio - GameConfig.ONCE_IDEAL_MARGEN_PROMEDIO) {
-      // TODO: falta el ícono real (imagen: "once-ideal.png") — el archivo
-      // que había en Temp no es una silueta de trofeo como las otras dos,
-      // sino un logo con texto. Sin `imagen`, trofeoIconHtml cae sola al
-      // 🏆 genérico (no se rompe nada, solo se ve menos distintivo).
-      temporadaActual.trofeos.push({ nombre: "Once Ideal", imagen: null });
+      temporadaActual.trofeos.push({ nombre: "Once Ideal", imagen: "once-ideal.png" });
       mensajes.push("¡Entraste al Once Ideal del año!");
     }
   }
 
   // ---- Balón de Oro: puntaje combinado contra TODO el pool ----
   const calidadJugador = GameConfig.calcularCalidadBalonDeOro(
-    temporadaActual.promedio, temporadaActual.goles + temporadaActual.asistencias, temporadaActual.trofeos.length > 0
+    temporadaActual.promedio, temporadaActual.goles + temporadaActual.asistencias, ganasteTrofeoDeEquipoOSeleccion
   );
   const mejorCalidad = candidatos.reduce((mejor, c) => {
     const calidad = GameConfig.calcularCalidadBalonDeOro(c.promedio, c.goles + c.asistencias, c.ganoTrofeo);
@@ -1024,8 +1030,11 @@ function finalizarTemporada() {
   // Premios mundiales — después de los trofeos de club (el Balón de Oro
   // mira si YA ganaste algo esta temporada) y antes de archivar la
   // temporada, para que los trofeos ganados queden en el mismo historial.
+  // Se captura el array ACÁ, antes de otorgar ningún premio individual —
+  // ver el porqué en el comentario de evaluarPremiosMundiales.
+  const ganasteTrofeoDeEquipoOSeleccion = temporadaActual.trofeos.length > 0;
   const candidatosPremios = generarCandidatosPremiosMundiales();
-  mensajesFinales.push(...evaluarPremiosMundiales(candidatosPremios));
+  mensajesFinales.push(...evaluarPremiosMundiales(candidatosPremios, ganasteTrofeoDeEquipoOSeleccion));
 
   // Clasificación a competición internacional para la PRÓXIMA temporada.
   // Si la confederación no tiene ese nivel de competición (ej. CONCACAF

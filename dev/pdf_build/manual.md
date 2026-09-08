@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 0.9.0-Beta — publicada el 8 de septiembre de 2026 · 11:46**
+**Versión 0.9.1-Beta — publicada el 8 de septiembre de 2026 · 13:28**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -54,6 +54,8 @@ A medida que completás los pasos, tu ficha (a la izquierda en escritorio, al fi
 Te van a ofrecer **4 clubes** para arrancar. Cada oferta te muestra el nombre del club, su liga, y la bandera del país de esa liga — sin ninguna etiqueta ni número que te diga qué tan grande es cada uno, para que decidas por sensación, no por matemática.
 
 Elegí con cabeza: cuanto más grande el club y más competitiva la liga, **más alto vas a arrancar de nivel**, pero también vas a tener más competencia por un lugar en el equipo titular y menos margen para errores al principio. Un club chico te da un arranque más tranquilo; uno grande, un desafío mayor desde el día uno. No hay una respuesta correcta — depende de qué carrera querés vivir.
+
+Y esto no es solo cosa del arranque: el nivel de la liga sigue pesando en tus números durante **toda** tu carrera ahí. El mismo OVR rinde claramente mejor en una liga floja (donde estás por encima de la media de tus rivales) que en una top (donde ese mismo nivel te deja por debajo) — un 70 de nivel en una liga chica puede sacar casi el doble de goles en una temporada que ese mismo 70 jugando en una de las grandes ligas europeas.
 
 Una vez que elegís, arranca tu Temporada 1.
 
@@ -158,6 +160,8 @@ Tu **OVR** es tu nivel general — el número que decide qué tan bien rendís y
 Además de la edad, cada jugador que creás tiene un **techo real** oculto — el nivel más alto que ese jugador en particular puede llegar a alcanzar, sorteado en el momento de crear el personaje y que nunca vas a ver expuesto en ningún número. La mayoría de las carreras van a terminar como jugadores sólidos (entre 80 y 89 de pico), una minoría se va a quedar más floja, y otra minoría —la menos común— va a llegar a ser una verdadera estrella de 90 para arriba. Cerca de tu techo, subir cuesta mucho más… pero nunca es del todo imposible: de vez en cuando, con una racha realmente buena, podés sorprender y pasarte por uno o dos puntos.
 
 Además, cada jugador que creás tiene un **ritmo de desarrollo propio**, que tampoco vas a ver expuesto en ningún número: con exactamente las mismas decisiones, dos carreras no van a crecer (ni decaer) igual — alguna vez te va a tocar un jugador de desarrollo más lento, y otras veces un verdadero talento precoz que además se sostiene mejor con la edad. Es parte de la sorpresa de cada carrera nueva.
+
+Si arrancaste en un club chico con un nivel bajo, los primeros años vas a mejorar **más rápido de lo normal** — mientras seas joven y sigas por debajo de un nivel ya consolidado, cada bloque de partidos te suma un poco más de lo que sumaría más adelante en la carrera. Es la forma en que el juego representa a un pibe que recién debuta y todavía tiene mucho margen para pulirse rápido — un veterano que bajó de nivel por la edad no tiene este empujón, ese es un problema distinto.
 
 ---
 

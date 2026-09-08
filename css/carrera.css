@@ -688,11 +688,15 @@
   text-align: center;
 }
 .trophy-card__name-under {
-  font-size: 0.56rem;
+  font-size: 0.5rem;
   font-weight: 700;
   line-height: 1.15;
   color: var(--trophy-gold);
-  max-width: 3.6rem;
+  /* Un poco más ancho que antes (3.6rem) + letra más chica: nombres
+     largos ("UEFA Europa League", "Liga Premier Rusa") entraban en 2-3
+     líneas, lo que alargaba de golpe la tarjeta del trofeo bastante más
+     que el resto — con esto entran en 1-2 líneas la gran mayoría. */
+  max-width: 4.4rem;
   display: none;
 }
 .timeline-item--expandida .trophy-card__name-under {
@@ -1235,6 +1239,13 @@
   .timeline-item__mtrophies {
     display: flex;
     justify-content: center;
+    /* flex-start (no el default "stretch"): al revelar el nombre debajo
+       de un ícono, esa tarjeta se alarga, y con "stretch" el resto de los
+       íconos de la misma fila se re-centraban verticalmente para
+       acompañar esa altura nueva — se leía como que los trofeos "se
+       movían" al tocar la tarjeta. Con flex-start quedan clavados arriba:
+       solo crece el espacio de abajo, donde aparece el texto. */
+    align-items: flex-start;
     gap: 0.35rem;
     padding-top: 0.4rem;
     border-top: 1px solid var(--card-border);

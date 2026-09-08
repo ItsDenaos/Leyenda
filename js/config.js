@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.9.0-Beta",
-  FECHA_PUBLICACION: "8 de septiembre de 2026 · 11:46",
+  VERSION: "0.9.1-Beta",
+  FECHA_PUBLICACION: "8 de septiembre de 2026 · 13:28",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
@@ -782,12 +782,16 @@ const GameConfig = {
   // una liga de fuerza 93 "espera" un nivel de jugador cercano al techo
   // (95), una de fuerza 55 espera un nivel bastante más modesto (~75).
   // La diferencia entre tu OVR y esa referencia (`ventaja`) empuja el
-  // factor para arriba o para abajo — el mismo 65 OVR rinde notoriamente
+  // factor para arriba o para abajo — el mismo OVR rinde notoriamente
   // mejor en una liga floja (donde está por encima de la media) que en
-  // una top (donde queda muy por debajo).
-  FACTOR_LIGA_COEFICIENTE: 0.015,
-  FACTOR_LIGA_MIN: 0.5,
-  FACTOR_LIGA_MAX: 1.8,
+  // una top (donde queda muy por debajo). Con estos valores, un 70 OVR en
+  // Chile (fuerza 60) saca un factor ~0.82; ese mismo 70 en la Premier
+  // (fuerza 96) saca ~0.36 — más de 2 veces mejor en Chile con el
+  // idéntico OVR. Antes (coeficiente 0.015, piso 0.5) esa misma
+  // comparación daba ~0.89 vs ~0.60, apenas 1.5 veces.
+  FACTOR_LIGA_COEFICIENTE: 0.024,
+  FACTOR_LIGA_MIN: 0.35,
+  FACTOR_LIGA_MAX: 2.2,
 
   factorPorFuerzaLiga(ovr, fuerzaLiga) {
     if (fuerzaLiga == null) return 1;
@@ -884,6 +888,30 @@ const GameConfig = {
     return GameConfig.OVR_EDAD_FACTOR_MIN;
   },
 
+  // "Salto de calidad" del arranque de carrera: sin esto, un jugador que
+  // debuta en un club humilde (OVR ~50-55) tarda 8-12 temporadas — de una
+  // carrera de ~26-27 — en cruzar el umbral de 70, más de un tercio del
+  // juego entero rindiendo con números flojos por partida doble (poco OVR
+  // Y, encima, poco factorPorFuerzaLiga). Este multiplicador NO toca las
+  // 3 etapas de arriba (factorCrecimientoPorEdad) ni el declive por edad
+  // más abajo (factorDeclivePorEdad) — es aparte, y solo empuja el lado
+  // del CRECIMIENTO cuando hay crecimiento de verdad (nunca agrava una
+  // racha floja, ver ajustarOvrTramo). Solo aplica en la etapa de Prime
+  // (edad ≤ OVR_EDAD_PRIME_MAX, donde el crecimiento ya es pleno) y por
+  // debajo del umbral — un veterano que bajó de nivel en la meseta o el
+  // ocaso NUNCA lo activa, aunque su OVR haya caído por debajo del umbral:
+  // el "salto de calidad" es cosa de pibe que recién arranca, no de
+  // alguien en decadencia.
+  UMBRAL_CRECIMIENTO_ACELERADO: 72,
+  CRECIMIENTO_ACELERADO_FACTOR_MAX: 1.8,
+
+  factorAprendizajeJoven(ovrActual, edad) {
+    if (edad > GameConfig.OVR_EDAD_PRIME_MAX) return 1;
+    if (ovrActual >= GameConfig.UMBRAL_CRECIMIENTO_ACELERADO) return 1;
+    const progreso = (GameConfig.UMBRAL_CRECIMIENTO_ACELERADO - ovrActual) / (GameConfig.UMBRAL_CRECIMIENTO_ACELERADO - GameConfig.OVR_CARRERA_MIN);
+    return 1 + GameConfig.clamp(progreso, 0, 1) * (GameConfig.CRECIMIENTO_ACELERADO_FACTOR_MAX - 1);
+  },
+
   // Caída natural por edad: desde OVR_EDAD_DECLIVE_INICIO empieza a restar
   // OVR de a poco (aunque el jugador rinda bien), superpuesta a la meseta
   // de arriba en vez de arrancar recién cuando esta termina — así el neto
@@ -972,7 +1000,11 @@ const GameConfig = {
 
   ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad, factorTalento = 1, potencialTecho = GameConfig.OVR_CARRERA_MAX) {
     const factorEdad = GameConfig.factorCrecimientoPorEdad(edad);
-    const deltaBase = (GameConfig.OVR_TRAMO_BASE + rendimientoAcumulado / GameConfig.OVR_TRAMO_RENDIMIENTO_DIVISOR) * factorEdad * factorTalento;
+    let deltaBase = (GameConfig.OVR_TRAMO_BASE + rendimientoAcumulado / GameConfig.OVR_TRAMO_RENDIMIENTO_DIVISOR) * factorEdad * factorTalento;
+    // Solo se acelera el crecimiento cuando HAY crecimiento (deltaBase ya
+    // positivo) — una racha floja no se agrava por estar en esta etapa,
+    // el multiplicador nunca empuja para el lado negativo.
+    if (deltaBase > 0) deltaBase *= GameConfig.factorAprendizajeJoven(ovrActual, edad);
     // Mismo sorteo de talento, invertido: 1.2 (muy talentoso) atenúa el
     // desgaste a un 80%; 0.85 (menos talentoso) lo agrava a un 115%.
     const declive = GameConfig.factorDeclivePorEdad(edad) * (2 - factorTalento);
