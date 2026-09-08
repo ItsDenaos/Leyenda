@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 0.6.0-Beta — publicada el 7 de septiembre de 2026 · 15:33**
+**Versión 0.7.0-Beta — publicada el 7 de septiembre de 2026 · 23:48**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -43,7 +43,7 @@ La primera pantalla te pide 3 cosas, en 3 pasos:
 
 - **¿Quién eres?** — tu apellido (va impreso en tu camiseta), tu edad de debut (entre 16 y 19 años) y tu pierna hábil.
 - **¿De dónde eres?** — tu país. Esto importa: si tu país tiene una liga real cargada en el juego (23 de los 46 países disponibles, de Argentina y España a Bolivia, Costa Rica o Paraguay), vas a arrancar tu carrera ahí. Si tu país no tiene liga propia, vas a debutar "de extranjero" en una de las 5 grandes ligas de Europa (Premier League, La Liga, Serie A, Bundesliga o Ligue 1), sorteada al azar.
-- **¿Dónde juegas?** — tu posición en la cancha, entre las 12 clásicas (arquero, defensores, mediocampistas y delanteros).
+- **¿Dónde juegas?** — tu posición en la cancha, entre las 12 clásicas (arquero, defensores, mediocampistas y delanteros). No es solo estética: define tu perfil de estadísticas. Un delantero va a acumular goles por encima de todo; un mediocampista o un lateral van a repartir bastantes más asistencias que goles (el lateral, todavía más — piensa en centros al área); un defensor central suma algún gol ocasional de pelota parada, pero casi no asiste. Y a mayor OVR, más lejos de lo normal rinden esas estadísticas — un crack de verdad puede terminar una temporada con más goles que partidos jugados, con algún que otro doblete o hat-trick en el camino.
 
 A medida que completás los pasos, tu ficha (a la izquierda en escritorio, al final en el celular) se va llenando en vivo, con tu camiseta y tus datos. Tu número de camiseta te lo asigna el club al debutar — no se elige acá.
 
@@ -139,7 +139,7 @@ Cada tanto, en una pausa de decisiones, en vez de las 2 tarjetas de siempre vas 
 
 El riesgo de lesionarte sube un poco con la edad. No hay forma de evitarlo del todo (las decisiones que tomás no lo previenen), es parte del riesgo de cualquier carrera — pero las graves son mucho menos frecuentes que las leves.
 
-Mientras estés lesionado, tu tarjeta de temporada se marca con un resplandor rojo y un 🤕 — para que de un vistazo sepas que hay algo importante pasando, incluso si no llegaste a leer el parte médico.
+Mientras estés lesionado, tu tarjeta de temporada se marca con un borde y un resplandor rojo — para que de un vistazo sepas que hay algo importante pasando, incluso si no llegaste a leer el parte médico.
 
 La buena noticia: el OVR que perdés por una lesión **no es para siempre**. Cuando te dan de alta, recuperás una parte de ese OVR — fue un golpe físico puntual, no que te volviste peor jugador de la nada. El mensaje de "te recuperaste" te va a avisar cuánto recuperaste.
 
@@ -149,13 +149,13 @@ La buena noticia: el OVR que perdés por una lesión **no es para siempre**. Cua
 
 Tu **OVR** es tu nivel general — el número que decide qué tan bien rendís y qué clubes se pueden interesar en vos. Sube solo, de a poco, en cada bloque de partidos, más rápido cuanto mejor te vaya (buen rendimiento en tus decisiones = crecimiento más fuerte).
 
-- **Hasta los 26 años**, crecés a tu ritmo pleno.
-- **De 27 a 31**, seguís creciendo pero cada vez más despacio.
-- **De 32 en adelante**, el crecimiento se vuelve lento — y además empieza el **declive natural**: aunque te vaya bien, vas a perder algo de nivel con el tiempo, cada vez más marcado a partir de los 39.
+- **Hasta los 28 años**, crecés a tu ritmo pleno.
+- **De 29 a 34**, entrás en tu meseta: cuesta cada vez más sumar, y hacia el final de esa ventana ya es normal empezar a bajar un poco en vez de seguir subiendo. Tu pico como jugador suele caer en algún punto de esta etapa.
+- **De 35 en adelante**, el crecimiento por buenas decisiones prácticamente desaparece y el desgaste natural sigue creciendo, cada vez más marcado — para cuando te llega el retiro obligatorio (entre los 41 y 45), lo normal es que ya hayas bajado bastante desde tu mejor momento, no que sigas cerca de tu techo.
 
-No hay techo fijo ni piso fijo salvo los extremos absolutos del juego — un jugador con una gran carrera puede llegar a niveles de leyenda real; uno que se estanca puede quedarse relegado a clubes chicos para siempre.
+Además de la edad, cada jugador que creás tiene un **techo real** oculto — el nivel más alto que ese jugador en particular puede llegar a alcanzar, sorteado en el momento de crear el personaje y que nunca vas a ver expuesto en ningún número. La mayoría de las carreras van a terminar como jugadores sólidos (entre 80 y 89 de pico), una minoría se va a quedar más floja, y otra minoría —la menos común— va a llegar a ser una verdadera estrella de 90 para arriba. Cerca de tu techo, subir cuesta mucho más… pero nunca es del todo imposible: de vez en cuando, con una racha realmente buena, podés sorprender y pasarte por uno o dos puntos.
 
-Además, cada jugador que creás tiene un **ritmo de desarrollo propio**, que nunca vas a ver expuesto en ningún número: con exactamente las mismas decisiones, dos carreras no van a crecer igual — alguna vez te va a tocar un jugador de desarrollo más lento, y otras veces un verdadero talento precoz. Es parte de la sorpresa de cada carrera nueva.
+Además, cada jugador que creás tiene un **ritmo de desarrollo propio**, que tampoco vas a ver expuesto en ningún número: con exactamente las mismas decisiones, dos carreras no van a crecer (ni decaer) igual — alguna vez te va a tocar un jugador de desarrollo más lento, y otras veces un verdadero talento precoz que además se sostiene mejor con la edad. Es parte de la sorpresa de cada carrera nueva.
 
 ---
 
@@ -163,7 +163,7 @@ Además, cada jugador que creás tiene un **ritmo de desarrollo propio**, que nu
 
 Cada temporada jugás, según tu club: tu **liga doméstica** siempre, tu **copa nacional** siempre, y una **competición internacional** (Champions/Libertadores o su segundo nivel) **solo si clasificaste** la temporada anterior por haber tenido una gran campaña.
 
-Al cierre de cada temporada te enterás si saliste campeón — cuanto mejor le haya ido a tu club (tu nivel, tu forma, y cómo vinieron tus decisiones "de equipo" en el año), más chances tenés. Ganar la liga es difícil y reservado casi siempre a los grandes; la copa nacional es bastante más pareja, con chances reales incluso para un club chico en un buen año.
+Al cierre de cada temporada te enterás si saliste campeón — cuanto mejor le haya ido a tu club (su nivel, tu forma, cómo vinieron tus decisiones "de equipo" en el año, **y tu propio rendimiento estadístico de la temporada**) más chances tenés. Una temporada floja para vos pesa poco; una temporada de ensueño (muchos goles, asistencias y premios a la figura del partido) empuja de verdad las chances de título de tu equipo, no solo las decisiones que tomaste en los eventos. Ganar la liga es difícil y reservado casi siempre a los grandes; la copa nacional es bastante más pareja, con chances reales incluso para un club chico en un buen año.
 
 Todos los trofeos que ganás quedan guardados en tu historial, con su escudo real — incluidos los que ganes con tu selección nacional (ver [sección 8](#8-tu-selección-nacional)), mezclados junto a los de club.
 

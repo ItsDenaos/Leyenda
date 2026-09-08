@@ -110,7 +110,7 @@
   <h1>LEYENDA</h1>
   <p class="cover__sub">Documentación técnica completa del proyecto</p>
   <div class="cover__meta">
-    <div><strong>Versión:</strong> 0.6.0-Beta — publicada el 7 de septiembre de 2026</div>
+    <div><strong>Versión:</strong> 0.7.0-Beta — publicada el 7 de septiembre de 2026</div>
     <div><strong>Alcance:</strong> Cada fórmula, cada constante y dónde vive cada pieza en el código</div>
     <div><strong>Motor:</strong> HTML / CSS / JavaScript vanilla, sin dependencias ni build</div>
   </div>
@@ -118,7 +118,7 @@
 
 ﻿<h1>Leyenda ⚽</h1>
 <p>Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.</p>
-<p><strong>Versión:</strong> 0.6.0-Beta — publicada el 7 de septiembre de 2026 · 15:33.</p>
+<p><strong>Versión:</strong> 0.7.0-Beta — publicada el 7 de septiembre de 2026 · 23:48.</p>
 <blockquote>
 <p>Este documento describe <strong>absolutamente toda la lógica del juego</strong>: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás &quot;cómo se juega&quot; en términos de jugador, ver el <em>Manual de Juego</em> aparte.</p>
 </blockquote>
@@ -372,6 +372,7 @@ pesoTitular = clamp(pesoActual + delta, 0.05, 0.95)
 <pre><code>prob = clamp(pesoTitular + (ovr − 55) × 0.01 + rendimientoAcumulado × 0.03, 0.08, 0.95)
 </code></pre>
 <p>El OVR todavía empuja un poco (un jugador claramente mejor que el resto del plantel tiene ventaja incluso saliendo de una mala racha) y las decisiones del tramo aportan su granito, pero <code>pesoTitular</code> es el factor dominante — ya no decide todo un sorteo desde cero.</p>
+<p><strong>La etiqueta que ves antes de jugar el primer tramo de una temporada nueva</strong> (<code>crearTemporada</code>, <a href="js/carrera.js:171">carrera.js:171</a>) ya no arranca fija en &quot;Suplente&quot; — se proyecta directo desde el <code>pesoTitular</code> heredado (<code>pesoTitular ≥ 0.5</code> → Titular). Antes quedaba en <code>false</code> a secas hasta que se simulaba el primer tramo, así que toda temporada nueva mostraba &quot;Suplente&quot; un instante, sin importar cuánto te hubieras ganado el puesto la temporada anterior — se leía como &quot;una gran temporada no sirvió de nada&quot;.</p>
 <p><strong>Probabilidad de jugar cada partido</strong> — <code>probabilidadJugar(ovr, rendimientoAcumulado, forma, esTitular)</code> (<a href="js/config.js:779">config.js:779-785</a>):</p>
 <pre><code>prob = 0.65                              (PARTICIPACION_BASE)
      + (ovr − 55) × 0.01                 (PARTICIPACION_OVR_REFERENCIA)
@@ -419,8 +420,8 @@ recortado entre 0.15 y 1
 <p><code>partidosJugador = redondeoEstocastico(partidosClub × prob)</code> (ver &quot;redondeo estocástico&quot; en <a href="#">sección 11</a>), recortado entre 0 y los partidos totales del club ese tramo. Si hay una lesión activa, <code>partidosJugador</code> es directamente 0, sin pasar por esta fórmula.</p>
 <hr>
 <h2 id="10-estadísticas-del-tramo-goles-asistencias-mvp-rating">10. Estadísticas del tramo: goles, asistencias, MVP, rating</h2>
-<p><code>GameConfig.simularTramo({ partidos, grupo, ovr, rendimientoAcumulado })</code> (<a href="js/config.js:583">config.js:583-603</a>) recorre partido por partido (de los que jugás vos, no los del equipo).</p>
-<p><strong>Grupo de posición</strong> (<code>GRUPOS_POSICION</code>, <a href="js/config.js:558">config.js:558-563</a>): cada una de las 12 posiciones cae en uno de 4 grupos —arquero, defensa, medio, ataque— cada uno con su propia propensión a convertir:</p>
+<p><code>GameConfig.simularTramo({ partidos, grupo, ovr, rendimientoAcumulado })</code> (<a href="js/config.js:760">config.js:760-782</a>) recorre partido por partido (de los que jugás vos, no los del equipo).</p>
+<p><strong>Grupo de posición</strong> (<code>GRUPOS_POSICION</code>, <a href="js/config.js:695">config.js:695-700</a>): cada una de las 12 posiciones cae en uno de <strong>5 grupos</strong> — antes &quot;defensa&quot; era uno solo (central y lateral idénticos); separarlos deja que el lateral aporte sobre todo asistencias (centros) y el central sume algún gol de cabeza mucho menos seguido:</p>
 <table>
 <thead>
 <tr>
@@ -431,77 +432,126 @@ recortado entre 0.15 y 1
 </thead>
 <tbody><tr>
 <td>Arquero</td>
-<td>1%</td>
-<td>1%</td>
+<td>0.5%</td>
+<td>0.5%</td>
 </tr>
 <tr>
-<td>Defensa</td>
-<td>12%</td>
-<td>14%</td>
+<td>Central (DFC)</td>
+<td>7%</td>
+<td>5%</td>
 </tr>
 <tr>
-<td>Medio</td>
-<td>24%</td>
-<td>34%</td>
+<td>Lateral (LI/LD)</td>
+<td>5%</td>
+<td>20%</td>
 </tr>
 <tr>
-<td>Ataque</td>
-<td>55%</td>
+<td>Medio (MCD/MC/MI/MD/MCO)</td>
+<td>16%</td>
 <td>28%</td>
+</tr>
+<tr>
+<td>Ataque (EI/ED/DC)</td>
+<td>48%</td>
+<td>20%</td>
 </tr>
 </tbody></table>
 <p><strong>Factor de forma general del tramo</strong>:</p>
-<pre><code>factorOvr   = 0.85 + (ovr − 50) / 50        (~neutral en el debut, crece fuerte después)
-factorForma = 1 + clamp(rendimientoAcumulado, −12, 12) × 0.05
-factor      = max(0.3, factorOvr × factorForma)
+<pre><code>factorOvr(ovr) = ESTADISTICAS_OVR_BASE + progreso^ESTADISTICAS_OVR_EXPONENTE × ESTADISTICAS_OVR_RANGO
+                 (progreso = (ovr − 45) / 54, recortado a 0-1; BASE=0.5, EXPONENTE=1.6, RANGO=2.3)
+factorForma    = 1 + clamp(rendimientoAcumulado, −12, 12) × 0.05
+factor         = max(0.3, factorOvr × factorForma)
 </code></pre>
-<p>Por cada partido: <code>hizoGol</code> sale con probabilidad <code>propensiónGol × factor</code>, <code>hizoAsistencia</code> con <code>propensiónAsistencia × factor</code> (tiradas independientes entre sí).</p>
-<p><strong>MVP y rating del partido</strong> están conectados a si metiste gol/asistencia ESE partido puntual (no son 3 sorteos independientes):</p>
-<pre><code>prob. de MVP  = 0.09 × factor + 0.14 (si hizo gol) + 0.08 (si hizo asistencia)
-rating        = clamp(6.5 + (factor − 1) × 2.5 + 0.7 (si gol) + 0.4 (si asistencia) + ruido(±0.4), 5, 10)
+<p>Es una curva (exponente &gt; 1), no una recta: en el OVR mínimo (45) el factor es 0.5, en el máximo (99) es 2.8 — más de 5x de diferencia de punta a punta, contra apenas 2.15x de la fórmula anterior (una recta suave que hacía que un crack de 95 rindiera casi igual que un jugador mediocre de 65).</p>
+<p><strong>Goles por partido, sin techo real</strong> — <code>golesEnPartido(probGol)</code> (<a href="js/config.js:750">config.js:750-758</a>), con <code>probGol = clamp(propensiónGol × factor, 0, 0.9)</code>:</p>
+<pre><code>si no sale (prob. 1 − probGol):           0 goles
+si sale:                                   1 gol
+  con prob. probGol × 0.4 (PROB_SEGUNDO_GOL_FACTOR):   2 goles (doblete)
+    con prob. probGol × 0.18 (PROB_TERCER_GOL_FACTOR):  3 goles (hat-trick)
+</code></pre>
+<p>Antes era un booleano puro (como mucho 1 gol por partido), así que la temporada entera jamás podía superar la cantidad de partidos jugados, por más crack que fueras — ahora un delantero de nivel alto puede perfectamente terminar una temporada con más goles que partidos. Las asistencias siguen siendo una tirada única por partido (<code>hizoAsistencia</code>, con <code>probAsistencia = clamp(propensiónAsistencia × factor, 0, 0.9)</code>).</p>
+<p><strong>MVP y rating del partido</strong> están conectados a cuántos goles/si hubo asistencia ESE partido puntual (no son sorteos independientes) — con un doblete o hat-trick, el bono escala con la cantidad de goles, no es todo-o-nada:</p>
+<pre><code>prob. de MVP  = 0.09 × factor + golesPartido × 0.14 + 0.08 (si hizo asistencia)
+rating        = clamp(6.5 + (factor − 1) × 2.5 + golesPartido × 0.7 + 0.4 (si asistencia) + ruido(±0.4), 5, 10)
 </code></pre>
 <p>El resultado del tramo (goles, asistencias, MVPs, suma de ratings) se acumula a las estadísticas de la temporada.</p>
 <hr>
 <h2 id="11-progresión-de-ovr">11. Progresión de OVR</h2>
-<p><code>ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad)</code> (<a href="js/config.js:670">config.js:670-682</a>) — se llama una vez por tramo, después de simular las estadísticas de ese tramo:</p>
-<pre><code>deltaBase = (0.7 + rendimientoAcumulado / 6) × factorCrecimientoPorEdad(edad)
-declive   = factorDeclivePorEdad(edad)
+<p><code>ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad, factorTalento, potencialTecho)</code> (<a href="js/config.js:913">config.js:913-936</a>) — se llama una vez por tramo, después de simular las estadísticas de ese tramo:</p>
+<pre><code>deltaBase = (0.7 + rendimientoAcumulado / 6) × factorCrecimientoPorEdad(edad) × factorTalento
+declive   = factorDeclivePorEdad(edad) × (2 − factorTalento)
 deltaCrudo = deltaBase − declive
+si deltaCrudo &gt; 0 y ovrActual + deltaCrudo &gt; potencialTecho:
+  deltaCrudo -= exceso × (1 − POTENCIAL_TECHO_FACTOR_MIN)   (recorta lo que se pasaría del techo, deja pasar un resto)
 delta = redondeoEstocastico(deltaCrudo), recortado entre:
         · [-1, +3]  en circunstancias normales (sin declive por edad)
         · [-10, +3] si ya hay declive por edad actuando
 ovrNuevo = clamp(ovrActual + delta, 45, 99)     (OVR_CARRERA_MIN / MAX — piso y techo absolutos)
 </code></pre>
-<p><strong>Redondeo estocástico</strong> (<a href="js/config.js:658">config.js:658-664</a>): en vez de redondear siempre igual, un valor de 0.4 da +1 el 40% de las veces y 0 el 60% restante — así los cambios chicos de vez en cuando pasan, en vez de quedar completamente anulados por el redondeo.</p>
-<p><strong>Freno de crecimiento por edad</strong> — <code>factorCrecimientoPorEdad(edad)</code> (<a href="js/config.js:631">config.js:631-638</a>):</p>
+<p><strong>Redondeo estocástico</strong> (<a href="js/config.js:790">config.js:790-796</a>): en vez de redondear siempre igual, un valor de 0.4 da +1 el 40% de las veces y 0 el 60% restante — así los cambios chicos de vez en cuando pasan, en vez de quedar completamente anulados por el redondeo.</p>
+<h3>11.1 Curva de edad en 3 etapas</h3>
+<p>Antes el freno de crecimiento se estabilizaba en 35% del ritmo pleno <strong>para siempre</strong> desde los 32 años, y el desgaste natural era demasiado débil para competirle — un jugador con buen rendimiento seguía subiendo bastante incluso pasados los 35-40. Ahora:</p>
+<p><strong>Freno de crecimiento por edad</strong> — <code>factorCrecimientoPorEdad(edad)</code> (<a href="js/config.js:818">config.js:818-825</a>):</p>
 <table>
 <thead>
 <tr>
+<th>Etapa</th>
 <th>Edad</th>
 <th>Factor</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>≤ 26 años</td>
+<td>Prime</td>
+<td>≤ 28 años</td>
 <td>1.0 (crecimiento pleno)</td>
 </tr>
 <tr>
-<td>27 a 31</td>
-<td>interpola linealmente de 1.0 a 0.35</td>
+<td>Meseta</td>
+<td>29 a 34</td>
+<td>interpola linealmente de 1.0 a 0.15</td>
 </tr>
 <tr>
-<td>32+</td>
-<td>fijo en 0.35 (un tercio del ritmo pleno — nunca llega a cero)</td>
+<td>Ocaso</td>
+<td>35+</td>
+<td>fijo en 0.15 (un resto mínimo — nunca llega a cero del todo)</td>
 </tr>
 </tbody></table>
-<p><strong>Declive natural por edad</strong> — <code>factorDeclivePorEdad(edad)</code> (<a href="js/config.js:649">config.js:649-656</a>), independiente del freno de arriba:</p>
+<p><strong>Desgaste natural por edad</strong> — <code>factorDeclivePorEdad(edad)</code> (<a href="js/config.js:840">config.js:840-847</a>), superpuesto a la meseta de arriba en vez de arrancar recién cuando termina:</p>
 <ul>
-<li>Antes de los 32 años: 0 (sin declive).</li>
-<li>De 32 a 39: resta <strong>0.08 de OVR por tramo, por cada año</strong> por encima de 32.</li>
-<li>De 39 en adelante: además, resta <strong>0.35 por tramo, por cada año</strong> por encima de 39 (la caída se acelera fuerte).</li>
+<li>Antes de los 30 años: 0 (sin desgaste).</li>
+<li>De 30 a 37: resta <strong>0.06 de OVR por tramo, por cada año</strong> por encima de 30.</li>
+<li>De 37 en adelante: además, resta <strong>0.22 por tramo, por cada año</strong> por encima de 37 (la caída se acelera).</li>
 </ul>
-<p>En cuanto el declive es mayor a 0, el piso de variación por tramo pasa de −1 a <strong>−10</strong> (<code>OVR_TRAMO_DECLIVE_VARIACION_MIN</code>) — nadie se mantiene en su pico para siempre.</p>
-<p><strong>Talento oculto</strong>: al arrancar la carrera se sortea, una única vez, un multiplicador entre <strong>0.85x y 1.2x</strong> (<code>TALENTO_MIN</code>/<code>MAX</code>, <a href="js/config.js:695">config.js:695-696</a>; sorteado en <a href="js/carrera.js:750">carrera.js:750-751</a>) que se aplica solo a <code>deltaBase</code> (el crecimiento, no el declive) dentro de <code>ajustarOvrTramo</code> — así, con las mismas decisiones de punta a punta, dos carreras no crecen exactamente igual: a veces te toca un desarrollo más lento, a veces un talento precoz. No se expone en ningún número visible del juego.</p>
+<p>Con estos números, el neto (crecimiento − desgaste) pasa de &quot;todavía sumás algo&quot; a &quot;cuesta mantenerte&quot; de forma gradual dentro de la ventana 29-34, en vez de un quiebre brusco a los 32 — el pico típico de una carrera queda entre los 30-33 años, y para el retiro obligatorio (41-45) ya bajó de forma notable. En cuanto el desgaste es mayor a 0, el piso de variación por tramo pasa de −1 a <strong>−10</strong> (<code>OVR_TRAMO_DECLIVE_VARIACION_MIN</code>).</p>
+<h3>11.2 Talento oculto y techo de potencial</h3>
+<p><strong>Talento oculto</strong>: al arrancar la carrera se sortea, una única vez, un multiplicador entre <strong>0.85x y 1.2x</strong> (<code>TALENTO_MIN</code>/<code>MAX</code>, <a href="js/config.js:870">config.js:870-871</a>; sorteado en <a href="js/carrera.js:958">carrera.js:958-960</a>) que acelera el crecimiento (<code>deltaBase</code>) y, invertido, atenúa el desgaste (<code>× (2 − factorTalento)</code>: 1.2 lo deja en 80%, 0.85 lo agrava a 115%) — con las mismas decisiones de punta a punta, dos carreras no crecen (ni declinan) exactamente igual.</p>
+<p><strong>Techo de potencial</strong> (<code>potencialTecho</code>, sorteado una única vez en <a href="js/carrera.js:962">carrera.js:962-970</a>, nunca expuesto en ningún número visible): sin esto, el crecimiento del prime empujaba casi cualquier carrera por encima de 90 — no era una excepción, era casi aritmética garantizada. <code>sortearPotencialTecho()</code> (<a href="js/config.js:902">config.js:902-911</a>) reparte:</p>
+<table>
+<thead>
+<tr>
+<th>Probabilidad</th>
+<th>Techo sorteado</th>
+<th>Lectura</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5%</td>
+<td>72-83</td>
+<td>Jugador modesto, nunca despega del todo</td>
+</tr>
+<tr>
+<td>55%</td>
+<td>85-90</td>
+<td>Profesional sólido</td>
+</tr>
+<tr>
+<td>40%</td>
+<td>91-98</td>
+<td>Estrella de élite</td>
+</tr>
+</tbody></table>
+<p>El crecimiento no se frena &quot;acercándose&quot; al techo (esa fue la primera versión probada — combinada con el freno de edad de la misma ventana 29-34, casi nadie llegaba cerca de un techo alto a tiempo). En cambio, actúa a pleno ritmo hasta el final, y <code>ajustarOvrTramo</code> solo recorta lo que un tramo puntual se pasaría de largo del techo, dejando pasar un resto (<code>POTENCIAL_TECHO_FACTOR_MIN = 0.08</code>, un 8%) — así una racha buenísima puede &quot;sorprender&quot; y pasarlo por uno o dos puntos en casos raros. Los rangos de la tabla de arriba no son directamente &quot;dónde termina la carrera&quot; (varias con techo alto se quedan cortas por el camino, sea por mala racha o por no alcanzar el límite superior del rango) — se calibraron corriendo ~3000 carreras simuladas contra la fórmula real hasta que el <strong>pico final</strong> de OVR quedara repartido ~10% por debajo de 80, ~60% entre 80-89, ~30% en 90+.</p>
+<p>Al fichar por un club nuevo se garantiza un mínimo margen de crecimiento sobre el OVR inicial (<code>potencialTecho = max(sorteo, ovrInicial + 5)</code>) — rarísimo que choquen, pero un debutante en un club grande puede arrancar con 65, y sin este piso una tirada floja del techo lo dejaría prácticamente congelado desde el primer tramo.</p>
 <hr>
 <h2 id="12-estado-de-forma">12. Estado de forma</h2>
 <p>7 estados (<code>FORM_STATES</code>, <a href="js/config.js:229">config.js:229-237</a>), de mejor a peor: <strong>Inspirado 🔥 → En plenitud 💪 → Animado 🙂 → Regular 😐 → Desanimado 😕 → Bajo de forma 📉 → Tocado físicamente 🤕</strong>.</p>
@@ -583,14 +633,16 @@ ovrNuevo = clamp(ovrActual + delta, 45, 99)     (OVR_CARRERA_MIN / MAX — piso 
 <p>La economía de un club nunca cae debajo del 60% de la de su propia liga (<code>ECONOMIA_PISO_LIGA</code>, <code>economiaEfectiva</code>, <a href="js/config.js:63">config.js:63-67</a>) — un club chico de una liga rica igual tiene más plata que casi cualquier gigante de una liga menor, por el reparto de TV.</p>
 <p>Los ~25 clubes más reconocibles del mundo (Real Madrid, Boca Juniors, PSG, Newcastle, etc.) tienen estos 3 valores puestos a mano; el resto se generó una sola vez a partir de su antiguo nivel 1-3 y la liga a la que pertenece, con una variación estable por club (mismo id → siempre el mismo resultado) para que no todos los equipos de un mismo nivel queden con el número idéntico — ver el comentario de formato en <a href="js/database.js:9">database.js:9-38</a>.</p>
 <h3>14.1 Fuerza de campaña</h3>
-<p>Todo sale de un único número por temporada, la <strong>&quot;fuerza de campaña&quot;</strong> — <code>calcularFuerzaCampana(equipo, liga, forma, equipoAcumuladoTemporada)</code> (<a href="js/config.js:835">config.js:835-843</a>):</p>
-<pre><code>calidadClub          = calidadFuerzaClub(equipo, liga)   (SOLO el eje fuerza, 55% equipo + 45% liga)
-calidadForma         = FORMA_CALIDAD[forma]     (1.0 inspirado ... 0.05 lesionado)
-calidadEquipoAcum    = clamp(0.5 + equipoAcumuladoTemporada / 8, 0, 1)
+<p>Todo sale de un único número por temporada, la <strong>&quot;fuerza de campaña&quot;</strong> — <code>calcularFuerzaCampana(equipo, liga, forma, equipoAcumuladoTemporada, promedioJugador)</code> (<a href="js/config.js:1034">config.js:1034-1052</a>):</p>
+<pre><code>calidadClub              = calidadFuerzaClub(equipo, liga)   (SOLO el eje fuerza, 55% equipo + 45% liga)
+calidadForma             = FORMA_CALIDAD[forma]     (1.0 inspirado ... 0.05 lesionado)
+calidadEquipoAcum        = clamp(0.5 + equipoAcumuladoTemporada / 8, 0, 1)
+calidadRendimientoJugador = promedioJugador ? clamp((promedioJugador − 6.0) / 3.0, 0, 1) : 0.5
 
-fuerza = 0.5 × calidadClub + 0.2 × calidadForma + 0.3 × calidadEquipoAcum
+fuerza = 0.4 × calidadClub + 0.15 × calidadForma + 0.2 × calidadEquipoAcum + 0.25 × calidadRendimientoJugador
 </code></pre>
-<p><code>equipoAcumuladoTemporada</code> es la suma de todos los efectos <code>equipo</code> de las decisiones tomadas en la temporada — cómo le vino colectivamente el año al plantel según tus elecciones.</p>
+<p><code>equipoAcumuladoTemporada</code> es la suma de todos los efectos <code>equipo</code> de las decisiones tomadas en la temporada. <code>promedioJugador</code> es <code>temporadaActual.promedio</code> (el rating medio por partido, que ya arrastra goles/asistencias/MVP — <a href="#">sección 10</a>) — <code>null</code> si todavía no jugaste ningún partido esta temporada, para no castigar como si hubieras rendido pésimo antes de debutar.</p>
+<p>Antes esta fórmula no incluía el rendimiento estadístico real de la temporada en absoluto — solo el club, la forma y las decisiones de &quot;equipo&quot; tomadas en los eventos. Se podía cerrar una temporada de 59 partidos y 59 goles y que eso no pesara nada en las chances de título. Con el peso nuevo, a igualdad de todo lo demás, una temporada floja (promedio 6.0) da ~12% de ganar la liga contra ~40% de una legendaria (promedio 9.5) con el mismo club — más de 3x de diferencia solo por el rendimiento individual.</p>
 <p>De <code>fuerza</code> salen 4 cosas:</p>
 <p><strong>Ganar la liga</strong> (al cierre de temporada) — curva empinada, casi exclusiva de los grandes:</p>
 <pre><code>prob = clamp(0.02 + 0.85 × fuerza^3.5, 0, 0.85)
@@ -763,13 +815,15 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </code></pre>
 <p>Al aceptar priorizar la convocatoria, <code>resolverParticipacionSeleccion</code> resuelve todo de un saque (no se reparte en tramos como las copas de club):</p>
 <ul>
-<li><strong>Año sin torneo</strong>: jugás 2 amistosos (<code>PARTIDOS_AMISTOSO_SELECCION</code>).</li>
-<li><strong>Año de torneo</strong>: primero se tira si tu país <strong>clasifica</strong> (<code>probClasificarTorneoSeleccion(calidad) = clamp(0.15 + 0.8 × calidad, 0.05, 0.97)</code>, más parejo que ganarlo). Si no clasifica, jugás 2 partidos de eliminatorias igual (<code>PARTIDOS_ELIMINATORIAS_SELECCION</code>). Si clasifica:<ul>
-<li>Fase de grupos garantizada (3 partidos, <code>PARTIDOS_FASE_DE_GRUPOS_SELECCION</code>), con una tirada para avanzar (<code>probAvanzarFaseDeGruposSeleccion(calidad) = clamp(0.35 + 0.6 × calidad, 0.15, 0.95)</code> — bastante generoso, como en la vida real).</li>
+<li><strong>Año sin torneo</strong>: jugás entre 3 y 5 amistosos (<code>PARTIDOS_AMISTOSO_SELECCION_MIN/MAX</code>) — antes era un número fijo (2), sin variación de temporada a temporada.</li>
+<li><strong>Año de torneo</strong>: la campaña de eliminatorias se juega <strong>siempre</strong>, clasifiques o no — entre 6 y 10 partidos (<code>PARTIDOS_ELIMINATORIAS_MIN/MAX</code>). Antes esto solo aparecía como &quot;premio consuelo&quot; al no clasificar, con el mismo número fijo (2) que un año de amistosos, así que nunca se sentían distintos. Después se tira si tu país <strong>clasifica</strong> (<code>probClasificarTorneoSeleccion(calidad) = clamp(0.15 + 0.8 × calidad, 0.05, 0.97)</code>, más parejo que ganarlo):<ul>
+<li>Si no clasifica, la temporada de selección termina ahí (solo esos 6-10 partidos de eliminatorias).</li>
+<li>Si clasifica, se <strong>suman</strong> arriba: fase de grupos garantizada (3 partidos, <code>PARTIDOS_FASE_DE_GRUPOS_SELECCION</code>), con una tirada para avanzar (<code>probAvanzarFaseDeGruposSeleccion(calidad) = clamp(0.35 + 0.6 × calidad, 0.15, 0.95)</code> — bastante generoso, como en la vida real).</li>
 <li>Si avanza, una ronda eliminatoria por vez (octavos → cuartos → semifinal → final en el Mundial, cuartos → semifinal → final en los continentales), cada una con la <strong>misma</strong> <code>probAvanzarRonda(calidad)</code> que ya usan las copas de club (<a href="#">sección 14.1</a>) — si gana todas, es <strong>campeón</strong> y el trofeo (Copa del Mundo / Copa América / Eurocopa / Copa Oro / Copa Africana de Naciones / Copa Asiática) se suma a <code>temporadaActual.trofeos</code>, el mismo array que los trofeos de club. Si pierde justo la final, queda <strong>subcampeón</strong>.</li>
 </ul>
 </li>
 </ul>
+<p>Con esto, el total de partidos de un año de torneo grande varía entre 6 (no clasificó) y 17+ (campeón del Mundial) en vez de saltar solo entre 2 (amistoso) o 6 (techo viejo de una campaña corta) como antes.</p>
 <p><code>calidad</code> es <code>calidadSeleccion(fuerzaSeleccion, forma)</code> (<a href="js/config.js">config.js</a>): la fuerza fija del país pesa la enorme mayoría, con un empujón chico (<code>SELECCION_PESO_JUGADOR = 0.15</code>) según tu forma del momento — un solo jugador no decide el destino de todo un seleccionado.</p>
 <p>Los goles de esos partidos reutilizan <code>GameConfig.simularTramo</code> tal cual la usa el club (misma propensión por grupo de posición, <a href="#">sección 10</a>), para que meter un gol con la selección se sienta igual que uno de club.</p>
 <h3>19.5 Estadísticas y dónde se ven</h3>
@@ -1135,9 +1189,9 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </li>
 <li><p><strong>Animaciones de tramo</strong>: los números del spotlight (partidos, goles, OVR, anillo de progreso) no saltan de golpe — se animan con un <em>ease-out</em> cúbico durante 900ms (<code>animarNumero</code>/<code>animarAnilloProgreso</code>, <a href="js/carrera.js:466">carrera.js:466-516</a>). En mobile, la versión chata tiene su propio equivalente: la barra de progreso lineal anima su ancho con una transición CSS (<code>animarBarraMobile</code>) y los mismos números se animan con <code>animarNumero</code> sobre los elementos <code>[data-stat-mobile]</code> — antes en mobile los números y la barra saltaban de golpe, sin animación.</p>
 </li>
-<li><p><strong>Reacomodo de tarjetas (técnica FLIP)</strong>: al resolver una decisión y quedar menos tarjetas, la que sigue no salta de golpe a su nueva posición — se captura su posición anterior y se anima el desplazamiento (<code>capturarPosicionesCards</code>/<code>animarReacomodoCards</code>, <a href="js/carrera.js:1131">carrera.js:1131-1158</a>), con una curva de easing pronunciada de 550ms (antes 350ms — se sentía demasiado brusco). <strong>Solo en desktop</strong>: en mobile, la técnica FLIP (que traslada la tarjeta desde su posición &quot;antes&quot;) entraba en conflicto con el scroll-snap nativo del carrusel de decisiones y producía un rebote visible al terminar la transición — en mobile se usa en cambio un fundido + escala simple (<code>@keyframes decisionCardEntrando</code>, también en 500ms), sin tocar la posición real de la tarjeta.</p>
+<li><p><strong>Reacomodo de tarjetas (técnica FLIP)</strong>: al resolver una decisión y quedar menos tarjetas, la que sigue no salta de golpe a su nueva posición — se captura su posición anterior y se anima el desplazamiento (<code>capturarPosicionesCards</code>/<code>animarReacomodoCards</code>, <a href="js/carrera.js:1131">carrera.js:1131-1158</a>), en 550ms (antes 350ms) con una curva de aceleración/desaceleración pareja (<code>cubic-bezier(0.4, 0, 0.2, 1)</code>) en vez de una curva &quot;snappy&quot; que concentraba la mayor parte del recorrido en el primer instante — esa combinación (arranque duro + poco tiempo) era lo que se sentía brusco, no solo la duración. <strong>Solo en desktop</strong>: en mobile, la técnica FLIP (que traslada la tarjeta desde su posición &quot;antes&quot;) entraba en conflicto con el scroll-snap nativo del carrusel de decisiones y producía un rebote visible al terminar la transición — en mobile se usa en cambio un fundido + escala simple con la misma curva (<code>@keyframes decisionCardEntrando</code>, también en 500ms), sin tocar la posición real de la tarjeta.</p>
 </li>
-<li><p><strong>Lesión activa — efecto de luz roja</strong>: mientras el jugador tiene una lesión en curso, la tarjeta de spotlight de la temporada (desktop y su equivalente mobile) muestra un borde y resplandor rojo (<code>.spotlight-card--lesionado</code>/<code>.spotlight-mobile--lesionado</code>) más un ícono 🤕 superpuesto — el mismo lenguaje visual que ya usaban la tarjeta de evento de alto impacto y el ícono de mundo de la convocatoria a la selección, para que &quot;algo importante está pasando&quot; se lea igual en toda la interfaz.</p>
+<li><p><strong>Lesión activa — efecto de luz roja</strong>: mientras el jugador tiene una lesión en curso, la tarjeta de spotlight de la temporada (desktop y su equivalente mobile) muestra un borde y resplandor rojo (<code>.spotlight-card--lesionado</code>/<code>.spotlight-mobile--lesionado</code>) — el mismo lenguaje visual que ya usaban la tarjeta de evento de alto impacto y el ícono de mundo de la convocatoria a la selección, para que &quot;algo importante está pasando&quot; se lea igual en toda la interfaz. Se repinta apenas se diagnostica la lesión (no recién al simular el tramo): las lesiones leves duran exactamente 1 tramo, así que sin este repintado inmediato el efecto nunca llegaba a verse — se generaba y se curaba en el mismo ciclo, antes de la siguiente vez que se pintaba el spotlight.</p>
 </li>
 <li><p><strong>Línea de diseño móvil independiente</strong>: por debajo de los 640px, <code>carrera.css</code> no solo achica la versión de escritorio — el hero, el spotlight y el historial tienen su propio HTML más chato (generado aparte en <code>carrera.js</code>, oculto/mostrado por CSS), y el panel de decisiones pasa a un carrusel de una tarjeta a la vez con scroll-snap, sin JavaScript adicional para eso.</p>
 </li>
@@ -1348,7 +1402,17 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <tr>
 <td><code>GRUPOS_POSICION</code> / <code>PROPENSION_GOL</code> / <code>PROPENSION_ASISTENCIA</code></td>
 <td>ver <a href="#">sección 10</a></td>
-<td>Probabilidad base de gol/asistencia por posición</td>
+<td>Probabilidad base de gol/asistencia por posición (5 grupos: arquero/central/lateral/medio/ataque)</td>
+</tr>
+<tr>
+<td><code>ESTADISTICAS_OVR_BASE</code> / <code>_EXPONENTE</code> / <code>_RANGO</code></td>
+<td>0.5 / 1.6 / 2.3</td>
+<td>Curva de escalado de estadísticas por OVR (factor 0.5 en el piso de carrera, 2.8 en el techo)</td>
+</tr>
+<tr>
+<td><code>PROB_SEGUNDO_GOL_FACTOR</code> / <code>_TERCER_GOL_FACTOR</code></td>
+<td>0.4 / 0.18</td>
+<td>Probabilidad (relativa a <code>probGol</code>) de que un gol se convierta en doblete/hat-trick en el mismo partido</td>
 </tr>
 <tr>
 <td><code>PROBABILIDAD_MVP_BASE</code></td>
@@ -1358,12 +1422,12 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <tr>
 <td><code>BONUS_MVP_POR_GOL</code> / <code>_ASISTENCIA</code></td>
 <td>0.14 / 0.08</td>
-<td>Bono de probabilidad de MVP en el partido donde participaste en un gol</td>
+<td>Bono de probabilidad de MVP por cada gol / por asistencia en el partido</td>
 </tr>
 <tr>
 <td><code>BONUS_RATING_POR_GOL</code> / <code>_ASISTENCIA</code></td>
 <td>0.7 / 0.4</td>
-<td>Bono de rating en ese mismo partido</td>
+<td>Bono de rating por cada gol / por asistencia en ese mismo partido</td>
 </tr>
 <tr>
 <td><code>OVR_TRAMO_BASE</code></td>
@@ -1392,33 +1456,48 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </tr>
 <tr>
 <td><code>OVR_EDAD_PRIME_MAX</code></td>
-<td>26</td>
+<td>28</td>
 <td>Hasta qué edad el crecimiento es pleno</td>
 </tr>
 <tr>
 <td><code>OVR_EDAD_DECLIVE_MAX</code></td>
-<td>31</td>
-<td>Edad en la que el freno de crecimiento llega a su mínimo</td>
+<td>34</td>
+<td>Edad en la que el freno de crecimiento llega a su mínimo (fin de la meseta)</td>
 </tr>
 <tr>
 <td><code>OVR_EDAD_FACTOR_MIN</code></td>
-<td>0.35</td>
-<td>Ritmo de crecimiento mínimo (nunca llega a cero)</td>
+<td>0.15</td>
+<td>Ritmo de crecimiento mínimo en el ocaso (nunca llega a cero del todo)</td>
 </tr>
 <tr>
 <td><code>OVR_EDAD_DECLIVE_INICIO</code></td>
-<td>32</td>
-<td>Edad desde la que empieza el declive natural</td>
+<td>30</td>
+<td>Edad desde la que empieza el desgaste natural (superpuesto a la meseta)</td>
 </tr>
 <tr>
 <td><code>OVR_EDAD_ACELERA_DECLIVE</code></td>
-<td>39</td>
-<td>Edad desde la que el declive se acelera fuerte</td>
+<td>37</td>
+<td>Edad desde la que el desgaste se acelera</td>
 </tr>
 <tr>
 <td><code>OVR_EDAD_DECLIVE_TASA_BASE</code> / <code>_ACELERADA</code></td>
-<td>0.08 / 0.35</td>
+<td>0.06 / 0.22</td>
 <td>OVR perdido por tramo, por año, antes/después de acelerar</td>
+</tr>
+<tr>
+<td><code>TALENTO_MIN</code> / <code>MAX</code></td>
+<td>0.85 / 1.2</td>
+<td>Multiplicador de talento oculto por carrera (acelera el crecimiento, atenúa el desgaste)</td>
+</tr>
+<tr>
+<td><code>POTENCIAL_TECHO_PROB_BAJO</code> / <code>_MEDIO</code></td>
+<td>0.05 / 0.55</td>
+<td>Probabilidad de sortear un techo de potencial bajo (72-83) / medio (85-90) — el resto (40%) es alto (91-98)</td>
+</tr>
+<tr>
+<td><code>POTENCIAL_TECHO_FACTOR_MIN</code></td>
+<td>0.08</td>
+<td>Fracción de lo que un tramo se pasaría del techo que se deja pasar igual</td>
 </tr>
 <tr>
 <td><code>FORMA_CALIDAD</code></td>
@@ -1466,9 +1545,14 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <td>Ajuste de <code>pesoTitular</code> si estuviste lesionado ese tramo</td>
 </tr>
 <tr>
-<td><code>FUERZA_PESO_CLUB</code> / <code>_FORMA</code> / <code>_EQUIPO_ACUMULADO</code></td>
-<td>0.5 / 0.2 / 0.3</td>
+<td><code>FUERZA_PESO_CLUB</code> / <code>_FORMA</code> / <code>_EQUIPO_ACUMULADO</code> / <code>_RENDIMIENTO_JUGADOR</code></td>
+<td>0.4 / 0.15 / 0.2 / 0.25</td>
 <td>Pesos de la fórmula de fuerza de campaña (el eje club usa solo <code>fuerza</code>, no el poder combinado)</td>
+</tr>
+<tr>
+<td><code>FUERZA_RENDIMIENTO_PROMEDIO_PISO</code> / <code>_RANGO</code></td>
+<td>6.0 / 3.0</td>
+<td>Normaliza el promedio de rating del jugador a 0-1 para la fuerza de campaña</td>
 </tr>
 <tr>
 <td><code>UMBRAL_CLASIFICA_PRIMER_NIVEL</code> / <code>_SEGUNDO_NIVEL</code></td>
@@ -1496,14 +1580,14 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <td>Cuánto empuja tu forma del momento a la &quot;calidad&quot; de campaña de tu selección (el resto es la fuerza fija del país)</td>
 </tr>
 <tr>
-<td><code>PARTIDOS_AMISTOSO_SELECCION</code></td>
-<td>2</td>
+<td><code>PARTIDOS_AMISTOSO_SELECCION_MIN</code> / <code>_MAX</code></td>
+<td>3 / 5</td>
 <td>Partidos de una ventana FIFA sin torneo grande en juego</td>
 </tr>
 <tr>
-<td><code>PARTIDOS_ELIMINATORIAS_SELECCION</code></td>
-<td>2</td>
-<td>Partidos si tu país no logra clasificar al torneo grande ese ciclo</td>
+<td><code>PARTIDOS_ELIMINATORIAS_MIN</code> / <code>_MAX</code></td>
+<td>6 / 10</td>
+<td>Partidos de la campaña de eliminatorias, se clasifique o no</td>
 </tr>
 <tr>
 <td><code>PARTIDOS_FASE_DE_GRUPOS_SELECCION</code></td>

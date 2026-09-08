@@ -168,13 +168,21 @@ function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionIntern
     valorMercado,
     trofeos: [],
     forma: "regular",
-    titular: false,
     // Qué tan afianzado estás como titular en ESTE club — se hereda de la
     // temporada anterior si seguís en el mismo club (ver finalizarTemporada),
     // o arranca "en la cuerda floja" si sos novato o recién fichado (ver
     // resolveOferta, que lo resetea al cambiar de club). Ver GameConfig.
     // calcularTitular/ajustarPesoTitular para cómo se usa y evoluciona.
     pesoTitular: pesoTitularHeredado ?? GameConfig.PESO_TITULAR_INICIAL,
+    // El badge de titular/suplente recién se recalcula tramo a tramo (ver
+    // simularTramoYAvanzar) — pero antes de jugar el primer tramo de la
+    // temporada hay que mostrar ALGO, y dejarlo en `false` a secas hacía
+    // que toda temporada nueva arrancara mostrando "Suplente" aunque el
+    // jugador llegara con el puesto bien ganado (pesoTitular alto) — se
+    // veía exactamente como "una gran temporada no sirvió de nada". Se
+    // proyecta con el mismo umbral del 50% que separa titular de suplente
+    // en la fórmula real, así el badge inicial ya refleja lo que ganaste.
+    titular: (pesoTitularHeredado ?? GameConfig.PESO_TITULAR_INICIAL) >= 0.5,
     progreso: 0,
     enCurso: true,
     calendario: GameConfig.crearCalendarioTemporada(numero),
@@ -579,6 +587,12 @@ function iniciarCheckpoint() {
     temporadaActual.loteActual = lesion
       ? [{ esInformeLesion: true, ...lesion }]
       : buildDecisionBatch(getEdadActual());
+    // Si la lesión dura 1 solo tramo (todas las leves, y parte de las
+    // moderadas), simularTramoYAvanzar la da de alta en el mismo tramo en
+    // que se generó, antes de volver a pintar el spotlight — sin este
+    // render acá, ese caso (el más común) nunca llegaba a mostrar el
+    // efecto de luz roja ni el ícono, ni en mobile ni en desktop.
+    if (lesion) renderSpotlight();
   }
 
   cambiarContenidoDecisiones(renderDecisions);
@@ -738,7 +752,10 @@ function simularTramoYAvanzar() {
   const grupo = GameConfig.GRUPOS_POSICION[player.posicion] ?? "medio";
   const tramoIndex = temporadaActual.tramoIndex;
 
-  const fuerza = GameConfig.calcularFuerzaCampana(equipo, liga, temporadaActual.forma, temporadaActual.equipoAcumuladoTemporada);
+  const fuerza = GameConfig.calcularFuerzaCampana(
+    equipo, liga, temporadaActual.forma, temporadaActual.equipoAcumuladoTemporada,
+    temporadaActual.partidos > 0 ? temporadaActual.promedio : null
+  );
 
   // ---- Partidos del CLUB este tramo, en todas las competiciones activas ----
   const partidosLiga = partidosLigaParaTramo(temporadaActual, tramoIndex);
@@ -787,7 +804,7 @@ function simularTramoYAvanzar() {
   const ratingTramo = partidosJugador > 0 ? resultado.sumaRating / partidosJugador : null;
   temporadaActual.pesoTitular = GameConfig.ajustarPesoTitular(temporadaActual.pesoTitular, ratingTramo, estabaLesionado);
 
-  temporadaActual.ovr = GameConfig.ajustarOvrTramo(temporadaActual.ovr, temporadaActual.bufferRendimiento, getEdadActual(), factorTalento);
+  temporadaActual.ovr = GameConfig.ajustarOvrTramo(temporadaActual.ovr, temporadaActual.bufferRendimiento, getEdadActual(), factorTalento, potencialTecho);
   temporadaActual.titular = esTitularEsteTramo;
   temporadaActual.equipoAcumuladoTemporada += temporadaActual.bufferEquipo;
   temporadaActual.valorMercado = GameConfig.calcularValorMercado(temporadaActual.ovr, equipo, liga);
@@ -846,7 +863,10 @@ function simularTramoYAvanzar() {
 function finalizarTemporada() {
   const equipo = equipoDe(temporadaActual);
   const liga = ligaDe(equipo);
-  const fuerza = GameConfig.calcularFuerzaCampana(equipo, liga, temporadaActual.forma, temporadaActual.equipoAcumuladoTemporada);
+  const fuerza = GameConfig.calcularFuerzaCampana(
+    equipo, liga, temporadaActual.forma, temporadaActual.equipoAcumuladoTemporada,
+    temporadaActual.partidos > 0 ? temporadaActual.promedio : null
+  );
   const mensajesFinales = [];
 
   const ganasteLiga = Math.random() < GameConfig.probGanarLiga(fuerza);
@@ -938,6 +958,16 @@ const edadRetiroForzoso = GameConfig.randomInt(GameConfig.EDAD_RETIRO_FORZOSO_MI
 // Talento oculto de esta carrera (ver GameConfig.ajustarOvrTramo): sorteado
 // una única vez, nunca se muestra en ningún número visible.
 const factorTalento = GameConfig.TALENTO_MIN + Math.random() * (GameConfig.TALENTO_MAX - GameConfig.TALENTO_MIN);
+
+// Techo de potencial de esta carrera (ver GameConfig.ajustarOvrTramo): el
+// nivel real que este jugador puede llegar a alcanzar, sorteado una única
+// vez — independiente del OVR con el que arranca y nunca expuesto en
+// ningún número visible. La mayoría de las carreras se van a estancar
+// bastante antes de los 90. Se garantiza un mínimo margen de crecimiento
+// sobre el OVR inicial (rarísimo que choquen, pero un debutante en un
+// club grande puede arrancar con 65 — sin este piso, una tirada floja del
+// techo lo dejaría prácticamente congelado desde el primer tramo).
+const potencialTecho = Math.max(GameConfig.sortearPotencialTecho(), (player.ovrInicial ?? GameConfig.OVR_INICIAL_MIN) + 5);
 
 let temporadasFinalizadas = [];
 let temporadaActual;
@@ -1044,7 +1074,6 @@ function renderSpotlight() {
 
   spotlight.innerHTML = `
     <article class="spotlight-card spotlight-card--desktop${lesionado ? " spotlight-card--lesionado" : ""}">
-      ${lesionado ? '<span class="spotlight-card__lesion-badge" title="Lesionado">🤕</span>' : ""}
       <div class="spotlight-card__head">
         <div>
           <span class="spotlight-card__season">Temporada ${s.numero} · ${s.anio}</span>
@@ -1084,7 +1113,6 @@ function renderSpotlight() {
          en animarSpotlightDesde), solo que con una barra lineal en vez
          de un anillo. -->
     <article class="spotlight-mobile${lesionado ? " spotlight-mobile--lesionado" : ""}">
-      ${lesionado ? '<span class="spotlight-mobile__lesion-badge" title="Lesionado">🤕</span>' : ""}
       <div class="spotlight-mobile__top">
         <span class="spotlight-mobile__season">T${s.numero} · ${s.anio}</span>
         <span class="forma-pill forma-pill--sm" style="background:${forma.color}22;color:${forma.color}">${forma.icon} ${forma.label}</span>
@@ -1385,7 +1413,7 @@ function animarReacomodoCards(track, posicionesPrevias) {
     el.style.transform = `translate(${dx}px, ${dy}px)`;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        el.style.transition = "transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1)";
+        el.style.transition = "transform 0.55s cubic-bezier(0.4, 0, 0.2, 1)";
         el.style.transform = "";
       });
     });
@@ -1413,19 +1441,23 @@ function resolverParticipacionSeleccion(prioriza) {
   let mensaje;
 
   if (!tipoAno) {
-    partidos = GameConfig.PARTIDOS_AMISTOSO_SELECCION;
+    partidos = GameConfig.randomInt(GameConfig.PARTIDOS_AMISTOSO_SELECCION_MIN, GameConfig.PARTIDOS_AMISTOSO_SELECCION_MAX);
     mensaje = `Jugaste ${partidos} amistosos con ${seleccion.pais}.`;
   } else {
+    // La campaña de eliminatorias se juega SIEMPRE en un año de torneo
+    // grande, clasifiques o no — antes solo aparecía como consuelo al no
+    // clasificar, con el mismo número fijo que un año de amistosos.
     const nombreTorneo = nombreTorneoSeleccion(seleccion.confederacion, tipoAno);
+    const partidosEliminatorias = GameConfig.randomInt(GameConfig.PARTIDOS_ELIMINATORIAS_MIN, GameConfig.PARTIDOS_ELIMINATORIAS_MAX);
     const clasifico = Math.random() < GameConfig.probClasificarTorneoSeleccion(calidad);
+    partidos = partidosEliminatorias;
     if (!clasifico) {
-      partidos = GameConfig.PARTIDOS_ELIMINATORIAS_SELECCION;
-      mensaje = `${seleccion.pais} no logró clasificarse a la ${nombreTorneo} esta vez, pero sumaste minutos en las eliminatorias.`;
+      mensaje = `Jugaste ${partidosEliminatorias} partidos de eliminatorias, pero ${seleccion.pais} no logró clasificarse a la ${nombreTorneo} esta vez.`;
     } else {
-      partidos = GameConfig.PARTIDOS_FASE_DE_GRUPOS_SELECCION;
+      partidos += GameConfig.PARTIDOS_FASE_DE_GRUPOS_SELECCION;
       const avanzaGrupos = Math.random() < GameConfig.probAvanzarFaseDeGruposSeleccion(calidad);
       if (!avanzaGrupos) {
-        mensaje = `Quedaste eliminado en la fase de grupos de la ${nombreTorneo} con ${seleccion.pais}.`;
+        mensaje = `Clasificaste a la ${nombreTorneo} con ${seleccion.pais} tras ${partidosEliminatorias} partidos de eliminatorias, pero quedaste eliminado en la fase de grupos.`;
       } else {
         const totalRondas = tipoAno === "mundial" ? GameConfig.RONDAS_KO_MUNDIAL : GameConfig.RONDAS_KO_CONTINENTAL;
         const rondas = GameConfig.NOMBRES_RONDA_KO[totalRondas];

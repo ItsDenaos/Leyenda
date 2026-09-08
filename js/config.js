@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.6.0-Beta",
-  FECHA_PUBLICACION: "7 de septiembre de 2026 · 15:33",
+  VERSION: "0.7.0-Beta",
+  FECHA_PUBLICACION: "7 de septiembre de 2026 · 23:48",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
@@ -687,17 +687,25 @@ const GameConfig = {
   // convertir goles/asistencias. El OVR y el rendimiento acumulado
   // del tramo (por las decisiones tomadas) escalan esa propensión.
   // ============================================================
+  // "central" y "lateral" antes eran un solo grupo "defensa" con la misma
+  // propensión — un lateral que centra todo el partido y un central que
+  // solo despeja se sentían idénticos. Separados: el lateral aporta más
+  // asistencias que goles (centros), el central anotar de vez en cuando
+  // (cabezazos de pelota parada) pero casi no asiste.
   GRUPOS_POSICION: {
     POR: "arquero",
-    DFC: "defensa", LI: "defensa", LD: "defensa",
+    DFC: "central", LI: "lateral", LD: "lateral",
     MCD: "medio", MC: "medio", MI: "medio", MD: "medio", MCO: "medio",
     EI: "ataque", ED: "ataque", DC: "ataque",
   },
 
   // Propensiones altas a propósito: el objetivo no es el realismo,
-  // es que el jugador se sienta cada vez más habilidoso.
-  PROPENSION_GOL: { arquero: 0.01, defensa: 0.12, medio: 0.24, ataque: 0.55 },
-  PROPENSION_ASISTENCIA: { arquero: 0.01, defensa: 0.14, medio: 0.34, ataque: 0.28 },
+  // es que el jugador se sienta cada vez más habilidoso. Perfil por
+  // posición: delanteros dominan en goles; medios y laterales reparten
+  // más asistencias que goles (los laterales, bastante más); centrales
+  // suman goles ocasionales de pelota parada y casi no asisten.
+  PROPENSION_GOL: { arquero: 0.005, central: 0.07, lateral: 0.05, medio: 0.16, ataque: 0.48 },
+  PROPENSION_ASISTENCIA: { arquero: 0.005, central: 0.05, lateral: 0.20, medio: 0.28, ataque: 0.20 },
   PROBABILIDAD_MVP_BASE: 0.09,
 
   // Cuánto suma un gol/asistencia a la chance de MVP y al rating de ESE
@@ -712,22 +720,61 @@ const GameConfig = {
   BONUS_RATING_POR_GOL: 0.7,
   BONUS_RATING_POR_ASISTENCIA: 0.4,
 
+  // Escala de estadísticas por OVR: antes era una recta suave (0.85 a
+  // ~1.83 de piso a techo, apenas 2.15x de diferencia) — un crack de 95
+  // rendía casi igual que un jugador mediocre de 65. Ahora es una curva
+  // (exponente > 1): se mantiene parecida en el tramo bajo/medio pero se
+  // dispara en el tramo alto, para que el OVR realmente se note en la
+  // cancha. En el mínimo absoluto de carrera (45) el factor es 0.5; en el
+  // máximo (99), 2.8 — más de 5x de diferencia de punta a punta.
+  ESTADISTICAS_OVR_BASE: 0.5,
+  ESTADISTICAS_OVR_EXPONENTE: 1.6,
+  ESTADISTICAS_OVR_RANGO: 2.3,
+
+  factorEstadisticoPorOvr(ovr) {
+    const rango = GameConfig.OVR_CARRERA_MAX - GameConfig.OVR_CARRERA_MIN;
+    const progreso = GameConfig.clamp((ovr - GameConfig.OVR_CARRERA_MIN) / rango, 0, 1);
+    return GameConfig.ESTADISTICAS_OVR_BASE + Math.pow(progreso, GameConfig.ESTADISTICAS_OVR_EXPONENTE) * GameConfig.ESTADISTICAS_OVR_RANGO;
+  },
+
+  // Goles de UN partido: normalmente 0 o 1, pero sin techo real — antes
+  // era un booleano puro (como mucho 1 gol por partido), así que la
+  // temporada entera JAMÁS podía superar la cantidad de partidos jugados,
+  // por más crack que fueras. Con la probabilidad ya alta (buen nivel/
+  // forma), de vez en cuando sale un doblete, y más raro todavía un
+  // hat-trick — cada gol extra es bastante menos probable que el
+  // anterior, así que sigue siendo la excepción, no la norma.
+  PROB_SEGUNDO_GOL_FACTOR: 0.4,
+  PROB_TERCER_GOL_FACTOR: 0.18,
+
+  golesEnPartido(probGol) {
+    if (Math.random() >= probGol) return 0;
+    let goles = 1;
+    if (Math.random() < probGol * GameConfig.PROB_SEGUNDO_GOL_FACTOR) {
+      goles = 2;
+      if (Math.random() < probGol * GameConfig.PROB_TERCER_GOL_FACTOR) goles = 3;
+    }
+    return goles;
+  },
+
   simularTramo({ partidos, grupo, ovr, rendimientoAcumulado }) {
-    const factorOvr = 0.85 + (ovr - 50) / 50; // ~neutral en el debut (OVR 50-65), crece fuerte después
+    const factorOvr = GameConfig.factorEstadisticoPorOvr(ovr);
     const factorForma = 1 + GameConfig.clamp(rendimientoAcumulado, -12, 12) * 0.05;
     const factor = Math.max(0.3, factorOvr * factorForma);
+    const probGol = GameConfig.clamp(GameConfig.PROPENSION_GOL[grupo] * factor, 0, 0.9);
+    const probAsistencia = GameConfig.clamp(GameConfig.PROPENSION_ASISTENCIA[grupo] * factor, 0, 0.9);
 
     let goles = 0, asistencias = 0, mvp = 0, sumaRating = 0;
     for (let i = 0; i < partidos; i++) {
-      const hizoGol = Math.random() < GameConfig.PROPENSION_GOL[grupo] * factor;
-      const hizoAsistencia = Math.random() < GameConfig.PROPENSION_ASISTENCIA[grupo] * factor;
-      if (hizoGol) goles++;
+      const golesPartido = GameConfig.golesEnPartido(probGol);
+      const hizoAsistencia = Math.random() < probAsistencia;
+      goles += golesPartido;
       if (hizoAsistencia) asistencias++;
 
-      const bonusActuacion = (hizoGol ? GameConfig.BONUS_MVP_POR_GOL : 0) + (hizoAsistencia ? GameConfig.BONUS_MVP_POR_ASISTENCIA : 0);
+      const bonusActuacion = golesPartido * GameConfig.BONUS_MVP_POR_GOL + (hizoAsistencia ? GameConfig.BONUS_MVP_POR_ASISTENCIA : 0);
       if (Math.random() < GameConfig.PROBABILIDAD_MVP_BASE * factor + bonusActuacion) mvp++;
 
-      const bonusRating = (hizoGol ? GameConfig.BONUS_RATING_POR_GOL : 0) + (hizoAsistencia ? GameConfig.BONUS_RATING_POR_ASISTENCIA : 0);
+      const bonusRating = golesPartido * GameConfig.BONUS_RATING_POR_GOL + (hizoAsistencia ? GameConfig.BONUS_RATING_POR_ASISTENCIA : 0);
       const ratingPartido = GameConfig.clamp(6.5 + (factor - 1) * 2.5 + bonusRating + GameConfig.randomInt(-4, 4) / 10, 5, 10);
       sumaRating += ratingPartido;
     }
@@ -752,13 +799,21 @@ const GameConfig = {
   OVR_CARRERA_MIN: 45,
   OVR_CARRERA_MAX: 99,
 
-  // Freno por edad: crecimiento pleno hasta los 26, cada vez más difícil
-  // entre 27 y 31, y a partir de los 32 se estabiliza en un tercio del
-  // ritmo pleno (sigue habiendo progreso, solo que más lento) — antes caía
-  // casi a cero y volvía carreras muy largas para llegar a un buen nivel.
-  OVR_EDAD_PRIME_MAX: 26,
-  OVR_EDAD_DECLIVE_MAX: 31,
-  OVR_EDAD_FACTOR_MIN: 0.35,
+  // Curva de edad en 3 etapas — antes el freno de crecimiento se
+  // estabilizaba en 35% del ritmo pleno PARA SIEMPRE desde los 32, y el
+  // desgaste de abajo era demasiado débil para competirle: un jugador con
+  // buen rendimiento seguía subiendo bastante incluso pasados los 35-40.
+  // Ahora:
+  //  - Prime (≤28): crecimiento pleno, sin cambios.
+  //  - Meseta (29-34): el crecimiento se frena fuerte Y el desgaste por
+  //    edad (ver más abajo) ya está actuando en la misma ventana — cuesta
+  //    cada vez más sumar, y hacia el final ya es normal empezar a bajar.
+  //  - Ocaso (35+): el crecimiento por decisiones casi desaparece (queda
+  //    un resto mínimo — la "excepción" ocasional, sobre todo con mucho
+  //    talento oculto, ver factorTalento) y el desgaste sigue creciendo.
+  OVR_EDAD_PRIME_MAX: 28,
+  OVR_EDAD_DECLIVE_MAX: 34,
+  OVR_EDAD_FACTOR_MIN: 0.15,
 
   factorCrecimientoPorEdad(edad) {
     if (edad <= GameConfig.OVR_EDAD_PRIME_MAX) return 1;
@@ -770,13 +825,17 @@ const GameConfig = {
   },
 
   // Caída natural por edad: desde OVR_EDAD_DECLIVE_INICIO empieza a restar
-  // OVR de a poco (aunque el jugador rinda bien), y desde OVR_EDAD_ACELERA_DECLIVE
-  // la caída se vuelve mucho más pronunciada — nadie se mantiene en su pico
-  // para siempre. Es independiente del freno de crecimiento de arriba.
-  OVR_EDAD_DECLIVE_INICIO: 32,
-  OVR_EDAD_ACELERA_DECLIVE: 39,
-  OVR_EDAD_DECLIVE_TASA_BASE: 0.08, // caída por tramo, por año, entre INICIO y ACELERA
-  OVR_EDAD_DECLIVE_TASA_ACELERADA: 0.35, // caída por tramo, por año, desde ACELERA en adelante
+  // OVR de a poco (aunque el jugador rinda bien), superpuesta a la meseta
+  // de arriba en vez de arrancar recién cuando esta termina — así el neto
+  // (crecimiento - desgaste) pasa de "todavía sumás algo" a "cuesta
+  // mantenerte" de forma gradual dentro de la misma ventana de 29-34, en
+  // vez de un quiebre brusco a los 32. Desde OVR_EDAD_ACELERA_DECLIVE el
+  // desgaste se acelera bastante más — nadie se mantiene en su pico para
+  // siempre, y para el retiro obligatorio (41-45) ya bajó en serio.
+  OVR_EDAD_DECLIVE_INICIO: 30,
+  OVR_EDAD_ACELERA_DECLIVE: 37,
+  OVR_EDAD_DECLIVE_TASA_BASE: 0.06, // caída por tramo, por año, entre INICIO y ACELERA
+  OVR_EDAD_DECLIVE_TASA_ACELERADA: 0.22, // caída por tramo, por año, desde ACELERA en adelante
 
   factorDeclivePorEdad(edad) {
     if (edad < GameConfig.OVR_EDAD_DECLIVE_INICIO) return 0;
@@ -800,19 +859,74 @@ const GameConfig = {
   OVR_TRAMO_DECLIVE_VARIACION_MIN: -10,
 
   // Talento oculto: un multiplicador sorteado una sola vez por carrera
-  // (ver carrera.js) sobre el ritmo de crecimiento de OVR — no sobre el
-  // declive, que es puro desgaste físico por edad, igual para todos. Con
-  // las mismas decisiones de punta a punta, dos carreras ya no crecen
-  // exactamente igual: a veces te toca un desarrollo más lento, a veces
-  // un talento precoz. No se expone en ningún número visible.
+  // (ver carrera.js) sobre el ritmo de crecimiento de OVR — y, en menor
+  // medida, sobre qué tan bien se sostiene ese nivel con la edad. Con las
+  // mismas decisiones de punta a punta, dos carreras ya no crecen (ni
+  // declinan) exactamente igual: a veces te toca un desarrollo más lento,
+  // a veces un talento precoz que además se conserva mejor entrada la
+  // meseta y el ocaso — la "excepción a la regla" ocasional sale de este
+  // mismo sorteo oculto, sin un mecanismo aparte. No se expone en ningún
+  // número visible.
   TALENTO_MIN: 0.85,
   TALENTO_MAX: 1.2,
 
-  ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad, factorTalento = 1) {
+  // Techo de potencial: sin esto, el crecimiento del prime (deltaBase
+  // siempre positivo, tramo tras tramo durante ~10-12 años) empuja casi
+  // cualquier carrera por encima de 90 — no era una excepción, era casi
+  // aritmética garantizada. Ahora cada carrera sortea, en la creación del
+  // personaje (ver carrera.js), un techo real distinto del OVR con el que
+  // arranca. No es una pared dura: cerca del techo el crecimiento se
+  // vuelve muy chico pero nunca llega a cero del todo, para que una racha
+  // buenísima pueda "sorprender" y pasarlo por uno o dos puntos en casos
+  // raros — y aun así, alcanzar un techo alto de verdad (90+) requiere
+  // recorrer mucho terreno dentro de una carrera de duración finita.
+  //
+  // Los rangos de acá NO son directamente "dónde termina la carrera": se
+  // corrieron ~3000 carreras simuladas con rendimiento variable (bueno y
+  // malo, no siempre óptimo) contra la fórmula real de ajustarOvrTramo, y
+  // estos valores son los que hacen que el PICO FINAL de OVR quede
+  // repartido ~10% por debajo de 80, ~60% entre 80-89, ~30% en 90+ (los
+  // techos altos apuntan por encima de 90 porque varios de esos casos se
+  // quedan cortos por el camino, sea por mala racha o por no alcanzar el
+  // límite superior del rango).
+  POTENCIAL_TECHO_PROB_BAJO: 0.05,
+  POTENCIAL_TECHO_PROB_MEDIO: 0.55, // acumulado con el de arriba: 60% — el 40% restante es el tramo alto
+  POTENCIAL_TECHO_BAJO_MIN: 72,
+  POTENCIAL_TECHO_BAJO_MAX: 83,
+  POTENCIAL_TECHO_MEDIO_MIN: 85,
+  POTENCIAL_TECHO_MEDIO_MAX: 90,
+  POTENCIAL_TECHO_ALTO_MIN: 91,
+  POTENCIAL_TECHO_ALTO_MAX: 98,
+  POTENCIAL_TECHO_FACTOR_MIN: 0.08, // qué fracción de lo que se pasaría del techo se deja pasar igual
+
+  sortearPotencialTecho() {
+    const r = Math.random();
+    if (r < GameConfig.POTENCIAL_TECHO_PROB_BAJO) {
+      return GameConfig.randomInt(GameConfig.POTENCIAL_TECHO_BAJO_MIN, GameConfig.POTENCIAL_TECHO_BAJO_MAX);
+    }
+    if (r < GameConfig.POTENCIAL_TECHO_PROB_BAJO + GameConfig.POTENCIAL_TECHO_PROB_MEDIO) {
+      return GameConfig.randomInt(GameConfig.POTENCIAL_TECHO_MEDIO_MIN, GameConfig.POTENCIAL_TECHO_MEDIO_MAX);
+    }
+    return GameConfig.randomInt(GameConfig.POTENCIAL_TECHO_ALTO_MIN, GameConfig.POTENCIAL_TECHO_ALTO_MAX);
+  },
+
+  ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad, factorTalento = 1, potencialTecho = GameConfig.OVR_CARRERA_MAX) {
     const factorEdad = GameConfig.factorCrecimientoPorEdad(edad);
     const deltaBase = (GameConfig.OVR_TRAMO_BASE + rendimientoAcumulado / GameConfig.OVR_TRAMO_RENDIMIENTO_DIVISOR) * factorEdad * factorTalento;
-    const declive = GameConfig.factorDeclivePorEdad(edad);
-    const deltaCrudo = deltaBase - declive;
+    // Mismo sorteo de talento, invertido: 1.2 (muy talentoso) atenúa el
+    // desgaste a un 80%; 0.85 (menos talentoso) lo agrava a un 115%.
+    const declive = GameConfig.factorDeclivePorEdad(edad) * (2 - factorTalento);
+    let deltaCrudo = deltaBase - declive;
+    // Techo de potencial: NO frena el camino hacia el techo (eso se probó
+    // y, sumado al freno de edad de la misma ventana 29-34, casi nadie
+    // llegaba cerca de un techo alto a tiempo) — solo recorta lo que este
+    // tramo puntual se pasaría de largo, dejando pasar un resto chico
+    // igual. Así el crecimiento real actúa a pleno hasta el final, y el
+    // freno se siente justo al llegar, no kilómetros antes.
+    if (deltaCrudo > 0 && ovrActual + deltaCrudo > potencialTecho) {
+      const exceso = ovrActual + deltaCrudo - potencialTecho;
+      deltaCrudo -= exceso * (1 - GameConfig.POTENCIAL_TECHO_FACTOR_MIN);
+    }
     const minPermitido = declive > 0 ? GameConfig.OVR_TRAMO_DECLIVE_VARIACION_MIN : GameConfig.OVR_TRAMO_VARIACION_MIN;
     const delta = GameConfig.clamp(
       GameConfig.redondeoEstocastico(deltaCrudo),
@@ -872,25 +986,36 @@ const GameConfig = {
   // SISTEMA DE COMPETICIONES
   // Todo sale de un único número por temporada, "fuerza de campaña":
   // qué tan bien le está yendo al equipo, mezclando el nivel del club/
-  // liga (fijo), el estado de forma del jugador (del momento) y el
-  // efecto `equipo` acumulado en la temporada (las decisiones tomadas).
-  // De ahí salen tres cosas: la chance de ganar la liga o la copa
-  // nacional al cierre de temporada, la chance de avanzar de ronda en
-  // cada competición eliminatoria (copa nacional / internacional), y a
-  // qué torneo internacional clasifica la próxima temporada.
+  // liga (fijo), el estado de forma del jugador (del momento), el efecto
+  // `equipo` acumulado (las decisiones tomadas) y — esto es nuevo — el
+  // rendimiento estadístico real de la temporada (promedio de rating,
+  // que ya arrastra goles/asistencias/MVP). Antes una temporada de 59
+  // partidos y 59 goles no pesaba nada acá: solo importaban las
+  // decisiones de "equipo" tomadas en los eventos, así que se podía
+  // terminar una temporada de ensueño individual sin ganar nada. De acá
+  // salen tres cosas: la chance de ganar la liga o la copa nacional al
+  // cierre de temporada, la chance de avanzar de ronda en cada
+  // competición eliminatoria (copa nacional / internacional), y a qué
+  // torneo internacional clasifica la próxima temporada.
   // ============================================================
   FORMA_CALIDAD: {
     inspirado: 1.0, plenitud: 0.85, animado: 0.7, regular: 0.5,
     desanimado: 0.3, bajo: 0.15, lesionado: 0.05,
   },
 
-  FUERZA_PESO_CLUB: 0.5,
-  FUERZA_PESO_FORMA: 0.2,
-  FUERZA_PESO_EQUIPO_ACUMULADO: 0.3,
+  FUERZA_PESO_CLUB: 0.4,
+  FUERZA_PESO_FORMA: 0.15,
+  FUERZA_PESO_EQUIPO_ACUMULADO: 0.2,
+  FUERZA_PESO_RENDIMIENTO_JUGADOR: 0.25,
   // Umbral de referencia para "normalizar" equipoAcumuladoTemporada a
   // 0..1 (mismo umbral que antes usaba el trofeo genérico): en 0 queda
   // neutral (0.5), en +REFERENCIA llega a 1, en -REFERENCIA a 0.
   FUERZA_EQUIPO_ACUMULADO_REFERENCIA: 4,
+  // Rango de "promedio de rating" (ver GameConfig.simularTramo) que
+  // normaliza a 0..1: 6.0 (flojo/mediocre) queda en 0, 9.0 (temporada de
+  // ensueño, muchos goles/asistencias/MVP) llega a 1.
+  FUERZA_RENDIMIENTO_PROMEDIO_PISO: 6.0,
+  FUERZA_RENDIMIENTO_PROMEDIO_RANGO: 3.0,
 
   // A propósito usa SOLO el eje fuerza (no poder): ganar títulos depende
   // de qué tan fuerte es el plantel hoy, no de cuánta plata tiene el club
@@ -902,15 +1027,26 @@ const GameConfig = {
     return fuerzaEquipo * GameConfig.OVR_PESO_EQUIPO + fuerzaLiga * GameConfig.OVR_PESO_LIGA;
   },
 
-  calcularFuerzaCampana(equipo, liga, forma, equipoAcumuladoTemporada) {
+  // `promedioJugador` es null/0 cuando todavía no jugaste ningún partido
+  // esta temporada (recién arrancando, o toda la temporada lesionado) —
+  // en ese caso queda neutral (0.5) en vez de castigar como si hubieras
+  // rendido pésimo.
+  calcularFuerzaCampana(equipo, liga, forma, equipoAcumuladoTemporada, promedioJugador = null) {
     const calidadClub = GameConfig.calidadFuerzaClub(equipo, liga);
     const calidadForma = GameConfig.FORMA_CALIDAD[forma] ?? 0.5;
     const calidadEquipoAcumulado = GameConfig.clamp(
       0.5 + equipoAcumuladoTemporada / (2 * GameConfig.FUERZA_EQUIPO_ACUMULADO_REFERENCIA), 0, 1
     );
+    const calidadRendimientoJugador = promedioJugador
+      ? GameConfig.clamp(
+          (promedioJugador - GameConfig.FUERZA_RENDIMIENTO_PROMEDIO_PISO) / GameConfig.FUERZA_RENDIMIENTO_PROMEDIO_RANGO,
+          0, 1
+        )
+      : 0.5;
     const fuerza = GameConfig.FUERZA_PESO_CLUB * calidadClub
       + GameConfig.FUERZA_PESO_FORMA * calidadForma
-      + GameConfig.FUERZA_PESO_EQUIPO_ACUMULADO * calidadEquipoAcumulado;
+      + GameConfig.FUERZA_PESO_EQUIPO_ACUMULADO * calidadEquipoAcumulado
+      + GameConfig.FUERZA_PESO_RENDIMIENTO_JUGADOR * calidadRendimientoJugador;
     return GameConfig.clamp(fuerza, 0, 1);
   },
 
@@ -992,8 +1128,20 @@ const GameConfig = {
   // Cada ronda eliminatoria en adelante reutiliza probAvanzarRonda tal
   // cual (misma escala 0-1 que la fuerza de campaña de un club).
 
-  PARTIDOS_AMISTOSO_SELECCION: 2, // ventana FIFA fuera de año de torneo
-  PARTIDOS_ELIMINATORIAS_SELECCION: 2, // no clasificó, pero jugó las eliminatorias
+  // Rango en vez de un número fijo — un año de amistosos "de verdad" tiene
+  // varias ventanas FIFA, no una sola, así que un valor único siempre se
+  // sentía igual de temporada a temporada.
+  PARTIDOS_AMISTOSO_SELECCION_MIN: 3,
+  PARTIDOS_AMISTOSO_SELECCION_MAX: 5,
+  // Una campaña de eliminatorias real son muchos partidos (una liguilla
+  // entera o varias rondas), se clasifiques o no — antes esto solo
+  // aparecía como "consuelo" al no clasificar, con el mismo número fijo
+  // que un año de amistosos (2), lo que las hacía indistinguibles. Ahora
+  // TODO año de torneo grande arranca con esta campaña (clasifiques o
+  // no), y si clasificás, se le suma la fase de grupos + eliminación
+  // directa — así el total ya no salta solo entre "2 o 6".
+  PARTIDOS_ELIMINATORIAS_MIN: 6,
+  PARTIDOS_ELIMINATORIAS_MAX: 10,
   PARTIDOS_FASE_DE_GRUPOS_SELECCION: 3,
   RONDAS_KO_MUNDIAL: 4, // octavos, cuartos, semifinal, final
   RONDAS_KO_CONTINENTAL: 3, // cuartos, semifinal, final
