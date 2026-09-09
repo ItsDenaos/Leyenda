@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Juego web, sin backend ni base de datos externa: todo el motor corre en el navegador, en JavaScript vanilla.
 
-**Versión:** 0.9.1-Beta — publicada el 8 de septiembre de 2026 · 13:28.
+**Versión:** 1.0.0-RC — publicada el 9 de septiembre de 2026 · 10:22.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -297,7 +297,7 @@ recortado entre 0.15 y 1
 
 ## 10. Estadísticas del tramo: goles, asistencias, MVP, rating
 
-`GameConfig.simularTramo({ partidos, grupo, ovr, rendimientoAcumulado })` ([config.js:760-782](js/config.js:760)) recorre partido por partido (de los que jugás vos, no los del equipo).
+`GameConfig.simularTramo({ partidos, grupo, ovr, rendimientoAcumulado, fuerzaLiga, factorTalento })` ([config.js:834-857](js/config.js:834)) recorre partido por partido (de los que jugás vos, no los del equipo).
 
 **Grupo de posición** (`GRUPOS_POSICION`, [config.js:695-700](js/config.js:695)): cada una de las 12 posiciones cae en uno de **5 grupos** — antes "defensa" era uno solo (central y lateral idénticos); separarlos deja que el lateral aporte sobre todo asistencias (centros) y el central sume algún gol de cabeza mucho menos seguido:
 
@@ -309,19 +309,21 @@ recortado entre 0.15 y 1
 | Medio (MCD/MC/MI/MD/MCO) | 7% | 12% |
 | Ataque (EI/ED/DC) | 20% | 9% |
 
-Estas son las propensiones en el punto **neutral** de la curva de OVR de abajo (factor ×1) — no en el piso de carrera. Una primera versión de la curva tenía ese punto neutral en ~OVR 65 (un jugador mediocre rendía casi como uno "decente"), lo que dejaba estadísticas infladas — un delantero de 65 OVR llegaba a ~26 goles en 38 partidos. Recalibrado, el neutral quedó en ~OVR 75-78 (profesional sólido de verdad) y esos mismos 65 OVR rinden bastante por debajo de la media.
+Estas son las propensiones en el punto **neutral** de la curva de OVR de abajo (factor ×1) — no en el piso de carrera. Una primera versión de la curva tenía ese punto neutral en ~OVR 65 (un jugador mediocre rendía casi como uno "decente"), lo que dejaba estadísticas infladas — un delantero de 65 OVR llegaba a ~26 goles en 38 partidos. Recalibrado, el neutral pasó a ~OVR 75-78 (profesional sólido de verdad), pero eso dejó los primeros años de cualquier carrera (todo debutante arranca en 50-65 OVR, siempre por debajo de ese punto) con promedios de gol demasiado bajos para sentirse un jugador de verdad — un delantero de 60 OVR sacaba apenas ~2 goles en una temporada completa. Con el piso subido y el neutral corrido a ~OVR 72-73 (ver fórmula abajo), ese mismo debutante de 60 OVR ahora saca ~3.3.
 
 **Factor de forma general del tramo**:
 
 ```
 factorOvr(ovr) = ESTADISTICAS_OVR_BASE + progreso^ESTADISTICAS_OVR_EXPONENTE × ESTADISTICAS_OVR_RANGO
-                 (progreso = (ovr − 45) / 54, recortado a 0-1; BASE=0.15, EXPONENTE=2.2, RANGO=2.85)
+                 (progreso = (ovr − 45) / 54, recortado a 0-1; BASE=0.22, EXPONENTE=1.9, RANGO=2.78)
 factorForma    = 1 + clamp(rendimientoAcumulado, −12, 12) × 0.05
 factorLiga     = factorPorFuerzaLiga(ovr, fuerzaLiga)   (ver más abajo)
-factor         = max(0.3, factorOvr × factorForma × factorLiga)
+factorTalento  = talento oculto de la carrera (0.85x-1.2x, ver sección 11.2) — también pesa en las
+                 estadísticas, no solo en el crecimiento de OVR
+factor         = max(0.3, factorOvr × factorForma × factorLiga × factorTalento)
 ```
 
-Curva (exponente > 1), no una recta: en el OVR mínimo (45) el factor es 0.15, en el máximo (99) es 3.0 — un delantero de 65 OVR (mediocre) promedia ~5 goles en 38 partidos, uno de 75 (profesional sólido) ~10, uno de 90 (estrella) ~23, y solo en el techo absoluto (99) aparecen las temporadas de 30+ goles (estos números son con `factorLiga = 1`, es decir, en una liga de fuerza "neutral" — ver justo abajo cómo cambia según la liga real).
+Curva (exponente > 1), no una recta: en el OVR mínimo (45) el factor es 0.22, en el máximo (99) es 3.0 (el piso se subió de 0.15 a 0.22 y el exponente se suavizó de 2.2 a 1.9, sin tocar el techo — ver el porqué arriba). Con talento neutral (factorTalento = 1) y `factorLiga = 1`: un delantero de 60 OVR promedia ~3.3 goles en 34 partidos, uno de 65 ~4.6, uno de 75 (cerca del nuevo neutral) ~8.4, uno de 90 (estrella) ~17.6, y en el techo absoluto (99) ~26. El talento oculto agrega variación real sobre esos números a igual OVR: ese mismo delantero de 60 OVR saca ~2.7 goles con talento bajo (0.85x) o ~4.0 con talento alto (1.2x) — casi el doble de diferencia, para que no toda carrera se sienta "arranca mal, mejora con el tiempo": algunas ya se notan con algo especial desde el debut.
 
 **Competitividad de la liga (o selección)** — sin esto, un jugador de 65 OVR rendía exactamente igual jugando en la liga de Colombia (fuerza ~55) que en la Premier League (fuerza ~96): el mismo OVR absoluto, sin importar contra qué nivel de rivales compite. `factorPorFuerzaLiga(ovr, fuerzaLiga)` ([config.js:792-797](js/config.js:792)) lo corrige:
 
@@ -349,8 +351,11 @@ Antes era un booleano puro (como mucho 1 gol por partido), así que la temporada
 
 ```
 prob. de MVP  = 0.09 × factor + golesPartido × 0.14 + 0.08 (si hizo asistencia)
-rating        = clamp(6.5 + (factor − 1) × 2.5 + golesPartido × 0.7 + 0.4 (si asistencia) + ruido(±0.4), 5, 10)
+rating        = clamp(RATING_BASE + (factor − 1) × RATING_FACTOR_COEFICIENTE + golesPartido × 0.7 + 0.4 (si asistencia) + ruido(±0.4), 5, 10)
+                (RATING_BASE = 6.5, RATING_FACTOR_COEFICIENTE = 1.3)
 ```
+
+Con el coeficiente viejo (2.5), un debutante de bajo OVR (factor ~0.3-0.5) promediaba notas de **~5.0-5.3 la temporada entera** — pegado al piso de 5, algo que casi no pasa en la vida real: ni un jugador flojo de verdad promedia tan bajo con continuidad, esas notas son para un partido puntual desastroso, no la norma de toda una temporada. Bajado a 1.3, ese mismo debutante ahora promedia **~5.6-5.9** (recién arrancando, pero no un desastre), sin tocar el techo — un factor alto (2.5-3.0) sigue empujando la nota hacia el 9-10 en partidos con gol/asistencia. Con talento neutral: OVR 50 → ~5.6, OVR 65 → ~6.2, OVR 73 (neutral) → ~6.7, OVR 90 → ~8.5, OVR 99 → ~9.6.
 
 El resultado del tramo (goles, asistencias, MVPs, suma de ratings) se acumula a las estadísticas de la temporada.
 
@@ -396,7 +401,9 @@ Con estos números, el neto (crecimiento − desgaste) pasa de "todavía sumás 
 
 ### 11.2 Talento oculto y techo de potencial
 
-**Talento oculto**: al arrancar la carrera se sortea, una única vez, un multiplicador entre **0.85x y 1.2x** (`TALENTO_MIN`/`MAX`, [config.js:870-871](js/config.js:870); sorteado en [carrera.js:958-960](js/carrera.js:958)) que acelera el crecimiento (`deltaBase`) y, invertido, atenúa el desgaste (`× (2 − factorTalento)`: 1.2 lo deja en 80%, 0.85 lo agrava a 115%) — con las mismas decisiones de punta a punta, dos carreras no crecen (ni declinan) exactamente igual.
+**Talento oculto**: al arrancar la carrera se sortea, una única vez, un multiplicador entre **0.85x y 1.2x** (`TALENTO_MIN`/`MAX`, [config.js:992-996](js/config.js:992); `GameConfig.sortearFactorTalento()`, sorteado en [carrera.js:1111](js/carrera.js:1111)) que acelera el crecimiento (`deltaBase`) y, invertido, atenúa el desgaste (`× (2 − factorTalento)`: 1.2 lo deja en 80%, 0.85 lo agrava a 115%) — con las mismas decisiones de punta a punta, dos carreras no crecen (ni declinan) exactamente igual.
+
+El mismo `factorTalento` también pesa en `simularTramo` (ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)) — antes solo tocaba el crecimiento de OVR, así que a igual OVR, TODA carrera rendía exactamente igual en cancha, y la única narrativa posible era "malo que se hizo bueno". Ahora un talento alto ya rinde mejor con el mismo OVR bajo (se nota que tiene algo especial antes de que el número lo confirme), mientras uno bajo sigue leyéndose como el grinder clásico. Para que la comparación de los premios mundiales ([sección 14.2](#142-premios-mundiales-bota-de-oro-once-ideal-y-balón-de-oro)) siga siendo pareja, cada candidato del pool sortea su propio `factorTalento` independiente — si no, el tuyo sería una ventaja permanente contra un pool que nunca lo tiene.
 
 **Techo de potencial** (`potencialTecho`, sorteado una única vez en [carrera.js:962-970](js/carrera.js:962), nunca expuesto en ningún número visible): sin esto, el crecimiento del prime empujaba casi cualquier carrera por encima de 90 — no era una excepción, era casi aritmética garantizada. `sortearPotencialTecho()` ([config.js:902-911](js/config.js:902)) reparte:
 
@@ -543,7 +550,8 @@ Este juego no simula miles de jugadores rivales por el mundo — solo existe tu 
 - **Club**: dentro de esa liga, ponderado por `equipo.fuerza` — sirve además para narrar el mensaje ("un delantero de Bayern Múnich...").
 - **Grupo de posición**: `sortearGrupoCandidatoPremio()` — 55% ataque / 25% medio / 12% lateral / 8% central (`PREMIOS_PESO_GRUPO`); nunca arquero, nadie gana la Bota de Oro de arquero.
 - **OVR**: `sortearOvrCandidatoPremio()` — entre 82 y 99 (`PREMIOS_OVR_MIN/MAX`), promediando 3 tiradas uniformes para sesgar hacia el centro del rango (85-95) en vez de una muestra pareja — son candidatos genuinos al premio, no cualquier nivel élite.
-- **Estadísticas**: una sola llamada a `simularTramo({ partidos: partidosMinimos de su liga, grupo, ovr, rendimientoAcumulado: 0 })` (rendimiento neutro — no tiene decisiones propias que tomar).
+- **Talento oculto**: `sortearFactorTalento()` — cada candidato sortea el suyo propio, igual rango que el tuyo (0.85x-1.2x), para que la comparación siga siendo pareja (ver [sección 11.2](#112-talento-oculto-y-techo-de-potencial)).
+- **Estadísticas**: una sola llamada a `simularTramo({ partidos: partidosMinimos de su liga, grupo, ovr, rendimientoAcumulado: 0, factorTalento })` (rendimiento neutro — no tiene decisiones propias que tomar).
 - **Trofeos**: `Math.random() < probGanarLiga(calidadFuerzaClub(equipo, liga))` — reutiliza la misma curva que decide si TU club gana la liga, en vez de inventar una probabilidad aparte.
 
 **🥾 Bota de Oro**: tu `goles` de la temporada contra el máximo del pool, sin filtrar por posición (un jugador de otro grupo con pocos goles nunca compite en la práctica, sin necesidad de un caso especial). Si no ganás pero quedás entre los 3 mejores, un mensaje aparte ("Terminaste 2° en la Bota de Oro, detrás de un delantero de PSG con 34 goles").
@@ -601,10 +609,13 @@ if (edad >= edadRetiroForzoso) return [ solo la carta de retiro forzoso ];
 ### 16.2 Período de gracia de contrato
 
 ```js
-enGraciaDeContrato = temporadasEnClubActual < 2     (TEMPORADAS_GRACIA_CONTRATO)
+graciaContrato    = esPrimerClub ? 4 : 2     (TEMPORADAS_GRACIA_CONTRATO_PRIMER_CLUB / TEMPORADAS_GRACIA_CONTRATO)
+enGraciaDeContrato = temporadasEnClubActual < graciaContrato
 ```
 
-Mientras estés en gracia (tus primeras **2 temporadas completas** en el club actual, sea el inicial o uno fichado después), tu club **nunca** puede "no renovarte" — sin este colchón, cualquier club de nivel medio/alto para arriba te dejaría ir en tu primerísima ventana de fichajes, porque ningún novato arranca con el OVR de un jugador hecho (ver [sección 5](#5-elección-de-club-inicial-equipohtml--jsequipojs): tope de 65 vs. ventanas de OVR que fácilmente piden 70+). El contador se resetea a 0 cada vez que fichás por otro club y sube +1 en cada cierre de temporada en el mismo club.
+Mientras estés en gracia, tu club **nunca** puede "no renovarte" — sin este colchón, cualquier club de nivel medio/alto para arriba te dejaría ir en tu primerísima ventana de fichajes, porque ningún novato arranca con el OVR de un jugador hecho (ver [sección 5](#5-elección-de-club-inicial-equipohtml--jsequipojs): tope de 65 vs. ventanas de OVR que fácilmente piden 70+). El contador (`temporadasEnClubActual`) se resetea a 0 cada vez que fichás por otro club y sube +1 en cada cierre de temporada en el mismo club.
+
+El período de gracia es distinto para el **primer club de la carrera** (el de la creación de personaje): **4 temporadas** en vez de las 2 normales de cualquier club fichado después — es tu debut real, no alguien fichado ya con currículum, así que el club que apostó por vos te da el doble de margen. Se trackea con `esPrimerClub` ([carrera.js:1136](js/carrera.js:1136), arranca en `true` y pasa a `false` para siempre en el primer traspaso, en `resolveOferta`).
 
 ### 16.3 ¿Tu club actual te renueva?
 
@@ -685,7 +696,7 @@ El resto de los cupos (y todo, si no hay candidatos de entorno) sale libre del p
 
 Las cartas ya **no se mezclan en orden aleatorio**: la carta de tu club actual (quedarme, o el retiro forzoso si no te renuevan) va siempre **primera**; si además aparece la opción de retirarte voluntariamente (16.4), esa va **segunda**. El resto de ofertas de club llena los cupos restantes, en cualquier orden — así el jugador siempre encuentra "seguir acá" (y "retirarme", si corresponde) en el mismo lugar de la fila, en vez de tener que buscarlos entre las demás ofertas.
 
-Un solo clic resuelve toda la pausa (`resolveOferta`, [carrera.js:1299-1343](js/carrera.js:1299)):
+Un solo clic resuelve toda la pausa (`resolveOferta`, [carrera.js:1696-1743](js/carrera.js:1696)):
 
 - **Retiro** → cierra la carrera ([sección 17](#17-fin-de-carrera-retiro-y-resumen)).
 - **Fichar por un club nuevo** → la ventana única de fichajes (ver [sección 7](#7-calendario-de-temporada)) cae siempre en pretemporada, así que el traspaso arranca la temporada entera de cero con el club nuevo (nunca parte un año en dos filas de historial): se actualiza club, liga, valor de mercado, se reinician `competiciones` desde cero (la clasificación internacional no se hereda — es del club, no tuya), se resetea `temporadasEnClubActual` a 0 y la forma vuelve a "regular".
@@ -900,6 +911,7 @@ Todos los números de partidos (mínimos garantizados + rondas extra) son una re
   | 96–99 | Amatista |
 
 - **Etiquetas de efecto en cada opción de decisión** (`efectoRendimientoHtml`/`efectoFormaHtml`/`efectoEquipoHtml`, [carrera.js:1021-1034](js/carrera.js:1021)): antes de elegir, cada botón muestra de forma explícita qué le va a pasar a tu rendimiento, tu forma y al equipo si lo tocás — no hay efectos ocultos en las decisiones de evento.
+- **Tarjeta de "Fin de carrera" (retiro forzoso por edad)**: ocupa toda la fila y va centrada (`.decision-card--retiro-forzoso`, [css/carrera.css:893-907](css/carrera.css:893)) para que se sienta un momento aparte, más solemne — pero ese centrado heredado también dejaba el nombre del club y su liga centrados dentro del bloque escudo+texto, desalineados del escudo que va al lado (en vez de leerse junto a él como en el resto de tarjetas). `.decision-card__team` fuerza `text-align: left` de vuelta, solo para ese bloque — el párrafo de despedida sigue centrado.
 - **Animaciones de tramo**: los números del spotlight (partidos, goles, OVR, anillo de progreso) no saltan de golpe — se animan con un *ease-out* cúbico durante 900ms (`animarNumero`/`animarAnilloProgreso`, [carrera.js:466-516](js/carrera.js:466)). En mobile, la versión chata tiene su propio equivalente: la barra de progreso lineal anima su ancho con una transición CSS (`animarBarraMobile`) y los mismos números se animan con `animarNumero` sobre los elementos `[data-stat-mobile]` — antes en mobile los números y la barra saltaban de golpe, sin animación.
 - **Reacomodo de tarjetas (técnica FLIP)**: al resolver una decisión y quedar menos tarjetas, la que sigue no salta de golpe a su nueva posición — se captura su posición anterior y se anima el desplazamiento (`capturarPosicionesCards`/`animarReacomodoCards`, [carrera.js:1131-1158](js/carrera.js:1131)), en 550ms (antes 350ms) con una curva de aceleración/desaceleración pareja (`cubic-bezier(0.4, 0, 0.2, 1)`) en vez de una curva "snappy" que concentraba la mayor parte del recorrido en el primer instante — esa combinación (arranque duro + poco tiempo) era lo que se sentía brusco, no solo la duración. **Solo en desktop**: en mobile, la técnica FLIP (que traslada la tarjeta desde su posición "antes") entraba en conflicto con el scroll-snap nativo del carrusel de decisiones y producía un rebote visible al terminar la transición — en mobile se usa en cambio un fundido + escala simple con la misma curva (`@keyframes decisionCardEntrando`, también en 500ms), sin tocar la posición real de la tarjeta.
 - **Lesión activa — efecto de luz roja**: mientras el jugador tiene una lesión en curso, la tarjeta de spotlight de la temporada (desktop y su equivalente mobile) muestra un borde y resplandor rojo (`.spotlight-card--lesionado`/`.spotlight-mobile--lesionado`) — el mismo lenguaje visual que ya usaban la tarjeta de evento de alto impacto y el ícono de mundo de la convocatoria a la selección, para que "algo importante está pasando" se lea igual en toda la interfaz. Se repinta apenas se diagnostica la lesión (no recién al simular el tramo): las lesiones leves duran exactamente 1 tramo, así que sin este repintado inmediato el efecto nunca llegaba a verse — se generaba y se curaba en el mismo ciclo, antes de la siguiente vez que se pintaba el spotlight.
@@ -957,8 +969,8 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `EDAD_RETIRO_OFERTA` | 36 | Desde cuándo podés elegir retiro voluntario |
 | `EDAD_RETIRO_FORZOSO_MIN` / `MAX` | 41 / 45 | Rango del que se sortea la edad de retiro forzoso (una vez por carrera) |
 | `EDAD_RETIRO_TRANSICION` | 2 | Temporadas antes del retiro forzoso en las que el cupo de ofertas ya se reduce a 1 |
-| `TALENTO_MIN` / `MAX` | 0.85 / 1.2 | Rango del multiplicador de talento oculto (sorteado una vez por carrera) sobre el ritmo de crecimiento de OVR |
-| `TEMPORADAS_GRACIA_CONTRATO` | 2 | Temporadas de gracia antes de que tu club pueda "no renovarte" |
+| `TEMPORADAS_GRACIA_CONTRATO` | 2 | Temporadas de gracia antes de que tu club pueda "no renovarte" (clubes fichados después del primero) |
+| `TEMPORADAS_GRACIA_CONTRATO_PRIMER_CLUB` | 4 | Igual, pero para el primer club de la carrera (el de la creación de personaje) — el doble de margen |
 | `CONTRATO_RENDIMIENTO_SALVAVIDAS` | 7.5 | Promedio de rating de la temporada anterior que salva el contrato aunque el OVR no llegue a la ventana del club |
 | `EDAD_POTENCIAL_BONUS_MAX` | 8 | Bono máx. de "potencial" para un jugador de 17 años |
 | `EDAD_POTENCIAL_BONUS_HASTA` | 24 | Edad desde la que el bono de juventud llega a 0 |
@@ -967,13 +979,15 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `EDAD_OCASO_RETORNO_PAIS` | 33 | Edad desde la que la garantía de "entorno" prioriza tu país en vez de tu liga |
 | `TOTAL_TRAMOS_TEMPORADA` | 3 | Bloques de partidos simulados por temporada |
 | `GRUPOS_POSICION` / `PROPENSION_GOL` / `PROPENSION_ASISTENCIA` | ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating) | Probabilidad base de gol/asistencia por posición (5 grupos: arquero/central/lateral/medio/ataque) |
-| `ESTADISTICAS_OVR_BASE` / `_EXPONENTE` / `_RANGO` | 0.15 / 2.2 / 2.85 | Curva de escalado de estadísticas por OVR (factor 0.15 en el piso de carrera, 3.0 en el techo; punto neutral ×1 en ~OVR 75-78) |
+| `ESTADISTICAS_OVR_BASE` / `_EXPONENTE` / `_RANGO` | 0.22 / 1.9 / 2.78 | Curva de escalado de estadísticas por OVR (factor 0.22 en el piso de carrera, 3.0 en el techo; punto neutral ×1 en ~OVR 72-73) |
 | `FACTOR_LIGA_COEFICIENTE` | 0.024 | Cuánto empuja el factor de estadísticas por cada punto de diferencia entre tu OVR y el nivel que "espera" la liga/selección |
 | `FACTOR_LIGA_MIN` / `MAX` | 0.35 / 2.2 | Clamp del factor de competitividad de liga (ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)) |
 | `PROB_SEGUNDO_GOL_FACTOR` / `_TERCER_GOL_FACTOR` | 0.4 / 0.18 | Probabilidad (relativa a `probGol`) de que un gol se convierta en doblete/hat-trick en el mismo partido |
 | `PROBABILIDAD_MVP_BASE` | 0.09 | Probabilidad base de MVP por partido |
 | `BONUS_MVP_POR_GOL` / `_ASISTENCIA` | 0.14 / 0.08 | Bono de probabilidad de MVP por cada gol / por asistencia en el partido |
 | `BONUS_RATING_POR_GOL` / `_ASISTENCIA` | 0.7 / 0.4 | Bono de rating por cada gol / por asistencia en ese mismo partido |
+| `RATING_BASE` | 6.5 | Nota de un partido neutral (factor ×1, sin gol ni asistencia) |
+| `RATING_FACTOR_COEFICIENTE` | 1.3 | Cuánto empuja el `factor` de rendimiento la nota para arriba o para abajo (antes 2.5 — ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)) |
 | `OVR_TRAMO_BASE` | 0.7 | Crecimiento natural de OVR por tramo |
 | `OVR_TRAMO_RENDIMIENTO_DIVISOR` | 6 | Cuánto divide el rendimiento acumulado antes de sumarse al crecimiento |
 | `OVR_TRAMO_VARIACION_MIN` / `MAX` | −1 / +3 | Variación normal de OVR por tramo (sin declive por edad) |
@@ -985,7 +999,7 @@ Todas viven en [`js/config.js`](js/config.js). Cambiar cualquiera de estos núme
 | `OVR_EDAD_DECLIVE_INICIO` | 30 | Edad desde la que empieza el desgaste natural (superpuesto a la meseta) |
 | `OVR_EDAD_ACELERA_DECLIVE` | 37 | Edad desde la que el desgaste se acelera |
 | `OVR_EDAD_DECLIVE_TASA_BASE` / `_ACELERADA` | 0.06 / 0.22 | OVR perdido por tramo, por año, antes/después de acelerar |
-| `TALENTO_MIN` / `MAX` | 0.85 / 1.2 | Multiplicador de talento oculto por carrera (acelera el crecimiento, atenúa el desgaste) |
+| `TALENTO_MIN` / `MAX` | 0.85 / 1.2 | Multiplicador de talento oculto por carrera (acelera el crecimiento, atenúa el desgaste, y desde esta versión también pesa en `simularTramo` — ver [sección 11.2](#112-talento-oculto-y-techo-de-potencial)) |
 | `UMBRAL_CRECIMIENTO_ACELERADO` | 72 | OVR por debajo del cual aplica el "salto de calidad" del arranque de carrera (solo en Prime, ver [sección 11.3](#113-salto-de-calidad-del-arranque-de-carrera)) |
 | `CRECIMIENTO_ACELERADO_FACTOR_MAX` | 1.8 | Multiplicador de crecimiento en el piso de ese rango (OVR 45), decreciendo a 1x en el umbral |
 | `POTENCIAL_TECHO_PROB_BAJO` / `_MEDIO` | 0.05 / 0.55 | Probabilidad de sortear un techo de potencial bajo (72-83) / medio (85-90) — el resto (40%) es alto (91-98) |

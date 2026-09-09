@@ -13,8 +13,8 @@ const GameConfig = {
   // Se muestra en el pie de página de cada pantalla (ver footerHtml).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada HTML.
-  VERSION: "0.9.1-Beta",
-  FECHA_PUBLICACION: "8 de septiembre de 2026 · 13:28",
+  VERSION: "1.0.0-RC",
+  FECHA_PUBLICACION: "9 de septiembre de 2026 · 10:22",
 
   footerHtml() {
     return `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}`;
@@ -617,6 +617,11 @@ const GameConfig = {
   // demostrar algo. Se cuenta en carrera.js (temporadasEnClubActual) y
   // se resetea cada vez que cambiás de club, sea el inicial o no.
   TEMPORADAS_GRACIA_CONTRATO: 2,
+  // El primer club de la carrera te ficha sabiendo que sos un debutante
+  // de verdad (no un jugador hecho de paso) — le da el doble de margen
+  // antes de poder cortarte, en vez de las 2 temporadas normales de
+  // cualquier club fichado después (ver `esPrimerClub` en carrera.js).
+  TEMPORADAS_GRACIA_CONTRATO_PRIMER_CLUB: 4,
 
   // Rating de rendimiento (mismo dato que ya usa calcularFuerzaCampana
   // para trofeos) por encima del cual una temporada se considera
@@ -755,18 +760,37 @@ const GameConfig = {
   BONUS_RATING_POR_GOL: 0.7,
   BONUS_RATING_POR_ASISTENCIA: 0.4,
 
+  // Nota base de un partido "neutral" (factor ×1, sin gol ni asistencia)
+  // y cuánto empuja el `factor` de rendimiento esa nota para arriba o
+  // para abajo. Con el coeficiente viejo (2.5), un debutante de bajo OVR
+  // (factor ~0.3-0.5) promediaba notas de ~4.8-5.5 — pegado al piso de
+  // 5.0 una temporada entera, algo que casi no pasa en la vida real: ni
+  // un jugador flojo de verdad promedia tan bajo con continuidad, esas
+  // notas son para un partido puntual desastroso, no la norma. Bajado a
+  // 1.3: ese mismo debutante ahora promedia ~5.6-6.0 (recién arrancando,
+  // pero no un desastre), sin tocar el techo — un factor alto (2.5-3.0)
+  // sigue empujando la nota hacia el 9-10 en partidos con gol/asistencia.
+  RATING_BASE: 6.5,
+  RATING_FACTOR_COEFICIENTE: 1.3,
+
   // Escala de estadísticas por OVR: antes era una recta suave (0.85 a
   // ~1.83 de piso a techo, apenas 2.15x de diferencia) — un crack de 95
   // rendía casi igual que un jugador mediocre de 65. Un primer intento
   // con exponente 1.6 arregló eso, pero el punto NEUTRAL (factor ×1)
   // seguía cayendo cerca de OVR 65 — un jugador mediocre rendía como un
-  // profesional decente. Ahora el neutral está en ~75-78 (profesional
-  // sólido de verdad) y el piso (OVR 45) es bastante más flojo (0.15 en
-  // vez de 0.5) — un jugador de 65 rinde claramente por debajo de la
-  // media, no casi igual. En el máximo (99) el factor es 3.0.
-  ESTADISTICAS_OVR_BASE: 0.15,
-  ESTADISTICAS_OVR_EXPONENTE: 2.2,
-  ESTADISTICAS_OVR_RANGO: 2.85,
+  // profesional decente. Después quedó con el neutral en ~75-78 y el piso
+  // (OVR 45) en 0.15 — un jugador de 65 rendía claramente por debajo de
+  // la media, pero un debutante recién arrancando (50-60 OVR, siempre por
+  // debajo del punto neutral por diseño) quedaba con promedios de gol
+  // demasiado bajos para sentirse un jugador de verdad, en vez de "recién
+  // empezando" — un delantero de 60 OVR sacaba apenas ~2 goles en una
+  // temporada completa. Piso subido (0.15 → 0.22) y exponente suavizado
+  // (2.2 → 1.9), sin tocar el techo (factor 3.0 en OVR 99, ajustando
+  // RANGO para compensar): ese mismo delantero de 60 OVR ahora saca ~3.2,
+  // uno de 65 OVR ~4.5 — el neutral baja un poco, a ~OVR 72-73.
+  ESTADISTICAS_OVR_BASE: 0.22,
+  ESTADISTICAS_OVR_EXPONENTE: 1.9,
+  ESTADISTICAS_OVR_RANGO: 2.78,
 
   factorEstadisticoPorOvr(ovr) {
     const rango = GameConfig.OVR_CARRERA_MAX - GameConfig.OVR_CARRERA_MIN;
@@ -820,11 +844,11 @@ const GameConfig = {
     return goles;
   },
 
-  simularTramo({ partidos, grupo, ovr, rendimientoAcumulado, fuerzaLiga = null }) {
+  simularTramo({ partidos, grupo, ovr, rendimientoAcumulado, fuerzaLiga = null, factorTalento = 1 }) {
     const factorOvr = GameConfig.factorEstadisticoPorOvr(ovr);
     const factorForma = 1 + GameConfig.clamp(rendimientoAcumulado, -12, 12) * 0.05;
     const factorLiga = GameConfig.factorPorFuerzaLiga(ovr, fuerzaLiga);
-    const factor = Math.max(0.3, factorOvr * factorForma * factorLiga);
+    const factor = Math.max(0.3, factorOvr * factorForma * factorLiga * factorTalento);
     const probGol = GameConfig.clamp(GameConfig.PROPENSION_GOL[grupo] * factor, 0, 0.9);
     const probAsistencia = GameConfig.clamp(GameConfig.PROPENSION_ASISTENCIA[grupo] * factor, 0, 0.9);
 
@@ -839,7 +863,7 @@ const GameConfig = {
       if (Math.random() < GameConfig.PROBABILIDAD_MVP_BASE * factor + bonusActuacion) mvp++;
 
       const bonusRating = golesPartido * GameConfig.BONUS_RATING_POR_GOL + (hizoAsistencia ? GameConfig.BONUS_RATING_POR_ASISTENCIA : 0);
-      const ratingPartido = GameConfig.clamp(6.5 + (factor - 1) * 2.5 + bonusRating + GameConfig.randomInt(-4, 4) / 10, 5, 10);
+      const ratingPartido = GameConfig.clamp(GameConfig.RATING_BASE + (factor - 1) * GameConfig.RATING_FACTOR_COEFICIENTE + bonusRating + GameConfig.randomInt(-4, 4) / 10, 5, 10);
       sumaRating += ratingPartido;
     }
     return { goles, asistencias, mvp, sumaRating };
@@ -955,8 +979,22 @@ const GameConfig = {
   // meseta y el ocaso — la "excepción a la regla" ocasional sale de este
   // mismo sorteo oculto, sin un mecanismo aparte. No se expone en ningún
   // número visible.
+  //
+  // También pesa en `simularTramo` (ver `factor` más abajo): antes solo
+  // tocaba el crecimiento de OVR, así que TODA carrera arrancaba
+  // exactamente igual de "en blanco" con el mismo OVR bajo, sin importar
+  // el talento — la única narrativa posible era "malo que se hizo bueno".
+  // Ahora un talento alto (1.2x) también rinde mejor en cancha con el
+  // MISMO OVR bajo (ya se nota que tiene algo especial desde el arranque,
+  // antes de que el número lo confirme), mientras uno bajo (0.85x) sigue
+  // leyéndose como el grinder clásico — variedad real entre carreras, sin
+  // inventar un sorteo aparte.
   TALENTO_MIN: 0.85,
   TALENTO_MAX: 1.2,
+
+  sortearFactorTalento() {
+    return GameConfig.TALENTO_MIN + Math.random() * (GameConfig.TALENTO_MAX - GameConfig.TALENTO_MIN);
+  },
 
   // Techo de potencial: sin esto, el crecimiento del prime (deltaBase
   // siempre positivo, tramo tras tramo durante ~10-12 años) empuja casi

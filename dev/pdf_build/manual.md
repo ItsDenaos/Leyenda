@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 0.9.1-Beta — publicada el 8 de septiembre de 2026 · 13:28**
+**Versión 1.0.0-RC — publicada el 9 de septiembre de 2026 · 10:22**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -159,7 +159,7 @@ Tu **OVR** es tu nivel general — el número que decide qué tan bien rendís y
 
 Además de la edad, cada jugador que creás tiene un **techo real** oculto — el nivel más alto que ese jugador en particular puede llegar a alcanzar, sorteado en el momento de crear el personaje y que nunca vas a ver expuesto en ningún número. La mayoría de las carreras van a terminar como jugadores sólidos (entre 80 y 89 de pico), una minoría se va a quedar más floja, y otra minoría —la menos común— va a llegar a ser una verdadera estrella de 90 para arriba. Cerca de tu techo, subir cuesta mucho más… pero nunca es del todo imposible: de vez en cuando, con una racha realmente buena, podés sorprender y pasarte por uno o dos puntos.
 
-Además, cada jugador que creás tiene un **ritmo de desarrollo propio**, que tampoco vas a ver expuesto en ningún número: con exactamente las mismas decisiones, dos carreras no van a crecer (ni decaer) igual — alguna vez te va a tocar un jugador de desarrollo más lento, y otras veces un verdadero talento precoz que además se sostiene mejor con la edad. Es parte de la sorpresa de cada carrera nueva.
+Además, cada jugador que creás tiene un **ritmo de desarrollo propio**, que tampoco vas a ver expuesto en ningún número: con exactamente las mismas decisiones, dos carreras no van a crecer (ni decaer) igual — alguna vez te va a tocar un jugador de desarrollo más lento, y otras veces un verdadero talento precoz que además se sostiene mejor con la edad. Ese mismo talento oculto también se nota en la cancha, no solo en el crecimiento: a igual OVR, un talento precoz ya rinde mejor desde el arranque — se le nota que tiene algo especial antes de que el número lo confirme — mientras que un desarrollo más lento se siente genuinamente en blanco al principio. No toda carrera arranca floja y mejora con el tiempo; algunas ya vienen jugando bien desde el debut. Es parte de la sorpresa de cada carrera nueva.
 
 Si arrancaste en un club chico con un nivel bajo, los primeros años vas a mejorar **más rápido de lo normal** — mientras seas joven y sigas por debajo de un nivel ya consolidado, cada bloque de partidos te suma un poco más de lo que sumaría más adelante en la carrera. Es la forma en que el juego representa a un pibe que recién debuta y todavía tiene mucho margen para pulirse rápido — un veterano que bajó de nivel por la edad no tiene este empujón, ese es un problema distinto.
 
@@ -200,7 +200,7 @@ Cosas para tener en cuenta:
 - **Desde los 33 años**, ese mismo criterio de "entorno" pasa a mirar tu **país de origen** en vez de tu liga — para simular la vuelta a casa a cerrar la carrera, aunque la hayas jugado toda en el exterior. Pero si tu nivel ya superó de sobra a los clubes de tu país, esa vuelta a casa deja de estar garantizada: pasa a ser una posibilidad ocasional (una de cada tres ventanas, aproximadamente), no algo que vas a ver todos los años.
 - **Cuanto más joven seas, mejores clubes vas a ver** a igual nivel — un jugador de 27 años con buen OVR va a recibir mejores ofertas que uno de 38 con el mismo OVR: los clubes apuestan más fuerte a quien todavía tiene recorrido.
 - Vas a ver "Te valoran en €X" en cada oferta — es una referencia de cuánto te valora ESE club en particular, puede variar un poco de una oferta a otra aunque el nivel del club sea parecido.
-- **Recién fichado a un club, tenés 2 temporadas de tranquilidad**: por más que tu nivel no termine de convencer, ese club no te va a dejar ir hasta que hayas tenido esas 2 temporadas completas para demostrar algo.
+- **Recién fichado a un club, tenés 2 temporadas de tranquilidad** (**4** si es tu primer club, el de la creación de personaje — te dan el doble de margen por ser tu debut real): por más que tu nivel no termine de convencer, ese club no te va a dejar ir hasta que hayas tenido esas temporadas completas para demostrar algo.
 - **Desde los 36 años** podés elegir **retirarte voluntariamente** aunque tu club te siga queriendo — ocupa una de las 4 cartas.
 - Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de "Quedarme" se reemplaza por una de retiro forzoso — todavía podés fichar por otro club en esa misma pausa, si hay ofertas. Igual, si veniste de cerrar una temporada realmente brillante (muchos goles/asistencias, gran promedio), eso puede salvarte el contrato aunque el número de OVR no haya llegado del todo — el club no te evalúa solo por un número, también por cómo jugaste de verdad.
 

@@ -903,7 +903,13 @@
   max-width: 100%;
   text-align: center;
 }
-.decision-card--retiro-forzoso .decision-card__team { justify-content: center; }
+/* El resto de la tarjeta va centrado (ver `text-align: center` arriba,
+   pensado para el párrafo de despedida), pero ese centrado heredado
+   dejaba también el nombre del club y su liga centrados dentro del
+   bloque escudo+texto — desalineados del escudo que va al lado, en vez
+   de leerse junto a él como en el resto de tarjetas. Vuelve a la
+   izquierda, solo para este bloque. */
+.decision-card--retiro-forzoso .decision-card__team { justify-content: center; text-align: left; }
 .decision-card--retiro-forzoso .decision-card__actions { max-width: 320px; margin: 0 auto; }
 
 /* Parte médico: aparece solo (sin eventos esa pausa), ocupa toda la

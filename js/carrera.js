@@ -237,7 +237,7 @@ function crearTemporada(numero, equipoId, ovr, valorMercado, clasificacionIntern
 // importa el nivel del club actual ni el OVR, la única carta es
 // retirarte. Es la única parte de esto que no depende de qué tan bien
 // te haya ido.
-function generarLoteOfertas(equipoActualId, ovr, edad, valorActual, promedioTemporadaAnterior = null) {
+function generarLoteOfertas(equipoActualId, ovr, edad, valorActual, promedioTemporadaAnterior = null, esPrimerClub = false) {
   const equipoActual = GameDatabase.equipos.find((e) => e.id === equipoActualId);
   const ligaActual = ligaDe(equipoActual);
 
@@ -256,8 +256,13 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual, promedioTemp
   // el club nunca puede "no renovarte" — sin esto, cualquier club de
   // nivel medio/alto para arriba te dejaría ir en tu primera ventana de
   // traspasos, antes de tener una sola temporada para demostrar algo
-  // (un novato jamás arranca con el OVR de un jugador hecho).
-  const enGraciaDeContrato = temporadasEnClubActual < GameConfig.TEMPORADAS_GRACIA_CONTRATO;
+  // (un novato jamás arranca con el OVR de un jugador hecho). El primer
+  // club de la carrera (el de la creación de personaje) te da el doble
+  // de margen: es tu debut real, no alguien fichado ya con currículum.
+  const graciaContrato = esPrimerClub
+    ? GameConfig.TEMPORADAS_GRACIA_CONTRATO_PRIMER_CLUB
+    : GameConfig.TEMPORADAS_GRACIA_CONTRATO;
+  const enGraciaDeContrato = temporadasEnClubActual < graciaContrato;
   const contratoTerminado = !enGraciaDeContrato && GameConfig.contratoDebeTerminar(equipoActual, ligaActual, ovr, promedioTemporadaAnterior);
   const puedeElegirRetiro = !contratoTerminado && edad >= GameConfig.EDAD_RETIRO_OFERTA;
 
@@ -403,9 +408,7 @@ function generarLoteOfertas(equipoActualId, ovr, edad, valorActual, promedioTemp
   // anteponerle); el retiro voluntario, en cambio, se intercala después
   // de "seguir en el club".
   if (contratoTerminado) {
-    return ofertasBarajadas.length > 0
-      ? [ofertasBarajadas[0], cartaClubActual, ...ofertasBarajadas.slice(1)]
-      : [cartaClubActual];
+    return [cartaClubActual, ...ofertasBarajadas];
   }
   return cartaRetiroVoluntario
     ? [cartaClubActual, cartaRetiroVoluntario, ...ofertasBarajadas]
@@ -600,7 +603,7 @@ function iniciarCheckpoint() {
     const temporadaCerrada = temporadasFinalizadas[temporadasFinalizadas.length - 1];
     const promedioTemporadaAnterior = temporadaCerrada && temporadaCerrada.partidos > 0 ? temporadaCerrada.promedio : null;
     temporadaActual.loteActual = generarLoteOfertas(
-      temporadaActual.equipoId, temporadaActual.ovr, getEdadActual(), temporadaActual.valorMercado, promedioTemporadaAnterior
+      temporadaActual.equipoId, temporadaActual.ovr, getEdadActual(), temporadaActual.valorMercado, promedioTemporadaAnterior, esPrimerClub
     );
   } else {
     const lesion = intentarGenerarLesion(getEdadActual());
@@ -810,6 +813,7 @@ function simularTramoYAvanzar() {
     ovr: temporadaActual.ovr,
     rendimientoAcumulado: temporadaActual.bufferRendimiento,
     fuerzaLiga: liga.fuerza,
+    factorTalento,
   });
 
   temporadaActual.partidos += partidosJugador;
@@ -902,7 +906,15 @@ function generarCandidatosPremiosMundiales() {
 
     const grupo = GameConfig.sortearGrupoCandidatoPremio();
     const ovr = GameConfig.sortearOvrCandidatoPremio();
-    const resultado = GameConfig.simularTramo({ partidos: competicion.partidosMinimos, grupo, ovr, rendimientoAcumulado: 0, fuerzaLiga: liga.fuerza });
+    // Cada candidato sortea su propio talento oculto, igual que tu propio
+    // jugador (ver factorTalento más arriba) — si no, tu factorTalento
+    // sería una ventaja permanente contra un pool que nunca lo tiene, y
+    // la comparación dejaría de ser pareja.
+    const factorTalentoCandidato = GameConfig.sortearFactorTalento();
+    const resultado = GameConfig.simularTramo({
+      partidos: competicion.partidosMinimos, grupo, ovr, rendimientoAcumulado: 0,
+      fuerzaLiga: liga.fuerza, factorTalento: factorTalentoCandidato,
+    });
     // Si el club del candidato es fuerte, también compite por títulos ese
     // año — reutiliza la misma curva que decide si TU club gana la liga,
     // para no inventar una probabilidad aparte.
@@ -1093,9 +1105,10 @@ const usaProgresionReal = Boolean(player.equipoId && typeof player.ovrInicial ==
 // temporadas ni depende de OVR/rendimiento.
 const edadRetiroForzoso = GameConfig.randomInt(GameConfig.EDAD_RETIRO_FORZOSO_MIN, GameConfig.EDAD_RETIRO_FORZOSO_MAX);
 
-// Talento oculto de esta carrera (ver GameConfig.ajustarOvrTramo): sorteado
-// una única vez, nunca se muestra en ningún número visible.
-const factorTalento = GameConfig.TALENTO_MIN + Math.random() * (GameConfig.TALENTO_MAX - GameConfig.TALENTO_MIN);
+// Talento oculto de esta carrera (ver GameConfig.ajustarOvrTramo y
+// GameConfig.simularTramo): sorteado una única vez, nunca se muestra en
+// ningún número visible.
+const factorTalento = GameConfig.sortearFactorTalento();
 
 // Techo de potencial de esta carrera (ver GameConfig.ajustarOvrTramo): el
 // nivel real que este jugador puede llegar a alcanzar, sorteado una única
@@ -1115,6 +1128,12 @@ let temporadaActual;
 // inicial o uno fichado a mitad de carrera, y sube +1 en cada cierre de
 // temporada en el mismo club (finalizarTemporada).
 let temporadasEnClubActual = 0;
+
+// El club en el que arrancó la carrera (creación de personaje) le da más
+// margen de contrato que uno fichado después — ver
+// TEMPORADAS_GRACIA_CONTRATO_PRIMER_CLUB. Pasa a `false` apenas fichás
+// por otro club, para siempre (ver resolveOferta).
+let esPrimerClub = true;
 
 if (usaProgresionReal) {
   const equipoInicial = GameDatabase.equipos.find((e) => e.id === player.equipoId);
@@ -1620,7 +1639,7 @@ function resolverParticipacionSeleccion(prioriza) {
   const grupo = GameConfig.GRUPOS_POSICION[player.posicion] ?? "medio";
   const { goles } = GameConfig.simularTramo({
     partidos, grupo, ovr: temporadaActual.ovr, rendimientoAcumulado: temporadaActual.bufferRendimiento,
-    fuerzaLiga: seleccion.fuerza,
+    fuerzaLiga: seleccion.fuerza, factorTalento,
   });
   temporadaActual.seleccionPartidos += partidos;
   temporadaActual.seleccionGoles += goles;
@@ -1699,8 +1718,11 @@ function resolveOferta(item) {
     temporadaActual.equipoId = item.equipo.id;
     temporadaActual.competiciones = inicializarCompeticionesTemporada(item.equipo.id, null);
     // Nuevo club, nuevo período de gracia de contrato (ver
-    // TEMPORADAS_GRACIA_CONTRATO en generarLoteOfertas).
+    // TEMPORADAS_GRACIA_CONTRATO en generarLoteOfertas) — y ya no es el
+    // primer club, así que ese período vuelve a ser el normal, no el
+    // extendido.
     temporadasEnClubActual = 0;
+    esPrimerClub = false;
     temporadaActual.titular = false;
     // Club nuevo: el puesto ganado en el club anterior no se traslada —
     // arrancás otra vez "en la cuerda floja" hasta ganártelo acá.
