@@ -6,6 +6,8 @@ Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso).
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
+> **Nota de desarrollo (no forma parte del juego publicado):** en la rama `feature/vue-migration` (carpeta [`app/`](app/)) hay una reescritura completa del frontend a **Vue 3 + TypeScript + Pinia + Vite**, todavía en curso y sin mergear a `main`. Es un *port*, no un rediseño: mismo motor, mismas fórmulas, mismas reglas de balance descritas en todo este documento — la reescritura solo cambia cómo está armada la interfaz (componentes en vez de manipulación directa del DOM, estado reactivo en vez de variables globales mutables), no qué hace el juego. Mientras esa rama no se mergee, la versión que corre de verdad — y la que describe el resto de esta referencia técnica — sigue siendo la vanilla de la raíz del repo (`index.html`/`equipo.html`/`carrera.html` + `js/`).
+
 ---
 
 ## Índice
@@ -78,10 +80,14 @@ Leyenda/
 │       ├── ligas/             Escudos/logos de cada liga
 │       └── trofeos/            Siluetas de trofeos reales (se pintan de dorado vía CSS mask)
 │
-└── dev/
-    └── test.html / test.js    Herramienta interna de depuración (tablas de la base de datos,
-                                distribución de OVR inicial simulada) — no forma parte del juego,
-                                es solo para calibrar balance durante el desarrollo.
+├── dev/
+│   └── test.html / test.js    Herramienta interna de depuración (tablas de la base de datos,
+│                               distribución de OVR inicial simulada) — no forma parte del juego,
+│                               es solo para calibrar balance durante el desarrollo.
+│
+└── app/                     Reescritura en curso a Vue 3 + TypeScript + Pinia (rama
+                                `feature/vue-migration`, no mergeada — ver la nota de desarrollo
+                                al principio de este documento). No forma parte del juego publicado.
 ```
 
 **Orden de carga de scripts** (importa: cada archivo asume que el anterior ya está cargado):
@@ -90,7 +96,7 @@ Leyenda/
 - `equipo.html` → `config.js` → `database.js` → `equipo.js`
 - `carrera.html` → `config.js` → `database.js` → `events.js` → `carrera.js`
 
-Todo vive en objetos globales (`GameConfig`, `GameDatabase`, `GameEvents`) — no hay módulos ES, ni bundler, ni build.
+Todo vive en objetos globales (`GameConfig`, `GameDatabase`, `GameEvents`) — no hay módulos ES, ni bundler, ni build. (La excepción es `app/`, que sí usa módulos ES + build — ver la nota de desarrollo arriba.)
 
 ---
 

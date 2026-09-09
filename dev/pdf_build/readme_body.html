@@ -4,28 +4,31 @@
 <blockquote>
 <p>Este documento describe <strong>absolutamente toda la lógica del juego</strong>: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás &quot;cómo se juega&quot; en términos de jugador, ver el <em>Manual de Juego</em> aparte.</p>
 </blockquote>
+<blockquote>
+<p><strong>Nota de desarrollo (no forma parte del juego publicado):</strong> en la rama <code>feature/vue-migration</code> (carpeta <a href="app/"><code>app/</code></a>) hay una reescritura completa del frontend a <strong>Vue 3 + TypeScript + Pinia + Vite</strong>, todavía en curso y sin mergear a <code>main</code>. Es un <em>port</em>, no un rediseño: mismo motor, mismas fórmulas, mismas reglas de balance descritas en todo este documento — la reescritura solo cambia cómo está armada la interfaz (componentes en vez de manipulación directa del DOM, estado reactivo en vez de variables globales mutables), no qué hace el juego. Mientras esa rama no se mergee, la versión que corre de verdad — y la que describe el resto de esta referencia técnica — sigue siendo la vanilla de la raíz del repo (<code>index.html</code>/<code>equipo.html</code>/<code>carrera.html</code> + <code>js/</code>).</p>
+</blockquote>
 <hr>
 <h2>Índice</h2>
 <ol>
-<li><a href="#1-cómo-correr-el-proyecto">Cómo correr el proyecto</a></li>
+<li><a href="#1-c%C3%B3mo-correr-el-proyecto">Cómo correr el proyecto</a></li>
 <li><a href="#2-estructura-de-archivos">Estructura de archivos</a></li>
 <li><a href="#3-flujo-general-del-juego">Flujo general del juego</a></li>
-<li><a href="#4-creación-de-personaje-indexhtml-jsscriptjs">Creación de personaje</a></li>
-<li><a href="#5-elección-de-club-inicial-equipohtml-jsequipojs">Elección de club inicial</a></li>
-<li><a href="#6-el-motor-de-carrera-visión-general-jscarrerajs">El motor de carrera — visión general</a></li>
+<li><a href="#4-creaci%C3%B3n-de-personaje-indexhtml--jsscriptjs">Creación de personaje</a></li>
+<li><a href="#5-elecci%C3%B3n-de-club-inicial-equipohtml--jsequipojs">Elección de club inicial</a></li>
+<li><a href="#6-el-motor-de-carrera--visi%C3%B3n-general-jscarrerajs">El motor de carrera — visión general</a></li>
 <li><a href="#7-calendario-de-temporada">Calendario de temporada</a></li>
 <li><a href="#8-el-ciclo-de-un-tramo-paso-a-paso">El ciclo de un tramo, paso a paso</a></li>
-<li><a href="#9-participación-cuántos-partidos-jugás-vos">Participación: cuántos partidos jugás</a></li>
-<li><a href="#10-estadísticas-del-tramo-goles-asistencias-mvp-rating">Estadísticas del tramo: goles, asistencias, MVP, rating</a></li>
-<li><a href="#11-progresión-de-ovr">Progresión de OVR</a></li>
+<li><a href="#9-participaci%C3%B3n-cu%C3%A1ntos-partidos-jug%C3%A1s-vos">Participación: cuántos partidos jugás</a></li>
+<li><a href="#10-estad%C3%ADsticas-del-tramo-goles-asistencias-mvp-rating">Estadísticas del tramo: goles, asistencias, MVP, rating</a></li>
+<li><a href="#11-progresi%C3%B3n-de-ovr">Progresión de OVR</a></li>
 <li><a href="#12-estado-de-forma">Estado de forma</a></li>
 <li><a href="#13-lesiones">Lesiones</a></li>
-<li><a href="#14-sistema-de-competiciones-liga-copas-clasificación-internacional">Sistema de competiciones (liga, copas, clasificación internacional)</a></li>
+<li><a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">Sistema de competiciones (liga, copas, clasificación internacional)</a></li>
 <li><a href="#15-valor-de-mercado">Valor de mercado</a></li>
 <li><a href="#16-sistema-de-fichajes-y-ofertas">Sistema de fichajes y ofertas</a></li>
 <li><a href="#17-fin-de-carrera-retiro-y-resumen">Fin de carrera: retiro y resumen</a></li>
 <li><a href="#18-solicitud-de-cambio-de-dorsal">Solicitud de cambio de dorsal</a></li>
-<li><a href="#19-selección-nacional">Selección nacional</a></li>
+<li><a href="#19-selecci%C3%B3n-nacional">Selección nacional</a></li>
 <li><a href="#20-banco-de-eventos-de-temporada-jseventsjs">Banco de eventos de temporada</a></li>
 <li><a href="#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs">Base de datos de ligas y equipos</a></li>
 <li><a href="#22-interfaz-componentes-animaciones-y-responsive">Interfaz: componentes, animaciones y responsive</a></li>
@@ -34,13 +37,13 @@
 <li><a href="#25-limitaciones-conocidas-y-notas-para-el-futuro">Limitaciones conocidas y notas para el futuro</a></li>
 </ol>
 <hr>
-<h2 id="1-cómo-correr-el-proyecto">1. Cómo correr el proyecto</h2>
+<h2>1. Cómo correr el proyecto</h2>
 <p>Es un sitio 100% estático (HTML/CSS/JS sin build). Cualquier servidor estático alcanza:</p>
 <pre><code class="language-bash">npx serve -l 5173 .
 </code></pre>
 <p>La configuración ya está en <a href=".claude/launch.json"><code>.claude/launch.json</code></a> para levantarlo automáticamente en el puerto <code>5173</code>. No hay <code>package.json</code>, ni paso de compilación, ni dependencias que instalar.</p>
 <hr>
-<h2 id="2-estructura-de-archivos">2. Estructura de archivos</h2>
+<h2>2. Estructura de archivos</h2>
 <pre><code>Leyenda/
 ├── index.html            Pantalla 1: creación de personaje
 ├── equipo.html            Pantalla 2: elección de club inicial
@@ -66,10 +69,14 @@
 │       ├── ligas/             Escudos/logos de cada liga
 │       └── trofeos/            Siluetas de trofeos reales (se pintan de dorado vía CSS mask)
 │
-└── dev/
-    └── test.html / test.js    Herramienta interna de depuración (tablas de la base de datos,
-                                distribución de OVR inicial simulada) — no forma parte del juego,
-                                es solo para calibrar balance durante el desarrollo.
+├── dev/
+│   └── test.html / test.js    Herramienta interna de depuración (tablas de la base de datos,
+│                               distribución de OVR inicial simulada) — no forma parte del juego,
+│                               es solo para calibrar balance durante el desarrollo.
+│
+└── app/                     Reescritura en curso a Vue 3 + TypeScript + Pinia (rama
+                                `feature/vue-migration`, no mergeada — ver la nota de desarrollo
+                                al principio de este documento). No forma parte del juego publicado.
 </code></pre>
 <p><strong>Orden de carga de scripts</strong> (importa: cada archivo asume que el anterior ya está cargado):</p>
 <ul>
@@ -77,9 +84,9 @@
 <li><code>equipo.html</code> → <code>config.js</code> → <code>database.js</code> → <code>equipo.js</code></li>
 <li><code>carrera.html</code> → <code>config.js</code> → <code>database.js</code> → <code>events.js</code> → <code>carrera.js</code></li>
 </ul>
-<p>Todo vive en objetos globales (<code>GameConfig</code>, <code>GameDatabase</code>, <code>GameEvents</code>) — no hay módulos ES, ni bundler, ni build.</p>
+<p>Todo vive en objetos globales (<code>GameConfig</code>, <code>GameDatabase</code>, <code>GameEvents</code>) — no hay módulos ES, ni bundler, ni build. (La excepción es <code>app/</code>, que sí usa módulos ES + build — ver la nota de desarrollo arriba.)</p>
 <hr>
-<h2 id="3-flujo-general-del-juego">3. Flujo general del juego</h2>
+<h2>3. Flujo general del juego</h2>
 <pre><code>index.html (crear personaje)
         │  guarda en localStorage[&quot;leyendaPlayer&quot;]:
         │  { apellido, numero, pierna, edad, pais, flag, paisCode, posicion }
@@ -96,9 +103,9 @@ carrera.html (el juego)
         ▼
 Retiro (forzoso por edad, o elegido) → resumen de carrera → volver a index.html
 </code></pre>
-<p>No hay guardado de partida: <strong>todo el estado de la carrera vive en memoria mientras la pestaña está abierta</strong>. Recargar la página reinicia la carrera desde la Temporada 1 (con el mismo club/OVR inicial, porque eso sí quedó en <code>localStorage</code>). Ver <a href="#">sección 23</a>.</p>
+<p>No hay guardado de partida: <strong>todo el estado de la carrera vive en memoria mientras la pestaña está abierta</strong>. Recargar la página reinicia la carrera desde la Temporada 1 (con el mismo club/OVR inicial, porque eso sí quedó en <code>localStorage</code>). Ver <a href="#23-persistencia-y-estado">sección 23</a>.</p>
 <hr>
-<h2 id="4-creación-de-personaje-indexhtml-jsscriptjs">4. Creación de personaje (<code>index.html</code> + <code>js/script.js</code>)</h2>
+<h2>4. Creación de personaje (<code>index.html</code> + <code>js/script.js</code>)</h2>
 <p>Formulario de 3 pasos (acordeón en móvil, los 3 siempre abiertos en escritorio):</p>
 <table>
 <thead>
@@ -134,17 +141,17 @@ Retiro (forzoso por edad, o elegido) → resumen de carrera → volver a index.h
 <td>12 posiciones sobre una cancha (<a href="index.html:158">index.html:158-196</a>): POR, DFC, LI, LD, MCD, MC, MI, MD, MCO, EI, ED, DC.</td>
 </tr>
 </tbody></table>
-<p>El <strong>dorsal</strong> se asigna solo al azar, no se elige — pero no parejo entre 1 y 99 (así, un debutante tenía la misma chance de arrancar con el 7 que con el 87, nada realista). <code>sortearDorsalInicial()</code> (<a href="js/config.js:37">config.js:37-41</a>, llamado desde <a href="js/script.js:60">script.js:60</a>) sortea por bandas: <strong>70%</strong> de las carreras arranca con un número común (<strong>1-30</strong>), <strong>20%</strong> con uno menos común (<strong>31-50</strong>), y solo el <strong>10%</strong> restante con uno alto (<strong>51-99</strong>) — el caso ocasional, no la norma. Recién se puede pedir cambiarlo al cerrar la primera temporada (ver <a href="#">sección 18</a>).</p>
+<p>El <strong>dorsal</strong> se asigna solo al azar, no se elige — pero no parejo entre 1 y 99 (así, un debutante tenía la misma chance de arrancar con el 7 que con el 87, nada realista). <code>sortearDorsalInicial()</code> (<a href="js/config.js:37">config.js:37-41</a>, llamado desde <a href="js/script.js:60">script.js:60</a>) sortea por bandas: <strong>70%</strong> de las carreras arranca con un número común (<strong>1-30</strong>), <strong>20%</strong> con uno menos común (<strong>31-50</strong>), y solo el <strong>10%</strong> restante con uno alto (<strong>51-99</strong>) — el caso ocasional, no la norma. Recién se puede pedir cambiarlo al cerrar la primera temporada (ver <a href="#18-solicitud-de-cambio-de-dorsal">sección 18</a>).</p>
 <p>Al completar los 3 pasos y tocar &quot;Comenzar carrera&quot;, se guarda en <code>localStorage[&quot;leyendaPlayer&quot;]</code> (<a href="js/script.js:264">script.js:264-282</a>):</p>
 <pre><code class="language-json">{ &quot;apellido&quot;: &quot;...&quot;, &quot;numero&quot;: 42, &quot;pierna&quot;: &quot;derecha&quot;, &quot;edad&quot;: 17,
   &quot;pais&quot;: &quot;Argentina&quot;, &quot;flag&quot;: &quot;🇦🇷&quot;, &quot;paisCode&quot;: &quot;ar&quot;, &quot;posicion&quot;: &quot;DC&quot; }
 </code></pre>
 <p>y se pasa a <code>equipo.html</code>.</p>
 <hr>
-<h2 id="5-elección-de-club-inicial-equipohtml-jsequipojs">5. Elección de club inicial (<code>equipo.html</code> + <code>js/equipo.js</code>)</h2>
+<h2>5. Elección de club inicial (<code>equipo.html</code> + <code>js/equipo.js</code>)</h2>
 <p>Se presentan <strong>4 ofertas de club</strong>, elegidas así (<a href="js/equipo.js:17">equipo.js:17-32</a>):</p>
 <ul>
-<li><strong>Si el país elegido tiene una liga propia</strong> en la base de datos (<strong>23 de los 46</strong> países de la creación de personaje, desde Alemania/Argentina/España hasta Bolivia/Costa Rica/Paraguay — todas las que tienen <code>pais</code> cargado en <code>GameDatabase.ligas</code>, ver <a href="#">sección 21</a>), las 4 ofertas salen de esa liga, en esta banda fija (<code>OFERTAS_INICIALES</code>, <a href="js/config.js:120">config.js:120-125</a>):<ul>
+<li><strong>Si el país elegido tiene una liga propia</strong> en la base de datos (<strong>23 de los 46</strong> países de la creación de personaje, desde Alemania/Argentina/España hasta Bolivia/Costa Rica/Paraguay — todas las que tienen <code>pais</code> cargado en <code>GameDatabase.ligas</code>, ver <a href="#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs">sección 21</a>), las 4 ofertas salen de esa liga, en esta banda fija (<code>OFERTAS_INICIALES</code>, <a href="js/config.js:120">config.js:120-125</a>):<ul>
 <li>2 clubes <strong>humildes</strong> (mitad de abajo por poder, dentro de esa liga)</li>
 <li>1 club <strong>consolidado</strong> (entre el 50% y el 85% por poder)</li>
 <li>1 club <strong>al azar</strong>, de cualquier categoría (la única chance de arrancar en un club grande)</li>
@@ -152,7 +159,7 @@ Retiro (forzoso por edad, o elegido) → resumen de carrera → volver a index.h
 </li>
 <li><strong>Si el país NO tiene liga propia</strong> (los otros 23 — mayormente africanos, asiáticos y del resto de Europa que todavía no tienen liga doméstica cargada), arranca &quot;de extranjero&quot; en una de las <strong>5 grandes ligas europeas</strong> elegida al azar (Premier League, La Liga, Serie A, Bundesliga, Ligue 1 — <code>LIGAS_GRANDES_EUROPEAS</code>, <a href="js/config.js:116">config.js:116</a>), con una banda más floja y sin favores (<code>OFERTAS_INICIALES_EXTRANJERO</code>, <a href="js/config.js:127">config.js:127-132</a>): 3 clubes humildes + 1 consolidado, nunca uno grande.</li>
 </ul>
-<p>&quot;Humilde&quot; / &quot;consolidado&quot; / &quot;grande&quot; son percentiles por poder <strong>dentro de la liga elegida</strong> (<code>categoriaEquipoEnLiga</code>, <a href="js/config.js:174">config.js:174-183</a> — ver <a href="#">sección 16.6</a> para qué es el poder de un club), no una categoría fija guardada en cada club: humilde es la mitad de abajo, consolidado el 50-85%, grande el 15% de arriba (<code>CATEGORIA_EQUIPO_PERCENTIL</code>, <a href="js/config.js:118">config.js:118</a>).</p>
+<p>&quot;Humilde&quot; / &quot;consolidado&quot; / &quot;grande&quot; son percentiles por poder <strong>dentro de la liga elegida</strong> (<code>categoriaEquipoEnLiga</code>, <a href="js/config.js:174">config.js:174-183</a> — ver <a href="#16-sistema-de-fichajes-y-ofertas">sección 16.6</a> para qué es el poder de un club), no una categoría fija guardada en cada club: humilde es la mitad de abajo, consolidado el 50-85%, grande el 15% de arriba (<code>CATEGORIA_EQUIPO_PERCENTIL</code>, <a href="js/config.js:118">config.js:118</a>).</p>
 <p>El <strong>OVR inicial</strong> con el que arrancarías en cada club se calcula recién al elegirlo, con <code>calcularOvrInicial(equipo, liga)</code> (<a href="js/config.js:155">config.js:155-167</a>):</p>
 <ol>
 <li>Se combina el poder del equipo y el de la liga con pesos fijos: <strong>55% equipo + 45% liga</strong> (<code>OVR_PESO_EQUIPO</code>/<code>OVR_PESO_LIGA</code>, <code>calidadPoderCombinada</code>, <a href="js/config.js:96">config.js:96-100</a>), normalizado a una escala 0..1.</li>
@@ -162,7 +169,7 @@ Retiro (forzoso por edad, o elegido) → resumen de carrera → volver a index.h
 <p>El jugador nunca ve estos números crudos: en la tarjeta de oferta solo se muestra el nombre del club/liga, su escudo y su bandera — sin ninguna etiqueta de &quot;qué tan grande es&quot;, a diferencia de versiones anteriores.</p>
 <p>Al elegir un club se guarda <code>equipoId</code> y <code>ovrInicial</code> en el mismo objeto de <code>localStorage</code>, y se pasa a <code>carrera.html</code> — sin ningún toast de confirmación de por medio (&quot;Fichaste por X, OVR inicial: Y&quot;) — la propia transición de pantalla ya comunica que la elección se hizo, y la sección 4 (creación de personaje) es la única que sí sigue mostrando un toast de bienvenida.</p>
 <hr>
-<h2 id="6-el-motor-de-carrera-visión-general-jscarrerajs">6. El motor de carrera — visión general (<code>js/carrera.js</code>)</h2>
+<h2>6. El motor de carrera — visión general (<code>js/carrera.js</code>)</h2>
 <p>Es el archivo más grande (2100+ líneas): mezcla el <strong>estado del juego</strong>, la <strong>simulación</strong> y <strong>todo el render de la UI</strong> de <code>carrera.html</code> (no hay separación de capas — es un único script).</p>
 <h3>Estado central</h3>
 <pre><code class="language-js">let temporadaActual;          // la temporada en curso (objeto mutable)
@@ -171,14 +178,14 @@ let temporadasEnClubActual = 0; // temporadas completas en el club actual (para 
 let carreraFinalizada = false;
 const edadRetiroForzoso = GameConfig.randomInt(41, 45); // sorteada UNA VEZ por carrera, al cargar la página
 </code></pre>
-<p><code>temporadaActual</code> (creada por <code>crearTemporada()</code>, <a href="js/carrera.js:138">carrera.js:138</a>) contiene, entre otras cosas: <code>numero</code>, <code>anio</code>, <code>equipoId</code>, <code>ovr</code>, <code>partidos/goles/asistencias/mvp/sumaRating/promedio</code>, <code>valorMercado</code>, <code>trofeos[]</code>, <code>forma</code>, <code>titular</code>, <code>progreso</code> (0–100%), <code>calendario[]</code>, <code>checkpointIndex</code>, <code>tramoIndex</code>, <code>lesionActiva</code>, <code>bufferRendimiento</code>/<code>bufferEquipo</code> (efecto acumulado de las decisiones del tramo en curso, sin aplicar todavía), <code>competiciones</code> (liga + copa nacional + copa internacional de esa temporada) y todo lo de la selección nacional de esa temporada — <code>seleccion</code>, <code>tipoAnoSeleccion</code>, <code>convocatoriaPausa</code>, <code>seleccionPartidos</code>/<code>seleccionGoles</code> (ver <a href="#">sección 19</a>).</p>
+<p><code>temporadaActual</code> (creada por <code>crearTemporada()</code>, <a href="js/carrera.js:138">carrera.js:138</a>) contiene, entre otras cosas: <code>numero</code>, <code>anio</code>, <code>equipoId</code>, <code>ovr</code>, <code>partidos/goles/asistencias/mvp/sumaRating/promedio</code>, <code>valorMercado</code>, <code>trofeos[]</code>, <code>forma</code>, <code>titular</code>, <code>progreso</code> (0–100%), <code>calendario[]</code>, <code>checkpointIndex</code>, <code>tramoIndex</code>, <code>lesionActiva</code>, <code>bufferRendimiento</code>/<code>bufferEquipo</code> (efecto acumulado de las decisiones del tramo en curso, sin aplicar todavía), <code>competiciones</code> (liga + copa nacional + copa internacional de esa temporada) y todo lo de la selección nacional de esa temporada — <code>seleccion</code>, <code>tipoAnoSeleccion</code>, <code>convocatoriaPausa</code>, <code>seleccionPartidos</code>/<code>seleccionGoles</code> (ver <a href="#19-selecci%C3%B3n-nacional">sección 19</a>).</p>
 <p>Si se abre <code>carrera.html</code> sin haber pasado por la creación de personaje (sin <code>equipoId</code>/<code>ovrInicial</code> válidos en <code>localStorage</code>), arranca una <strong>carrera demo</strong> ya avanzada, con el mismo motor real (totalmente jugable) — <a href="js/carrera.js:758">carrera.js:758-785</a>.</p>
 <p><strong>La edad sube 1 año por cada temporada, nunca dentro de una misma temporada</strong> — <code>getEdadActual()</code> (<a href="js/carrera.js:869">carrera.js:869-871</a>):</p>
 <pre><code>edadActual = edad de creación + (número de temporada actual − 1)
 </code></pre>
 <p>Todas las fórmulas que dependen de la edad (crecimiento/declive de OVR, riesgo de lesión, ventanas de fichaje, retiro) usan este valor.</p>
 <hr>
-<h2 id="7-calendario-de-temporada">7. Calendario de temporada</h2>
+<h2>7. Calendario de temporada</h2>
 <p>Cada temporada tiene <strong>3 &quot;tramos&quot;</strong> (<code>TOTAL_TRAMOS_TEMPORADA</code>, <a href="js/config.js:590">config.js:590</a>) — bloques de partidos que se simulan de una vez — separados por pausas donde el jugador interactúa: 3 de decisiones y, a partir de la Temporada 2, <strong>1 sola ventana de fichajes</strong>.</p>
 <p><code>crearCalendarioTemporada(numeroTemporada)</code> (<a href="js/config.js:594">config.js:594-604</a>) arma:</p>
 <table>
@@ -213,9 +220,9 @@ const edadRetiroForzoso = GameConfig.randomInt(41, 45); // sorteada UNA VEZ por 
 <p>Las 4 (o 3, en la Temporada 1) se ordenan por este <code>progreso</code> para que el calendario quede cronológico <strong>al narrar la temporada</strong> — pero ese número es solo para ordenar pausas, no es lo que se muestra en pantalla (ver más abajo). Cada pausa de decisión resuelta dispara la simulación del tramo siguiente (<code>simularTramoYAvanzar</code>) y avanza al próximo checkpoint (<code>avanzarCheckpoint</code>); al agotarse el calendario, se cierra la temporada (<code>finalizarTemporada</code>).</p>
 <p><strong>El progreso que ves en pantalla (anillo/barra) es otro número</strong>: <code>temporadaActual.progreso</code> se recalcula en cada tramo como <code>partidosJugados / partidosMinimos</code> de la liga (<code>simularTramoYAvanzar</code>, <a href="js/carrera.js">carrera.js</a>), no a partir de la tabla de arriba — antes reusaba esos valores aleatorios de la tabla, así que la barra podía verse casi llena con 15 partidos jugados y saltar a más de 50% recién en el último tramo. Ahora sigue de cerca el avance real de partidos de liga (no puede ser 100% exacto porque la cantidad de partidos por tramo no es fija, pero da la ilusión correcta de avance).</p>
 <p><strong>Por qué una sola ventana, y siempre en pretemporada</strong>: antes había una segunda pausa de fichajes a mitad de año, lo que permitía que un traspaso partiera una temporada en dos (dos clubes distintos, dos filas de historial, el mismo año). Se sacó a propósito — ahora un fichaje sale siempre con la temporada en cero (0 partidos jugados con el club nuevo) y la corres entera de punta a punta con ese club, tal como pasaría en la realidad con una ventana de pases real. <code>resolveOferta</code> (<a href="js/carrera.js:1299">carrera.js:1299-1343</a>) ya no tiene ninguna rama de &quot;traspaso a mitad de camino&quot;: cambiar de club siempre resetea <code>competiciones</code> (liga + copa nacional; la clasificación internacional NO se hereda, es del club, no del jugador) desde cero.</p>
-<p><strong>Alto Impacto</strong>: al crear la temporada se sortea si va a haber un evento de alto impacto (30% de probabilidad) y, si sale, en cuál de los 3 tramos va a aparecer (<code>altoImpactoPausa</code>, <a href="js/carrera.js:145">carrera.js:145</a>). Ver <a href="#">sección 20</a>.</p>
+<p><strong>Alto Impacto</strong>: al crear la temporada se sortea si va a haber un evento de alto impacto (30% de probabilidad) y, si sale, en cuál de los 3 tramos va a aparecer (<code>altoImpactoPausa</code>, <a href="js/carrera.js:145">carrera.js:145</a>). Ver <a href="#20-banco-de-eventos-de-temporada-jseventsjs">sección 20</a>.</p>
 <hr>
-<h2 id="8-el-ciclo-de-un-tramo-paso-a-paso">8. El ciclo de un tramo, paso a paso</h2>
+<h2>8. El ciclo de un tramo, paso a paso</h2>
 <p>Todo pasa en <code>simularTramoYAvanzar()</code> (<a href="js/carrera.js:567">carrera.js:567-659</a>), disparado al resolver la última decisión pendiente de una pausa:</p>
 <ol>
 <li><strong>Partidos del club esta franja</strong>, sumando las 3 competiciones activas:<ul>
@@ -223,24 +230,24 @@ const edadRetiroForzoso = GameConfig.randomInt(41, 45); // sorteada UNA VEZ por 
 <li>Copa nacional / internacional: <code>resolverKnockout</code> — en su tramo de &quot;partidos mínimos&quot; juega la ronda garantizada; después, un tramo por cada ronda extra disponible, con una tirada de <code>probAvanzarRonda(fuerza)</code> para seguir viva (si pierde, queda eliminado para el resto de la temporada).</li>
 </ul>
 </li>
-<li><strong>Titularidad de este tramo</strong>: <code>calcularTitular(pesoTitular, ovr, rendimientoAcumulado)</code> — una tirada (ver fórmula en <a href="#">sección 9</a>) decidida <strong>antes</strong> de calcular cuánto jugás, para que ser titular realmente sume participación (no es solo un badge decorativo). Al cierre del tramo, el resultado también ajusta <code>pesoTitular</code> de cara al próximo (paso 7 más abajo).</li>
+<li><strong>Titularidad de este tramo</strong>: <code>calcularTitular(pesoTitular, ovr, rendimientoAcumulado)</code> — una tirada (ver fórmula en <a href="#9-participaci%C3%B3n-cu%C3%A1ntos-partidos-jug%C3%A1s-vos">sección 9</a>) decidida <strong>antes</strong> de calcular cuánto jugás, para que ser titular realmente sume participación (no es solo un badge decorativo). Al cierre del tramo, el resultado también ajusta <code>pesoTitular</code> de cara al próximo (paso 7 más abajo).</li>
 <li><strong>Cuántos de esos partidos jugás vos</strong> (no todos, ver sección 9) — si estás lesionado, <strong>cero</strong>, sin excepción.</li>
-<li><strong>Resultado del tramo</strong> (<code>GameConfig.simularTramo</code>, ver <a href="#">sección 10</a>): goles, asistencias, MVPs y la suma de ratings de esos partidos.</li>
+<li><strong>Resultado del tramo</strong> (<code>GameConfig.simularTramo</code>, ver <a href="#10-estad%C3%ADsticas-del-tramo-goles-asistencias-mvp-rating">sección 10</a>): goles, asistencias, MVPs y la suma de ratings de esos partidos.</li>
 <li>Se acumulan a las estadísticas de la temporada, se recalcula el promedio (<code>sumaRating / partidos</code>).</li>
-<li><strong>Se ajusta el OVR</strong> (<code>ajustarOvrTramo</code>, <a href="#">sección 11</a>) y se recalcula el <strong>valor de mercado</strong> con el nuevo OVR.</li>
-<li><strong>Se ajusta <code>pesoTitular</code></strong> con el rating de este tramo (<code>ajustarPesoTitular</code>, ver <a href="#">sección 9</a>) — de cara al próximo tramo, no a este que ya se jugó.</li>
+<li><strong>Se ajusta el OVR</strong> (<code>ajustarOvrTramo</code>, <a href="#11-progresi%C3%B3n-de-ovr">sección 11</a>) y se recalcula el <strong>valor de mercado</strong> con el nuevo OVR.</li>
+<li><strong>Se ajusta <code>pesoTitular</code></strong> con el rating de este tramo (<code>ajustarPesoTitular</code>, ver <a href="#9-participaci%C3%B3n-cu%C3%A1ntos-partidos-jug%C3%A1s-vos">sección 9</a>) — de cara al próximo tramo, no a este que ya se jugó.</li>
 <li>Se descuenta un tramo a la lesión activa, si había una; al llegar a 0, se da de alta.</li>
-<li>Se avanza <code>tramoIndex</code> y se recalcula el <code>progreso</code> mostrado en pantalla a partir de <code>partidosJugados / partidosMinimos</code> de la liga (ver <a href="#">sección 7</a>).</li>
+<li>Se avanza <code>tramoIndex</code> y se recalcula el <code>progreso</code> mostrado en pantalla a partir de <code>partidosJugados / partidosMinimos</code> de la liga (ver <a href="#7-calendario-de-temporada">sección 7</a>).</li>
 <li>Se anima el spotlight (anillo de progreso + contadores) y, 1050ms después (<code>ANIMACION_TRAMO_MS</code> + margen), se pasa a la próxima pausa (o se cierra la temporada si no queda ninguna).</li>
 </ol>
 <p>Al <strong>cerrar la temporada</strong> (<code>finalizarTemporada</code>, <a href="js/carrera.js:661">carrera.js:661-737</a>):</p>
 <ul>
-<li>Se tira si ganás la <strong>liga</strong> y, si tu copa nacional llegó a la final, si la ganás también (fórmulas en <a href="#">sección 14</a>).</li>
+<li>Se tira si ganás la <strong>liga</strong> y, si tu copa nacional llegó a la final, si la ganás también (fórmulas en <a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">sección 14</a>).</li>
 <li>Se decide la <strong>clasificación internacional de la próxima temporada</strong> según qué tan bien te fue.</li>
 <li>Se archiva la temporada en <code>temporadasFinalizadas</code>, se crea la siguiente (heredando OVR y club), y se habilita el pedido de cambio de dorsal.</li>
 </ul>
 <hr>
-<h2 id="9-participación-cuántos-partidos-jugás-vos">9. Participación: cuántos partidos jugás vos</h2>
+<h2>9. Participación: cuántos partidos jugás vos</h2>
 <p>Los partidos de arriba son los del <strong>equipo</strong>; cuántos de esos jugás vos depende de tu nivel, tu momento y si sos titular ese tramo.</p>
 <p><strong>Titularidad</strong> — ya no es un sorteo nuevo e independiente cada tramo: hay un valor persistente <code>pesoTitular</code> (0-1, &quot;cuánto te ganaste el puesto DE VERDAD&quot;) que se arrastra tramo a tramo e incluso de una temporada a la siguiente mientras sigas en el mismo club. Una gran temporada ya no se &quot;olvida&quot; al arrancar la próxima, y un jugador titular indiscutido no vuelve a ser una moneda al aire de un día para el otro.</p>
 <p>Arranca en <code>PESO_TITULAR_INICIAL = 0.4</code> (novato o recién fichado — hay que ganarse el puesto) y se resetea a ese mismo valor en cada transferencia (<a href="js/carrera.js"><code>resolveOferta</code></a>); si te quedás en el club, se hereda de una temporada a la siguiente sin tocar.</p>
@@ -299,9 +306,9 @@ recortado entre 0.15 y 1
 <td>−0.35</td>
 </tr>
 </tbody></table>
-<p><code>partidosJugador = redondeoEstocastico(partidosClub × prob)</code> (ver &quot;redondeo estocástico&quot; en <a href="#">sección 11</a>), recortado entre 0 y los partidos totales del club ese tramo. Si hay una lesión activa, <code>partidosJugador</code> es directamente 0, sin pasar por esta fórmula.</p>
+<p><code>partidosJugador = redondeoEstocastico(partidosClub × prob)</code> (ver &quot;redondeo estocástico&quot; en <a href="#11-progresi%C3%B3n-de-ovr">sección 11</a>), recortado entre 0 y los partidos totales del club ese tramo. Si hay una lesión activa, <code>partidosJugador</code> es directamente 0, sin pasar por esta fórmula.</p>
 <hr>
-<h2 id="10-estadísticas-del-tramo-goles-asistencias-mvp-rating">10. Estadísticas del tramo: goles, asistencias, MVP, rating</h2>
+<h2>10. Estadísticas del tramo: goles, asistencias, MVP, rating</h2>
 <p><code>GameConfig.simularTramo({ partidos, grupo, ovr, rendimientoAcumulado, fuerzaLiga, factorTalento })</code> (<a href="js/config.js:834">config.js:834-857</a>) recorre partido por partido (de los que jugás vos, no los del equipo).</p>
 <p><strong>Grupo de posición</strong> (<code>GRUPOS_POSICION</code>, <a href="js/config.js:695">config.js:695-700</a>): cada una de las 12 posiciones cae en uno de <strong>5 grupos</strong> — antes &quot;defensa&quot; era uno solo (central y lateral idénticos); separarlos deja que el lateral aporte sobre todo asistencias (centros) y el central sume algún gol de cabeza mucho menos seguido:</p>
 <table>
@@ -355,7 +362,7 @@ ventaja        = ovr − referenciaLiga
 factorLiga     = clamp(1 + ventaja × FACTOR_LIGA_COEFICIENTE, FACTOR_LIGA_MIN, FACTOR_LIGA_MAX)
                  (COEFICIENTE = 0.024, MIN = 0.35, MAX = 2.2)
 </code></pre>
-<p><code>referenciaLiga</code> mapea la fuerza de la liga (0-100) al mismo rango de OVR de carrera: una liga de fuerza 96 &quot;espera&quot; un nivel cercano al techo (~97), una de fuerza 55 espera algo bastante más modesto (~75). La diferencia entre tu OVR y esa referencia empuja el factor para arriba o para abajo. Con estos valores, un delantero de <strong>70 OVR en Chile</strong> (fuerza 60) promedia ~4 goles en una temporada de 34 partidos; ese mismo 70 OVR en la <strong>Premier League</strong> (fuerza 96) promedia ~2.1 — casi la mitad, con idéntico nivel absoluto. Se aplica también a los partidos con la selección nacional (con la fuerza de la selección rival, no la de tu liga de club — ver <a href="#">sección 19</a>).</p>
+<p><code>referenciaLiga</code> mapea la fuerza de la liga (0-100) al mismo rango de OVR de carrera: una liga de fuerza 96 &quot;espera&quot; un nivel cercano al techo (~97), una de fuerza 55 espera algo bastante más modesto (~75). La diferencia entre tu OVR y esa referencia empuja el factor para arriba o para abajo. Con estos valores, un delantero de <strong>70 OVR en Chile</strong> (fuerza 60) promedia ~4 goles en una temporada de 34 partidos; ese mismo 70 OVR en la <strong>Premier League</strong> (fuerza 96) promedia ~2.1 — casi la mitad, con idéntico nivel absoluto. Se aplica también a los partidos con la selección nacional (con la fuerza de la selección rival, no la de tu liga de club — ver <a href="#19-selecci%C3%B3n-nacional">sección 19</a>).</p>
 <p><strong>Goles por partido, sin techo real</strong> — <code>golesEnPartido(probGol)</code> (<a href="js/config.js:750">config.js:750-758</a>), con <code>probGol = clamp(propensiónGol × factor, 0, 0.9)</code>:</p>
 <pre><code>si no sale (prob. 1 − probGol):           0 goles
 si sale:                                   1 gol
@@ -371,7 +378,7 @@ rating        = clamp(RATING_BASE + (factor − 1) × RATING_FACTOR_COEFICIENTE 
 <p>Con el coeficiente viejo (2.5), un debutante de bajo OVR (factor ~0.3-0.5) promediaba notas de <strong>~5.0-5.3 la temporada entera</strong> — pegado al piso de 5, algo que casi no pasa en la vida real: ni un jugador flojo de verdad promedia tan bajo con continuidad, esas notas son para un partido puntual desastroso, no la norma de toda una temporada. Bajado a 1.3, ese mismo debutante ahora promedia <strong>~5.6-5.9</strong> (recién arrancando, pero no un desastre), sin tocar el techo — un factor alto (2.5-3.0) sigue empujando la nota hacia el 9-10 en partidos con gol/asistencia. Con talento neutral: OVR 50 → ~5.6, OVR 65 → ~6.2, OVR 73 (neutral) → ~6.7, OVR 90 → ~8.5, OVR 99 → ~9.6.</p>
 <p>El resultado del tramo (goles, asistencias, MVPs, suma de ratings) se acumula a las estadísticas de la temporada.</p>
 <hr>
-<h2 id="11-progresión-de-ovr">11. Progresión de OVR</h2>
+<h2>11. Progresión de OVR</h2>
 <p><code>ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad, factorTalento, potencialTecho)</code> (<a href="js/config.js:913">config.js:913-936</a>) — se llama una vez por tramo, después de simular las estadísticas de ese tramo:</p>
 <pre><code>deltaBase = (0.7 + rendimientoAcumulado / 6) × factorCrecimientoPorEdad(edad) × factorTalento
 declive   = factorDeclivePorEdad(edad) × (2 − factorTalento)
@@ -420,7 +427,7 @@ ovrNuevo = clamp(ovrActual + delta, 45, 99)     (OVR_CARRERA_MIN / MAX — piso 
 <p>Con estos números, el neto (crecimiento − desgaste) pasa de &quot;todavía sumás algo&quot; a &quot;cuesta mantenerte&quot; de forma gradual dentro de la ventana 29-34, en vez de un quiebre brusco a los 32 — el pico típico de una carrera queda entre los 30-33 años, y para el retiro obligatorio (41-45) ya bajó de forma notable. En cuanto el desgaste es mayor a 0, el piso de variación por tramo pasa de −1 a <strong>−10</strong> (<code>OVR_TRAMO_DECLIVE_VARIACION_MIN</code>).</p>
 <h3>11.2 Talento oculto y techo de potencial</h3>
 <p><strong>Talento oculto</strong>: al arrancar la carrera se sortea, una única vez, un multiplicador entre <strong>0.85x y 1.2x</strong> (<code>TALENTO_MIN</code>/<code>MAX</code>, <a href="js/config.js:992">config.js:992-996</a>; <code>GameConfig.sortearFactorTalento()</code>, sorteado en <a href="js/carrera.js:1111">carrera.js:1111</a>) que acelera el crecimiento (<code>deltaBase</code>) y, invertido, atenúa el desgaste (<code>× (2 − factorTalento)</code>: 1.2 lo deja en 80%, 0.85 lo agrava a 115%) — con las mismas decisiones de punta a punta, dos carreras no crecen (ni declinan) exactamente igual.</p>
-<p>El mismo <code>factorTalento</code> también pesa en <code>simularTramo</code> (ver <a href="#">sección 10</a>) — antes solo tocaba el crecimiento de OVR, así que a igual OVR, TODA carrera rendía exactamente igual en cancha, y la única narrativa posible era &quot;malo que se hizo bueno&quot;. Ahora un talento alto ya rinde mejor con el mismo OVR bajo (se nota que tiene algo especial antes de que el número lo confirme), mientras uno bajo sigue leyéndose como el grinder clásico. Para que la comparación de los premios mundiales (<a href="#">sección 14.2</a>) siga siendo pareja, cada candidato del pool sortea su propio <code>factorTalento</code> independiente — si no, el tuyo sería una ventaja permanente contra un pool que nunca lo tiene.</p>
+<p>El mismo <code>factorTalento</code> también pesa en <code>simularTramo</code> (ver <a href="#10-estad%C3%ADsticas-del-tramo-goles-asistencias-mvp-rating">sección 10</a>) — antes solo tocaba el crecimiento de OVR, así que a igual OVR, TODA carrera rendía exactamente igual en cancha, y la única narrativa posible era &quot;malo que se hizo bueno&quot;. Ahora un talento alto ya rinde mejor con el mismo OVR bajo (se nota que tiene algo especial antes de que el número lo confirme), mientras uno bajo sigue leyéndose como el grinder clásico. Para que la comparación de los premios mundiales (<a href="#142-premios-mundiales-bota-de-oro-once-ideal-y-bal%C3%B3n-de-oro">sección 14.2</a>) siga siendo pareja, cada candidato del pool sortea su propio <code>factorTalento</code> independiente — si no, el tuyo sería una ventaja permanente contra un pool que nunca lo tiene.</p>
 <p><strong>Techo de potencial</strong> (<code>potencialTecho</code>, sorteado una única vez en <a href="js/carrera.js:962">carrera.js:962-970</a>, nunca expuesto en ningún número visible): sin esto, el crecimiento del prime empujaba casi cualquier carrera por encima de 90 — no era una excepción, era casi aritmética garantizada. <code>sortearPotencialTecho()</code> (<a href="js/config.js:902">config.js:902-911</a>) reparte:</p>
 <table>
 <thead>
@@ -461,16 +468,16 @@ factorAprendizaje   = 1 + progreso × (CRECIMIENTO_ACELERADO_FACTOR_MAX − 1)
 </ul>
 <p>Con esto, las mismas 8-12 temporadas para cruzar OVR 70 bajan a <strong>~5-9</strong>, según qué tan floja sea la liga/club inicial — la etapa de jugador limitado se acorta, no desaparece.</p>
 <hr>
-<h2 id="12-estado-de-forma">12. Estado de forma</h2>
+<h2>12. Estado de forma</h2>
 <p>7 estados (<code>FORM_STATES</code>, <a href="js/config.js:229">config.js:229-237</a>), de mejor a peor: <strong>Inspirado 🔥 → En plenitud 💪 → Animado 🙂 → Regular 😐 → Desanimado 😕 → Bajo de forma 📉 → Tocado físicamente 🤕</strong>.</p>
 <p>Cada opción de cada decisión de evento define un <strong>objetivo</strong> de forma fijo (<code>efectos.forma</code>, no es aleatorio — está definido evento por evento en <code>js/events.js</code>), pero ya no la teletransporta ahí directamente: <code>acumularForma(formaActual, formaObjetivo)</code> (<a href="js/config.js:312">config.js:312-327</a>) te acerca a ese objetivo recorriendo una fracción del camino (<code>FORMA_PESO_ACUMULACION = 0.5</code> del tramo que falta, con un paso mínimo de 1 escalón para no estancarse justo antes de llegar). Así, dos decisiones seguidas que tiran para el mismo lado siguen sumando en vez de que la segunda pise a la primera, y si tiran para lados opuestos se combinan en vez de que gane la última resuelta. La forma afecta:</p>
 <ul>
-<li><strong>Participación</strong> (tabla en <a href="#">sección 9</a>).</li>
-<li><strong>La &quot;calidad&quot; de la temporada del equipo</strong> (<code>FORMA_CALIDAD</code>, ver <a href="#">sección 14</a>) — de 1.0 (inspirado) a 0.05 (lesionado).</li>
+<li><strong>Participación</strong> (tabla en <a href="#9-participaci%C3%B3n-cu%C3%A1ntos-partidos-jug%C3%A1s-vos">sección 9</a>).</li>
+<li><strong>La &quot;calidad&quot; de la temporada del equipo</strong> (<code>FORMA_CALIDAD</code>, ver <a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">sección 14</a>) — de 1.0 (inspirado) a 0.05 (lesionado).</li>
 </ul>
 <p>Mientras hay una lesión de nivel 1 o 2 activa, la forma queda <strong>fija en &quot;Tocado físicamente&quot;</strong> sin importar qué decisiones tomes (las decisiones siguen sumando a <code>rendimiento</code>/<code>equipo</code>, solo no &quot;curan&quot; el ánimo de golpe) — <a href="js/carrera.js:1165">carrera.js:1165-1170</a>.</p>
 <hr>
-<h2 id="13-lesiones">13. Lesiones</h2>
+<h2>13. Lesiones</h2>
 <p>Se evalúan en <strong>cada pausa de decisión</strong> (nunca en una de fichajes), solo si no hay ya una lesión activa — <code>intentarGenerarLesion(edad)</code> (<a href="js/carrera.js:407">carrera.js:407-433</a>).</p>
 <p><strong>Probabilidad de lesión</strong> — <code>probabilidadLesion(edad)</code> (<a href="js/config.js:824">config.js:824-827</a>):</p>
 <pre><code>prob = clamp(0.065 + max(0, edad − 30) × 0.0027, 0, 0.18)
@@ -501,11 +508,11 @@ factorAprendizaje   = 1 + progreso × (CRECIMIENTO_ACELERADO_FACTOR_MAX − 1)
 <td>Sin partidos, entre 2 pausas y el resto de la temporada + forma fija en &quot;Tocado&quot; + OVR <strong>−4 a −10</strong>, aplicado de una vez.</td>
 </tr>
 </tbody></table>
-<p>La duración exacta (<code>duracionLesion</code>, <a href="js/config.js:857">config.js:857-868</a>) y la pérdida de OVR (<code>ovrPerdidoPorLesion</code>, <a href="js/config.js:870">config.js:870-874</a>) se sortean dentro de esos rangos, siempre topeados por los tramos que en verdad quedan en la temporada. Cada nivel tiene su propio banco de nombres/descripciones de lesión real (rotura de LCA, esguince, desgarro, etc. — ver <a href="#">sección 20</a>).</p>
+<p>La duración exacta (<code>duracionLesion</code>, <a href="js/config.js:857">config.js:857-868</a>) y la pérdida de OVR (<code>ovrPerdidoPorLesion</code>, <a href="js/config.js:870">config.js:870-874</a>) se sortean dentro de esos rangos, siempre topeados por los tramos que en verdad quedan en la temporada. Cada nivel tiene su propio banco de nombres/descripciones de lesión real (rotura de LCA, esguince, desgarro, etc. — ver <a href="#20-banco-de-eventos-de-temporada-jseventsjs">sección 20</a>).</p>
 <p>Cuando sale una lesión nueva, esa pausa entera se reemplaza por un <strong>parte médico</strong> (sin decisiones que tomar, <code>crearLesionCard</code>, <a href="js/carrera.js:1197">carrera.js:1197-1221</a>): muestra nombre, descripción, OVR perdido (si corresponde) y pausas de baja, y el jugador confirma con un botón <strong>&quot;Continuar&quot;</strong> para avanzar el tramo — no hay temporizador ni avance automático. En mobile esa tarjeta ocupa el ancho completo del carrusel de decisiones en vez de compartir espacio como una tarjeta más.</p>
 <p><strong>Recuperación al darte de alta</strong>: al cumplirse los tramos de baja, se te devuelve el <strong>50%</strong> del OVR que perdiste por esa lesión (<code>LESION_RECUPERACION_OVR</code>, <a href="js/config.js:907">config.js:907</a>, aplicado en <a href="js/carrera.js:636">carrera.js:636-645</a>) — fue un golpe físico puntual, no una pérdida de nivel definitiva. El toast de &quot;te recuperaste&quot; muestra cuánto OVR recuperaste, si fue mayor a 0.</p>
 <hr>
-<h2 id="14-sistema-de-competiciones-liga-copas-clasificación-internacional">14. Sistema de competiciones (liga, copas, clasificación internacional)</h2>
+<h2>14. Sistema de competiciones (liga, copas, clasificación internacional)</h2>
 <h3>14.0 Antes de esto: la clasificación de clubes y ligas</h3>
 <p>Cada club y cada liga en <code>GameDatabase</code> tiene <strong>3 ejes ocultos de 0 a 100</strong> (reemplazan al viejo <code>nivel</code> entero 1-3/1-6):</p>
 <table>
@@ -519,12 +526,12 @@ factorAprendizaje   = 1 + progreso × (CRECIMIENTO_ACELERADO_FACTOR_MAX − 1)
 <tbody><tr>
 <td><code>fuerza</code></td>
 <td>Nivel deportivo actual del plantel/competencia</td>
-<td>Quién gana títulos (<a href="#">sección 14</a>, acá mismo)</td>
+<td>Quién gana títulos (<a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">sección 14</a>, acá mismo)</td>
 </tr>
 <tr>
 <td><code>prestigio</code></td>
 <td>Historia, títulos, marca, hinchada</td>
-<td>Valor de mercado (<a href="#">sección 15</a>) y qué tan aspiracional es un destino (<a href="#">sección 16</a>)</td>
+<td>Valor de mercado (<a href="#15-valor-de-mercado">sección 15</a>) y qué tan aspiracional es un destino (<a href="#16-sistema-de-fichajes-y-ofertas">sección 16</a>)</td>
 </tr>
 <tr>
 <td><code>economia</code></td>
@@ -549,7 +556,7 @@ calidadRendimientoJugador = promedioJugador ? clamp((promedioJugador − 6.0) / 
 
 fuerza = 0.4 × calidadClub + 0.15 × calidadForma + 0.2 × calidadEquipoAcum + 0.25 × calidadRendimientoJugador
 </code></pre>
-<p><code>equipoAcumuladoTemporada</code> es la suma de todos los efectos <code>equipo</code> de las decisiones tomadas en la temporada. <code>promedioJugador</code> es <code>temporadaActual.promedio</code> (el rating medio por partido, que ya arrastra goles/asistencias/MVP — <a href="#">sección 10</a>) — <code>null</code> si todavía no jugaste ningún partido esta temporada, para no castigar como si hubieras rendido pésimo antes de debutar.</p>
+<p><code>equipoAcumuladoTemporada</code> es la suma de todos los efectos <code>equipo</code> de las decisiones tomadas en la temporada. <code>promedioJugador</code> es <code>temporadaActual.promedio</code> (el rating medio por partido, que ya arrastra goles/asistencias/MVP — <a href="#10-estad%C3%ADsticas-del-tramo-goles-asistencias-mvp-rating">sección 10</a>) — <code>null</code> si todavía no jugaste ningún partido esta temporada, para no castigar como si hubieras rendido pésimo antes de debutar.</p>
 <p>Antes esta fórmula no incluía el rendimiento estadístico real de la temporada en absoluto — solo el club, la forma y las decisiones de &quot;equipo&quot; tomadas en los eventos. Se podía cerrar una temporada de 59 partidos y 59 goles y que eso no pesara nada en las chances de título. Con el peso nuevo, a igualdad de todo lo demás, una temporada floja (promedio 6.0) da ~12% de ganar la liga contra ~40% de una legendaria (promedio 9.5) con el mismo club — más de 3x de diferencia solo por el rendimiento individual.</p>
 <p>De <code>fuerza</code> salen 4 cosas:</p>
 <p><strong>Ganar la liga</strong> (al cierre de temporada) — curva empinada, casi exclusiva de los grandes:</p>
@@ -567,8 +574,8 @@ fuerza = 0.4 × calidadClub + 0.15 × calidadForma + 0.2 × calidadEquipoAcum + 
 <li><code>fuerza ≥ 0.45</code> o ganaste la copa nacional → clasificás a la de <strong>segundo nivel</strong> (Europa League / Sudamericana / AFC Champions League Two — CONCACAF todavía no tiene equivalente).</li>
 <li>Si no, no clasificás a nada.</li>
 </ul>
-<p>Las confederaciones con liga(s) cargada(s) son <code>UEFA</code> / <code>CONMEBOL</code> / <code>CONCACAF</code> / <code>AFC</code> (<code>CAF</code> todavía no tiene ninguna liga doméstica propia, solo selecciones — ver <a href="#">sección 19</a>). Si tu confederación no tiene competición de un nivel dado (el caso de CONCACAF sin segundo nivel), simplemente no clasificás a nada en ese nivel — no hay error ni sustituto.</p>
-<p>Los partidos de cada competición (mínimos garantizados + extra por ronda) salen de <code>GameDatabase.competiciones</code> — ver <a href="#">sección 21</a>.</p>
+<p>Las confederaciones con liga(s) cargada(s) son <code>UEFA</code> / <code>CONMEBOL</code> / <code>CONCACAF</code> / <code>AFC</code> (<code>CAF</code> todavía no tiene ninguna liga doméstica propia, solo selecciones — ver <a href="#19-selecci%C3%B3n-nacional">sección 19</a>). Si tu confederación no tiene competición de un nivel dado (el caso de CONCACAF sin segundo nivel), simplemente no clasificás a nada en ese nivel — no hay error ni sustituto.</p>
+<p>Los partidos de cada competición (mínimos garantizados + extra por ronda) salen de <code>GameDatabase.competiciones</code> — ver <a href="#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs">sección 21</a>.</p>
 <h3>14.2 Premios mundiales: Bota de Oro, Once Ideal y Balón de Oro</h3>
 <p>Este juego no simula miles de jugadores rivales por el mundo — solo existe tu propio personaje. Para que &quot;sos el mejor del mundo&quot; signifique algo real, al cierre de cada temporada (<code>generarCandidatosPremiosMundiales</code>, <a href="js/carrera.js">carrera.js</a>, llamado desde <code>finalizarTemporada</code> después de resolver liga/copa/copa internacional) se genera un pool de <strong>24 candidatos fantasma</strong> de nivel élite, simulados con <strong>la misma fórmula que usa tu propio jugador</strong> (<code>GameConfig.simularTramo</code>) — así la comparación es justa: si tus números se sienten inflados o flojos, los del pool se sienten exactamente igual.</p>
 <p><strong>Generación de cada candidato</strong> (<code>PREMIOS_CANDIDATOS_N = 24</code>, <a href="js/config.js">config.js</a>):</p>
@@ -577,12 +584,12 @@ fuerza = 0.4 × calidadClub + 0.15 × calidadForma + 0.2 × calidadEquipoAcum + 
 <li><strong>Club</strong>: dentro de esa liga, ponderado por <code>equipo.fuerza</code> — sirve además para narrar el mensaje (&quot;un delantero de Bayern Múnich...&quot;).</li>
 <li><strong>Grupo de posición</strong>: <code>sortearGrupoCandidatoPremio()</code> — 55% ataque / 25% medio / 12% lateral / 8% central (<code>PREMIOS_PESO_GRUPO</code>); nunca arquero, nadie gana la Bota de Oro de arquero.</li>
 <li><strong>OVR</strong>: <code>sortearOvrCandidatoPremio()</code> — entre 82 y 99 (<code>PREMIOS_OVR_MIN/MAX</code>), promediando 3 tiradas uniformes para sesgar hacia el centro del rango (85-95) en vez de una muestra pareja — son candidatos genuinos al premio, no cualquier nivel élite.</li>
-<li><strong>Talento oculto</strong>: <code>sortearFactorTalento()</code> — cada candidato sortea el suyo propio, igual rango que el tuyo (0.85x-1.2x), para que la comparación siga siendo pareja (ver <a href="#">sección 11.2</a>).</li>
+<li><strong>Talento oculto</strong>: <code>sortearFactorTalento()</code> — cada candidato sortea el suyo propio, igual rango que el tuyo (0.85x-1.2x), para que la comparación siga siendo pareja (ver <a href="#112-talento-oculto-y-techo-de-potencial">sección 11.2</a>).</li>
 <li><strong>Estadísticas</strong>: una sola llamada a <code>simularTramo({ partidos: partidosMinimos de su liga, grupo, ovr, rendimientoAcumulado: 0, factorTalento })</code> (rendimiento neutro — no tiene decisiones propias que tomar).</li>
 <li><strong>Trofeos</strong>: <code>Math.random() &lt; probGanarLiga(calidadFuerzaClub(equipo, liga))</code> — reutiliza la misma curva que decide si TU club gana la liga, en vez de inventar una probabilidad aparte.</li>
 </ul>
 <p><strong>🥾 Bota de Oro</strong>: tu <code>goles</code> de la temporada contra el máximo del pool, sin filtrar por posición (un jugador de otro grupo con pocos goles nunca compite en la práctica, sin necesidad de un caso especial). Si no ganás pero quedás entre los 3 mejores, un mensaje aparte (&quot;Terminaste 2° en la Bota de Oro, detrás de un delantero de PSG con 34 goles&quot;).</p>
-<p><strong>⭐ Once Ideal</strong>: tu <code>promedio</code> de rating contra los candidatos de <strong>tu mismo grupo de posición</strong> — no simula quién ocupa los otros 10 puestos, igual que el juego no simula las otras 31 selecciones en un Mundial. Con un margen de tolerancia (<code>ONCE_IDEAL_MARGEN_PROMEDIO = 0.4</code>): desde OVR ~95 el rating de cada partido queda clampeado al tope (10.0) sin variación posible (ver <a href="#">sección 10</a>), así que comparar el promedio exacto dejaba el premio reservado casi solo a quien pisa ese umbral literal — con el margen, un promedio de élite real un poco por debajo (9.5-9.9) también tiene una chance genuina, no solo cero o cien por ciento.</p>
+<p><strong>⭐ Once Ideal</strong>: tu <code>promedio</code> de rating contra los candidatos de <strong>tu mismo grupo de posición</strong> — no simula quién ocupa los otros 10 puestos, igual que el juego no simula las otras 31 selecciones en un Mundial. Con un margen de tolerancia (<code>ONCE_IDEAL_MARGEN_PROMEDIO = 0.4</code>): desde OVR ~95 el rating de cada partido queda clampeado al tope (10.0) sin variación posible (ver <a href="#10-estad%C3%ADsticas-del-tramo-goles-asistencias-mvp-rating">sección 10</a>), así que comparar el promedio exacto dejaba el premio reservado casi solo a quien pisa ese umbral literal — con el margen, un promedio de élite real un poco por debajo (9.5-9.9) también tiene una chance genuina, no solo cero o cien por ciento.</p>
 <p><strong>🏆 Balón de Oro</strong>: un puntaje combinado contra TODO el pool, sin importar posición — <code>calcularCalidadBalonDeOro(promedio, goles + asistencias, ganoTrofeo)</code> (<a href="js/config.js">config.js</a>):</p>
 <pre><code>calidadRating    = clamp((promedio − 7.0) / 2.5, 0, 1)
 calidadGoleador  = clamp((goles + asistencias) / 40, 0, 1)     (BALON_ORO_REFERENCIA_GOLES)
@@ -593,8 +600,8 @@ calidad = 0.4 × calidadRating + 0.35 × calidadGoleador + 0.25 × calidadTrofeo
 <p><code>ganoTrofeo</code> (para el jugador) es <code>ganasteTrofeoDeEquipoOSeleccion</code>, capturado en <code>finalizarTemporada</code> <strong>antes</strong> de otorgar la Bota de Oro o el Once Ideal (<a href="js/carrera.js:1024">carrera.js:1024-1030</a>, pasado como parámetro a <code>evaluarPremiosMundiales</code>) — no se lee en vivo desde <code>temporadaActual.trofeos.length &gt; 0</code> dentro de la misma función que evalúa los tres premios. La razón: Bota de Oro y Once Ideal NO requieren haber ganado nada de equipo, y esta misma función los agrega a ese array un poco más abajo — si el Balón de Oro mirara el array en ese momento, ganar cualquiera de esos dos premios individuales &quot;contaría como trofeo&quot; para el propio Balón de Oro, volviendo casi automático un barrido de los tres sin haber ganado una sola liga, copa o título con la selección (medido: 70% de las veces con estadísticas de élite y cero trofeos reales, contra 0.15% ya corregido).</p>
 <p>Los tres empates (<code>&gt;=</code> en vez de <code>&gt;</code> en las tres comparaciones) los gana el jugador — dado el clampeo de rating de arriba, un empate exacto contra el pool es común en el tramo alto, y no tendría sentido que ese empate SIEMPRE lo pierda el jugador. Los trofeos ganados se guardan en el mismo array <code>temporadaActual.trofeos</code> que los de liga/copa/selección — reutilizan toda la UI existente sin cambios (badge, historial, resumen, tarjeta para compartir). Los tres premios ya tienen ícono propio en <a href="assets/escudos/trofeos/">assets/escudos/trofeos/</a>: <code>bota-de-oro.png</code>, <code>balon-de-oro.png</code> y <code>once-ideal.png</code>.</p>
 <hr>
-<h2 id="15-valor-de-mercado">15. Valor de mercado</h2>
-<p><code>calcularValorMercado(ovr, equipo, liga)</code> (<a href="js/config.js:255">config.js:255-260</a>) — curva exponencial sobre el OVR (cada punto extra cerca del techo vale desproporcionadamente más, como en la vida real), multiplicada por la economía y el prestigio del club/liga actual (a propósito, <strong>no</strong> por su fuerza — ver <a href="#">sección 14.0</a>):</p>
+<h2>15. Valor de mercado</h2>
+<p><code>calcularValorMercado(ovr, equipo, liga)</code> (<a href="js/config.js:255">config.js:255-260</a>) — curva exponencial sobre el OVR (cada punto extra cerca del techo vale desproporcionadamente más, como en la vida real), multiplicada por la economía y el prestigio del club/liga actual (a propósito, <strong>no</strong> por su fuerza — ver <a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">sección 14.0</a>):</p>
 <pre><code>valorPorOvr = 18000 × 1.185^(ovr − 45)          (VALOR_MERCADO_BASE, VALOR_MERCADO_CRECIMIENTO)
 valorScore  = 0.6 × economía-efectiva + 0.4 × prestigio     (VALOR_PESO_ECONOMIA / _PRESTIGIO,
               valorScoreEquipo/valorScoreLiga, config.js:238-245)
@@ -605,8 +612,8 @@ valor = round(valorPorOvr × multiplicadorClub / 1000) × 1000    (redondeado al
 <p>Se recalcula cada vez que cambia el OVR (cada tramo) y cada vez que cambiás de club (con la economía/prestigio del club nuevo). Se muestra formateado con <code>formatMarketValue</code> (<a href="js/carrera.js:67">carrera.js:67</a>): <code>€18K</code>, <code>€1.2M</code>, etc.</p>
 <p>Para las <strong>ofertas de fichaje</strong> se usa una variante cosmética, <code>valorOfrecidoPorClub</code> (<a href="js/config.js:267">config.js:267-271</a>), que le suma un ±8% de variación aleatoria (<code>OFERTA_VARIACION_VALOR</code>) — para que dos clubes de poder parecido no muestren el mismísimo número al centavo en sus tarjetas. No afecta tu valor de mercado real, solo el texto &quot;Te valoran en €X&quot; de esa tarjeta puntual.</p>
 <hr>
-<h2 id="16-sistema-de-fichajes-y-ofertas">16. Sistema de fichajes y ofertas</h2>
-<p>Toda la lógica vive en <code>generarLoteOfertas(equipoActualId, ovr, edad, valorActual)</code> (<a href="js/carrera.js:203">carrera.js:203-375</a>), que corre en la única pausa de &quot;oferta&quot; de cada temporada (ver <a href="#">sección 7</a>).</p>
+<h2>16. Sistema de fichajes y ofertas</h2>
+<p>Toda la lógica vive en <code>generarLoteOfertas(equipoActualId, ovr, edad, valorActual)</code> (<a href="js/carrera.js:203">carrera.js:203-375</a>), que corre en la única pausa de &quot;oferta&quot; de cada temporada (ver <a href="#7-calendario-de-temporada">sección 7</a>).</p>
 <h3>16.1 Retiro forzoso (el corte final)</h3>
 <pre><code class="language-js">if (edad &gt;= edadRetiroForzoso) return [ solo la carta de retiro forzoso ];
 </code></pre>
@@ -616,7 +623,7 @@ valor = round(valorPorOvr × multiplicadorClub / 1000) × 1000    (redondeado al
 <pre><code class="language-js">graciaContrato    = esPrimerClub ? 4 : 2     (TEMPORADAS_GRACIA_CONTRATO_PRIMER_CLUB / TEMPORADAS_GRACIA_CONTRATO)
 enGraciaDeContrato = temporadasEnClubActual &lt; graciaContrato
 </code></pre>
-<p>Mientras estés en gracia, tu club <strong>nunca</strong> puede &quot;no renovarte&quot; — sin este colchón, cualquier club de nivel medio/alto para arriba te dejaría ir en tu primerísima ventana de fichajes, porque ningún novato arranca con el OVR de un jugador hecho (ver <a href="#">sección 5</a>: tope de 65 vs. ventanas de OVR que fácilmente piden 70+). El contador (<code>temporadasEnClubActual</code>) se resetea a 0 cada vez que fichás por otro club y sube +1 en cada cierre de temporada en el mismo club.</p>
+<p>Mientras estés en gracia, tu club <strong>nunca</strong> puede &quot;no renovarte&quot; — sin este colchón, cualquier club de nivel medio/alto para arriba te dejaría ir en tu primerísima ventana de fichajes, porque ningún novato arranca con el OVR de un jugador hecho (ver <a href="#5-elecci%C3%B3n-de-club-inicial-equipohtml--jsequipojs">sección 5</a>: tope de 65 vs. ventanas de OVR que fácilmente piden 70+). El contador (<code>temporadasEnClubActual</code>) se resetea a 0 cada vez que fichás por otro club y sube +1 en cada cierre de temporada en el mismo club.</p>
 <p>El período de gracia es distinto para el <strong>primer club de la carrera</strong> (el de la creación de personaje): <strong>4 temporadas</strong> en vez de las 2 normales de cualquier club fichado después — es tu debut real, no alguien fichado ya con currículum, así que el club que apostó por vos te da el doble de margen. Se trackea con <code>esPrimerClub</code> (<a href="js/carrera.js:1136">carrera.js:1136</a>, arranca en <code>true</code> y pasa a <code>false</code> para siempre en el primer traspaso, en <code>resolveOferta</code>).</p>
 <h3>16.3 ¿Tu club actual te renueva?</h3>
 <p>Pasado el período de gracia, <code>contratoDebeTerminar(equipo, liga, ovr, promedioTemporadaAnterior)</code> (<a href="js/config.js:617">config.js:617-624</a>) compara primero tu OVR contra la &quot;ventana de OVR&quot; de tu propio club (ver 16.5 más abajo): si llegás al mínimo, seguís sin más vueltas. Si no llegás, todavía hay una salida: si el <strong>promedio de rating con el que cerraste la temporada anterior</strong> fue realmente bueno (<code>≥ 7.5</code>, <code>CONTRATO_RENDIMIENTO_SALVAVIDAS</code>, muy por encima del neutral de 6.5) el club te renueva igual — antes esto se decidía solo por el número de OVR crudo, sin mirar cómo jugaste, así que se podía cerrar una temporada brillante en goles/asistencias/rating y que el club te cortara igual, porque el OVR (que crece con su propia curva de edad/techo, no 1 a 1 con las estadísticas del año) no llegó a tiempo. Si ninguna de las dos te salva, no te renuevan — la carta de &quot;Quedarme&quot; se reemplaza por una de retiro (no forzoso, con el texto &quot;decide no renovarte para la próxima temporada&quot;).</p>
@@ -676,19 +683,19 @@ peso = 1 / (1 + distancia)^2.2
 <p>Las cartas ya <strong>no se mezclan en orden aleatorio</strong>: la carta de tu club actual (quedarme, o el retiro forzoso si no te renuevan) va siempre <strong>primera</strong>; si además aparece la opción de retirarte voluntariamente (16.4), esa va <strong>segunda</strong>. El resto de ofertas de club llena los cupos restantes, en cualquier orden — así el jugador siempre encuentra &quot;seguir acá&quot; (y &quot;retirarme&quot;, si corresponde) en el mismo lugar de la fila, en vez de tener que buscarlos entre las demás ofertas.</p>
 <p>Un solo clic resuelve toda la pausa (<code>resolveOferta</code>, <a href="js/carrera.js:1696">carrera.js:1696-1743</a>):</p>
 <ul>
-<li><strong>Retiro</strong> → cierra la carrera (<a href="#">sección 17</a>).</li>
-<li><strong>Fichar por un club nuevo</strong> → la ventana única de fichajes (ver <a href="#">sección 7</a>) cae siempre en pretemporada, así que el traspaso arranca la temporada entera de cero con el club nuevo (nunca parte un año en dos filas de historial): se actualiza club, liga, valor de mercado, se reinician <code>competiciones</code> desde cero (la clasificación internacional no se hereda — es del club, no tuya), se resetea <code>temporadasEnClubActual</code> a 0 y la forma vuelve a &quot;regular&quot;.</li>
+<li><strong>Retiro</strong> → cierra la carrera (<a href="#17-fin-de-carrera-retiro-y-resumen">sección 17</a>).</li>
+<li><strong>Fichar por un club nuevo</strong> → la ventana única de fichajes (ver <a href="#7-calendario-de-temporada">sección 7</a>) cae siempre en pretemporada, así que el traspaso arranca la temporada entera de cero con el club nuevo (nunca parte un año en dos filas de historial): se actualiza club, liga, valor de mercado, se reinician <code>competiciones</code> desde cero (la clasificación internacional no se hereda — es del club, no tuya), se resetea <code>temporadasEnClubActual</code> a 0 y la forma vuelve a &quot;regular&quot;.</li>
 <li><strong>Quedarme</strong> → sin cambios.</li>
 </ul>
 <p>Ninguna de las dos dispara un toast — el nuevo hero/spotlight (o, si te quedás, la ausencia de cambios) ya lo comunica solo; antes un mensaje de &quot;Fichaste por X&quot;/&quot;Decidiste quedarte en X&quot; se sentía redundante, la única pausa del juego donde SIEMPRE hay un toast aunque no haya nada nuevo que contar.</p>
 <hr>
-<h2 id="17-fin-de-carrera-retiro-y-resumen">17. Fin de carrera: retiro y resumen</h2>
+<h2>17. Fin de carrera: retiro y resumen</h2>
 <p>Al aceptar una carta de retiro (<code>finalizarCarrera</code>, <a href="js/carrera.js:1402">carrera.js:1402-1434</a>):</p>
 <ul>
 <li>Se archiva la temporada en curso tal como quedó.</li>
 <li>El spotlight desaparece y el panel de decisiones muestra el mensaje de despedida con <strong>2 botones</strong>:<ul>
 <li><strong>&quot;Ver resumen de mi carrera&quot;</strong> → abre un modal (<code>renderResumenCarrera</code>, <a href="js/carrera.js:1540">carrera.js:1540-1580</a>) con:<ul>
-<li><strong>Banner</strong> con el degradado de colores del último club (mismo lenguaje visual que el hero de <code>carrera.html</code>, vía <code>--rb-a</code>/<code>--rb-b</code>): escudo, nombre, posición, temporadas jugadas, edad de retiro, y el <strong>badge de pico de OVR</strong> (<code>ovr-badge--hero</code>, coloreado con <code>ovrTierColor</code> — ver <a href="#">sección 22</a>) a un costado.</li>
+<li><strong>Banner</strong> con el degradado de colores del último club (mismo lenguaje visual que el hero de <code>carrera.html</code>, vía <code>--rb-a</code>/<code>--rb-b</code>): escudo, nombre, posición, temporadas jugadas, edad de retiro, y el <strong>badge de pico de OVR</strong> (<code>ovr-badge--hero</code>, coloreado con <code>ovrTierColor</code> — ver <a href="#22-interfaz-componentes-animaciones-y-responsive">sección 22</a>) a un costado.</li>
 <li><strong>Gráfico de evolución de OVR</strong>: un SVG de área + línea (<code>ovrArcoSvg</code>, <a href="js/carrera.js:1494">carrera.js:1494-1512</a>) con el OVR de cada temporada de punta a punta, coloreado con el mismo color de gema/metal que el badge de pico — la caption de al lado indica &quot;De X a Y&quot; (OVR de la Temporada 1 al pico alcanzado).</li>
 <li><strong>Estadísticas combinadas</strong> de <strong>toda</strong> la carrera (todas las filas de <code>temporadasFinalizadas</code>): partidos, goles, asistencias, MVP, promedio de rating y mayor valor de mercado, cada una con su ícono.</li>
 <li><strong>Clubes</strong>, como un recorrido horizontal con flechas entre escudos (en el orden en que los fichaste, sin repetir) en vez de una grilla suelta — con scroll propio si fueron muchos. El nombre debajo de cada escudo va alineado a la izquierda (<code>.resumen__club</code>, <a href="css/carrera.css">css/carrera.css</a>), igual que el resto del texto del resumen — antes quedaba centrado bajo el escudo, inconsistente con todo lo demás.</li>
@@ -701,26 +708,26 @@ peso = 1 / (1 + distancia)^2.2
 </ul>
 <p>Toda la lógica de agregación (incluida la serie de OVR para el gráfico) vive en <code>construirResumenCarrera()</code> (<a href="js/carrera.js:1441">carrera.js:1441-1489</a>).</p>
 <hr>
-<h2 id="18-solicitud-de-cambio-de-dorsal">18. Solicitud de cambio de dorsal</h2>
+<h2>18. Solicitud de cambio de dorsal</h2>
 <p>Se habilita al cerrar <strong>cada</strong> temporada (<a href="js/carrera.js:724">carrera.js:724-728</a>) y queda disponible hasta que se use (no hace falta pedirlo en el momento). Un solo pedido por vez.</p>
 <p><code>probabilidadAceptarCambioNumero(ovr, equipoAcumuladoTemporada)</code> (<a href="js/config.js:799">config.js:799-804</a>) — evaluado con el OVR y el rendimiento colectivo <strong>con los que cerró</strong> la temporada anterior, no con los de la nueva (que todavía no jugó nada):</p>
 <pre><code>prob = clamp(0.3 + (ovr − 45) × 0.008 + equipoAcumuladoTemporada × 0.05, 0.05, 0.95)
 </code></pre>
 <p>El número pedido en sí no influye en nada — lo que pesa es tu peso dentro del plantel, no si &quot;el 10 está más pedido&quot; que el 23.</p>
 <hr>
-<h2 id="19-selección-nacional">19. Selección nacional</h2>
+<h2>19. Selección nacional</h2>
 <p>Sistema aparte del banco de eventos (aunque su tarjeta se muestra en el mismo lugar): representa las convocatorias, torneos y estadísticas del jugador con la selección de su país, en paralelo a su carrera de club.</p>
 <h3>19.1 Selecciones nacionales (<code>GameDatabase.selecciones</code>)</h3>
-<p><strong>46 selecciones</strong> — una por cada país de <code>COUNTRIES</code> (<a href="js/script.js:4">script.js:4</a>) — cada una con <code>fuerza</code>/<code>prestigio</code> (mismo eje 0-100 que clubes/ligas, ver <a href="#">sección 14.0</a>) y su <code>confederacion</code> (<code>UEFA</code> / <code>CONMEBOL</code> / <code>CONCACAF</code> / <code>CAF</code> / <code>AFC</code> — más amplio que el de <code>ligas</code>, porque acá entran todos los países de la creación de personaje, no solo los que tienen liga propia cargada). Van a mano según pedigrí futbolístico real: de Brasil (fuerza 92) a Catar (fuerza 38).</p>
+<p><strong>46 selecciones</strong> — una por cada país de <code>COUNTRIES</code> (<a href="js/script.js:4">script.js:4</a>) — cada una con <code>fuerza</code>/<code>prestigio</code> (mismo eje 0-100 que clubes/ligas, ver <a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">sección 14.0</a>) y su <code>confederacion</code> (<code>UEFA</code> / <code>CONMEBOL</code> / <code>CONCACAF</code> / <code>CAF</code> / <code>AFC</code> — más amplio que el de <code>ligas</code>, porque acá entran todos los países de la creación de personaje, no solo los que tienen liga propia cargada). Van a mano según pedigrí futbolístico real: de Brasil (fuerza 92) a Catar (fuerza 38).</p>
 <h3>19.2 Convocatoria</h3>
-<p>Se sortea <strong>una vez por temporada</strong>, igual mecanismo que Alto Impacto (ver <a href="#">sección 20</a>): cada país tiene un &quot;OVR de referencia&quot; que te da un 50/50 de ser convocado — <code>probConvocatoria(ovr, fuerzaSeleccion)</code> (<a href="js/config.js">config.js</a>):</p>
+<p>Se sortea <strong>una vez por temporada</strong>, igual mecanismo que Alto Impacto (ver <a href="#20-banco-de-eventos-de-temporada-jseventsjs">sección 20</a>): cada país tiene un &quot;OVR de referencia&quot; que te da un 50/50 de ser convocado — <code>probConvocatoria(ovr, fuerzaSeleccion)</code> (<a href="js/config.js">config.js</a>):</p>
 <pre><code>umbral = 50 + fuerzaSeleccion × 0.35                         (UMBRAL_OVR_CONVOCATORIA_BASE/_FACTOR)
 prob   = clamp(0.5 + (ovr − umbral) × 0.04, 0.03, 0.95)       (PROB_CONVOCATORIA_PENDIENTE_OVR, min/max)
 </code></pre>
 <p>Cuanto más grande la selección, más alto el OVR que hace falta: a Brasil (fuerza 92, umbral ≈ 82) hay que llegarle con un OVR de élite; a Bolivia (fuerza 35, umbral ≈ 62) un OVR medio ya empareja. La probabilidad sube/baja de forma lineal alrededor de ese umbral — no es un corte seco, hay una franja real de incertidumbre.</p>
 <p>Si el sorteo da que sí, se elige al azar en qué pausa de la temporada cae la convocatoria (igual que Alto Impacto). Si esa pausa <strong>ya</strong> está ocupada por un evento de Alto Impacto de tipo &quot;deportivo&quot;, la convocatoria simplemente no se muestra esa vez (caso raro: requiere que ambos coincidan de pausa).</p>
 <h3>19.3 La tarjeta de convocatoria</h3>
-<p>Reemplaza el slot &quot;deportivo&quot; de esa pausa (mismo mecanismo de reemplazo que Alto Impacto), con un dilema real de 2 opciones — nunca gratis, mismo principio que el resto del banco de eventos (ver <a href="#">sección 20</a>):</p>
+<p>Reemplaza el slot &quot;deportivo&quot; de esa pausa (mismo mecanismo de reemplazo que Alto Impacto), con un dilema real de 2 opciones — nunca gratis, mismo principio que el resto del banco de eventos (ver <a href="#20-banco-de-eventos-de-temporada-jseventsjs">sección 20</a>):</p>
 <table>
 <thead>
 <tr>
@@ -753,13 +760,13 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <li><strong>Año de torneo</strong>: la campaña de eliminatorias se juega <strong>siempre</strong>, clasifiques o no — entre 6 y 10 partidos (<code>PARTIDOS_ELIMINATORIAS_MIN/MAX</code>). Antes esto solo aparecía como &quot;premio consuelo&quot; al no clasificar, con el mismo número fijo (2) que un año de amistosos, así que nunca se sentían distintos. Después se tira si tu país <strong>clasifica</strong> (<code>probClasificarTorneoSeleccion(calidad) = clamp(0.15 + 0.8 × calidad, 0.05, 0.97)</code>, más parejo que ganarlo):<ul>
 <li>Si no clasifica, la temporada de selección termina ahí (solo esos 6-10 partidos de eliminatorias).</li>
 <li>Si clasifica, se <strong>suman</strong> arriba: fase de grupos garantizada (3 partidos, <code>PARTIDOS_FASE_DE_GRUPOS_SELECCION</code>), con una tirada para avanzar (<code>probAvanzarFaseDeGruposSeleccion(calidad) = clamp(0.35 + 0.6 × calidad, 0.15, 0.95)</code> — bastante generoso, como en la vida real).</li>
-<li>Si avanza, una ronda eliminatoria por vez (octavos → cuartos → semifinal → final en el Mundial, cuartos → semifinal → final en los continentales), cada una con la <strong>misma</strong> <code>probAvanzarRonda(calidad)</code> que ya usan las copas de club (<a href="#">sección 14.1</a>) — si gana todas, es <strong>campeón</strong> y el trofeo (Copa del Mundo / Copa América / Eurocopa / Copa Oro / Copa Africana de Naciones / Copa Asiática) se suma a <code>temporadaActual.trofeos</code>, el mismo array que los trofeos de club. Si pierde justo la final, queda <strong>subcampeón</strong>.</li>
+<li>Si avanza, una ronda eliminatoria por vez (octavos → cuartos → semifinal → final en el Mundial, cuartos → semifinal → final en los continentales), cada una con la <strong>misma</strong> <code>probAvanzarRonda(calidad)</code> que ya usan las copas de club (<a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">sección 14.1</a>) — si gana todas, es <strong>campeón</strong> y el trofeo (Copa del Mundo / Copa América / Eurocopa / Copa Oro / Copa Africana de Naciones / Copa Asiática) se suma a <code>temporadaActual.trofeos</code>, el mismo array que los trofeos de club. Si pierde justo la final, queda <strong>subcampeón</strong>.</li>
 </ul>
 </li>
 </ul>
 <p>Con esto, el total de partidos de un año de torneo grande varía entre 6 (no clasificó) y 17+ (campeón del Mundial) en vez de saltar solo entre 2 (amistoso) o 6 (techo viejo de una campaña corta) como antes.</p>
 <p><code>calidad</code> es <code>calidadSeleccion(fuerzaSeleccion, forma)</code> (<a href="js/config.js">config.js</a>): la fuerza fija del país pesa la enorme mayoría, con un empujón chico (<code>SELECCION_PESO_JUGADOR = 0.15</code>) según tu forma del momento — un solo jugador no decide el destino de todo un seleccionado.</p>
-<p>Los goles de esos partidos reutilizan <code>GameConfig.simularTramo</code> tal cual la usa el club (misma propensión por grupo de posición, <a href="#">sección 10</a>), para que meter un gol con la selección se sienta igual que uno de club.</p>
+<p>Los goles de esos partidos reutilizan <code>GameConfig.simularTramo</code> tal cual la usa el club (misma propensión por grupo de posición, <a href="#10-estad%C3%ADsticas-del-tramo-goles-asistencias-mvp-rating">sección 10</a>), para que meter un gol con la selección se sienta igual que uno de club.</p>
 <h3>19.5 Estadísticas y dónde se ven</h3>
 <p>Cada temporada guarda su propio <code>seleccionPartidos</code>/<code>seleccionGoles</code> (independientes de los <code>partidos</code>/<code>goles</code> de club — nunca se suman entre sí):</p>
 <ul>
@@ -768,7 +775,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <li><strong>Resumen final de carrera</strong>: una sección &quot;Con la selección&quot; con la bandera, el país y el total acumulado de partidos/goles de toda la carrera (<code>construirResumenCarrera</code>, <a href="js/carrera.js">carrera.js</a>) — y los trofeos de selección aparecen mezclados con los de club en la misma fila de trofeos, porque comparten el mismo array.</li>
 </ul>
 <hr>
-<h2 id="20-banco-de-eventos-de-temporada-jseventsjs">20. Banco de eventos de temporada (<code>js/events.js</code>)</h2>
+<h2>20. Banco de eventos de temporada (<code>js/events.js</code>)</h2>
 <p><strong>226 eventos de decisión</strong> en total, cada uno con <strong>2 opciones</strong> (formato completo documentado en el encabezado de <a href="js/events.js:10">events.js:10-28</a>):</p>
 <table>
 <thead>
@@ -806,14 +813,14 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </tbody></table>
 <p><strong>Selección de un evento normal</strong> (<code>elegirEventoPorTipo</code>, <a href="js/carrera.js:397">carrera.js:397-414</a>): para cada pausa, 50/50 si sale del banco <code>generales</code> o del banco correspondiente a la edad actual; dentro de ese banco se filtra por tipo (<code>&quot;personal&quot;</code> o <code>&quot;deportivo&quot;</code> — cada pausa siempre muestra exactamente 1 de cada). <strong>Ningún evento se repite en la misma carrera</strong>: se recuerda cada id ya usado (<code>eventosUsados</code>, compartido entre bancos) y se excluye de futuros sorteos; si un banco se queda sin eventos sin usar de ese tipo (carrera muy larga), se libera el filtro para ese banco puntual antes que forzar una repetición.</p>
 <p><strong>Eventos de debut</strong>: 2 eventos de <code>porEdad.novato</code> (<code>nov-08</code>, <code>nov-32</code>) están escritos sobre el debut profesional en sí (&quot;un defensor te marca en tu debut&quot;, &quot;debutás en un estadio gigante&quot;) — un momento que ocurre una única vez. Quedan marcados con <code>debut: true</code> y <code>esElegibleParaDebut(evento)</code> (<a href="js/carrera.js:392">carrera.js:392-395</a>) los excluye del sorteo salvo que sea, literal, la primera pausa de decisión de toda la carrera (Temporada 1, antes de simular el primer tramo) — antes solo se filtraba por rango de edad, así que podían salir en la Temporada 3 con el jugador ya afianzado en el club.</p>
-<p><strong>Eventos incompatibles con estar lesionado</strong>: 14 eventos (12 normales + <code>ai-16</code>/<code>ai-17</code> de <code>altoImpacto</code>) presuponen que el jugador está jugando en ese momento — pedir un penal, ganarse minutos, marcar al goleador rival, jugar con una molestia, recibir una crítica post-partido — algo contradictorio si está lesionado y sin sumar minutos. Quedan marcados con <code>noDuranteLesion: true</code> y <code>esElegibleDuranteLesion(evento)</code> (<a href="js/carrera.js:435">carrera.js:435-439</a>) los excluye del sorteo mientras <code>temporadaActual.lesionActiva</code> esté activo (ver <a href="#">sección 13</a>) — el resto del banco (familia, prensa, vestuario, eventos que solo mencionan un partido próximo sin requerir que el jugador esté en cancha) sigue funcionando igual durante la baja.</p>
+<p><strong>Eventos incompatibles con estar lesionado</strong>: 14 eventos (12 normales + <code>ai-16</code>/<code>ai-17</code> de <code>altoImpacto</code>) presuponen que el jugador está jugando en ese momento — pedir un penal, ganarse minutos, marcar al goleador rival, jugar con una molestia, recibir una crítica post-partido — algo contradictorio si está lesionado y sin sumar minutos. Quedan marcados con <code>noDuranteLesion: true</code> y <code>esElegibleDuranteLesion(evento)</code> (<a href="js/carrera.js:435">carrera.js:435-439</a>) los excluye del sorteo mientras <code>temporadaActual.lesionActiva</code> esté activo (ver <a href="#13-lesiones">sección 13</a>) — el resto del banco (familia, prensa, vestuario, eventos que solo mencionan un partido próximo sin requerir que el jugador esté en cancha) sigue funcionando igual durante la baja.</p>
 <p><strong>Sin decisiones &quot;gratis&quot;</strong>: cada opción de cada evento normal (no aplica a <code>altoImpacto</code>, ver el porqué debajo) tiene siempre <strong>al menos una señal positiva y una negativa</strong> entre <code>rendimiento</code>/<code>forma</code>/<code>equipo</code> — ninguna opción es pura-positiva ni pura-negativa, y ninguna queda neutra-plana. La idea no es que una opción &quot;gane&quot; a la otra en todo, sino que el jugador elija cuál le conviene más, cuál le hace perder más o cuál le hace perder menos. Un segundo pase completo sobre las 452 opciones del banco (238 modificadas) eliminó los últimos casos de &quot;opción comprometida en las tres dimensiones vs. opción pasiva floja&quot; que todavía quedaban del primer ajuste — siempre inyectando la señal que falta en un eje que esa opción tenía en cero, nunca pisando la única señal que ya tenía. La única excepción a propósito sigue siendo un evento de <code>altoImpacto</code> sobre aceptar un soborno para arreglar un partido (<code>ai-17</code>) — ahí rechazar la propuesta debe ser, sí, objetivamente mejor en todo: no es un dilema de números, es una cuestión de integridad.</p>
-<p><strong>Eventos de Alto Impacto</strong>: sin restricción de edad, efectos mucho más fuertes (hasta ±6 de rendimiento, ±4 de equipo — contra ±3/±2 de los eventos normales), y algunos tienen <strong>las dos opciones en negativo a propósito</strong> (elegir el mal menor, no &quot;ganar&quot;). Se identifican con un ⚠️ en la tarjeta. Se sortea al crear la temporada si va a haber uno (30% de probabilidad) y en qué tramo; si sale, reemplaza al evento del tipo que corresponda en esa pausa — mismo mecanismo de reemplazo que usa la convocatoria a la selección nacional (<a href="#">sección 19</a>), que compite por el mismo slot &quot;deportivo&quot;.</p>
+<p><strong>Eventos de Alto Impacto</strong>: sin restricción de edad, efectos mucho más fuertes (hasta ±6 de rendimiento, ±4 de equipo — contra ±3/±2 de los eventos normales), y algunos tienen <strong>las dos opciones en negativo a propósito</strong> (elegir el mal menor, no &quot;ganar&quot;). Se identifican con un ⚠️ en la tarjeta. Se sortea al crear la temporada si va a haber uno (30% de probabilidad) y en qué tramo; si sale, reemplaza al evento del tipo que corresponda en esa pausa — mismo mecanismo de reemplazo que usa la convocatoria a la selección nacional (<a href="#19-selecci%C3%B3n-nacional">sección 19</a>), que compite por el mismo slot &quot;deportivo&quot;.</p>
 <p>Cada opción define el texto del botón y sus <code>efectos</code> (<code>rendimiento</code> −3..+3 normal / −6..+6 alto impacto, <code>forma</code> nuevo estado fijo, <code>equipo</code> −2..+2 normal / −4..+4 alto impacto). También trae un texto de <code>resultado</code> en los datos — es contenido narrativo pensado para uso futuro (por ejemplo, un registro/historial de decisiones), pero <strong>hoy no se muestra en ningún lado de la interfaz</strong>: se sacó del toast que lo mostraba antes porque era pura redundancia con lo que ya decía el botón elegido.</p>
-<p><strong>Lesiones</strong> (contenido, no la lógica — ver <a href="#">sección 13</a>): 17 lesiones reales con nombre y descripción médica, repartidas en nivel3 (6, leves), nivel2 (6, moderadas) y nivel1 (5, graves — LCA, fractura de tibia/peroné, tendón de Aquiles, hernia discal, rotura muscular grado 3).</p>
+<p><strong>Lesiones</strong> (contenido, no la lógica — ver <a href="#13-lesiones">sección 13</a>): 17 lesiones reales con nombre y descripción médica, repartidas en nivel3 (6, leves), nivel2 (6, moderadas) y nivel1 (5, graves — LCA, fractura de tibia/peroné, tendón de Aquiles, hernia discal, rotura muscular grado 3).</p>
 <hr>
-<h2 id="21-base-de-datos-de-ligas-y-equipos-jsdatabasejs">21. Base de datos de ligas y equipos (<code>js/database.js</code>)</h2>
-<p><strong>29 ligas reales</strong>, cada una con sus 3 ejes ocultos de 0 a 100 (<code>fuerza</code> / <code>prestigio</code> / <code>economia</code> — ver <a href="#">sección 14.0</a>). Las primeras 10 (las &quot;grandes&quot; originales) tienen estos valores puestos a mano desde el arranque del proyecto; las otras 19 se sumaron después en una incorporación masiva, con la misma metodología:</p>
+<h2>21. Base de datos de ligas y equipos (<code>js/database.js</code>)</h2>
+<p><strong>29 ligas reales</strong>, cada una con sus 3 ejes ocultos de 0 a 100 (<code>fuerza</code> / <code>prestigio</code> / <code>economia</code> — ver <a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">sección 14.0</a>). Las primeras 10 (las &quot;grandes&quot; originales) tienen estos valores puestos a mano desde el arranque del proyecto; las otras 19 se sumaron después en una incorporación masiva, con la misma metodología:</p>
 <table>
 <thead>
 <tr>
@@ -1058,7 +1065,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <td>15</td>
 </tr>
 </tbody></table>
-<p><strong>23 de las 29</strong> tienen el campo <code>pais</code> cargado con un país que existe en <code>COUNTRIES</code> (<code>js/script.js</code>) — esas son las que pueden ser el punto de partida &quot;local&quot; en la creación de personaje (ver <a href="#">sección 5</a>). Turquía, Grecia, Rusia, China, El Salvador y Ucrania tienen liga cargada pero <strong>no</strong> son nacionalidades elegibles todavía — se puede fichar por sus clubes, pero no arrancar la carrera como local ahí.</p>
+<p><strong>23 de las 29</strong> tienen el campo <code>pais</code> cargado con un país que existe en <code>COUNTRIES</code> (<code>js/script.js</code>) — esas son las que pueden ser el punto de partida &quot;local&quot; en la creación de personaje (ver <a href="#5-elecci%C3%B3n-de-club-inicial-equipohtml--jsequipojs">sección 5</a>). Turquía, Grecia, Rusia, China, El Salvador y Ucrania tienen liga cargada pero <strong>no</strong> son nacionalidades elegibles todavía — se puede fichar por sus clubes, pero no arrancar la carrera como local ahí.</p>
 <p><strong>510 equipos reales</strong> repartidos en esas 29 ligas, cada uno con: nombre real, sus propios <code>fuerza</code>/<code>prestigio</code>/<code>economia</code>, iniciales y colores propios (para el placeholder si el escudo no carga) y el nombre del archivo de escudo real. Los ~25 clubes más reconocibles del mundo de las 10 ligas originales tienen esos 3 valores puestos a mano; el resto (incluidos los 296 equipos de las 19 ligas nuevas) se derivó con una variación estable por club (mismo id → siempre el mismo resultado) a partir de 3 niveles de referencia por liga — &quot;grande&quot; / &quot;consolidado&quot; / &quot;humilde&quot; — para que no todos los equipos de una misma liga terminen con el número idéntico.</p>
 <p><strong>Nombres cortos, &quot;como se los conoce&quot;</strong>: los 510 equipos usan el nombre por el que se los reconoce popularmente en vez de su denominación social completa (194 renombrados) — por ejemplo &quot;Club Sportivo Independiente Rivadavia&quot; pasó a ser &quot;Independiente Rivadavia&quot;, &quot;Club Atlético Boca Juniors&quot; a &quot;Boca Juniors&quot;, &quot;FC Barcelona&quot; a &quot;Barcelona&quot;, &quot;Sport Club Corinthians Paulista&quot; a &quot;Corinthians&quot;, &quot;FC Internazionale Milano&quot; a &quot;Inter&quot;. Se dejaron sin tocar los casos donde el prefijo/sufijo es parte genuina del nombre reconocido en su país (Bayern München, Borussia Dortmund, Hamburger SV, VfB Stuttgart, Club Brugge, Royal Antwerp, etc.) — no hay dos equipos con el mismo nombre visible dentro de una misma liga.</p>
 <p><strong>Escudos reales para toda la incorporación nueva</strong>: los 296 equipos, las 19 ligas y sus 38 trofeos (liga + copa nacional de cada una) tienen su imagen real cargada — no hay ninguna liga nueva con ícono genérico de respaldo, salvo el trofeo de liga de Eredivisie (que sí tiene su logo real, pero todavía no un trofeo de campeón propio) y el logo de liga de Costa Rica.</p>
@@ -1067,13 +1074,13 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <ul>
 <li><strong>29 ligas domésticas</strong> (una por cada liga cargada), con la cantidad real (o una referencia realista) de partidos de su formato vigente.</li>
 <li><strong>29 copas domésticas</strong>, una por liga — de las 10 originales (FA Cup, Copa del Rey, Coppa Italia, DFB-Pokal, Coupe de France, Copa do Brasil, Copa Argentina, Copa México, Lamar Hunt U.S. Open Cup, Copa Colombia) a las 19 nuevas (KNVB Beker, Taça de Portugal, Croky Cup, Copa de Turquía, Scottish Cup, Copa de Grecia, Copa de Rusia, Copa del Emperador, Copa de China, Copa Perú, Copa Simón Bolívar, Copa Chile, Copa AUF Uruguay, Copa Venezuela, Copa Ecuador, Copa Costa Rica, Copa Paraguay, Copa Presidente, Copa de Ucrania).</li>
-<li><strong>7 competiciones internacionales de club</strong> por confederación/categoría: Champions League y Europa League (UEFA), Libertadores y Sudamericana (CONMEBOL), Concacaf Champions Cup (CONCACAF no tiene un segundo nivel continental vigente), y <strong>AFC Champions League Elite/Two</strong> (agregadas junto con J1 League y Super League China, para que sus clubes también tengan a qué clasificar — ver <a href="#">sección 14</a>).</li>
-<li><strong>6 competiciones de selección</strong>: Copa del Mundo + una copa continental por confederación (Copa América, Eurocopa, Copa Oro, Copa Africana de Naciones, Copa Asiática) — ver <a href="#">sección 19</a>.</li>
+<li><strong>7 competiciones internacionales de club</strong> por confederación/categoría: Champions League y Europa League (UEFA), Libertadores y Sudamericana (CONMEBOL), Concacaf Champions Cup (CONCACAF no tiene un segundo nivel continental vigente), y <strong>AFC Champions League Elite/Two</strong> (agregadas junto con J1 League y Super League China, para que sus clubes también tengan a qué clasificar — ver <a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">sección 14</a>).</li>
+<li><strong>6 competiciones de selección</strong>: Copa del Mundo + una copa continental por confederación (Copa América, Eurocopa, Copa Oro, Copa Africana de Naciones, Copa Asiática) — ver <a href="#19-selecci%C3%B3n-nacional">sección 19</a>.</li>
 </ul>
 <p>Todos los números de partidos (mínimos garantizados + rondas extra) son una referencia realista basada en el formato vigente de cada torneo — ver los comentarios junto a cada entrada en el archivo para el detalle de cada formato.</p>
-<p><strong>46 selecciones nacionales</strong> (<code>GameDatabase.selecciones</code>) — una por cada país de la creación de personaje, con <code>fuerza</code>/<code>prestigio</code> propios y su confederación (<code>UEFA</code>/<code>CONMEBOL</code>/<code>CONCACAF</code>/<code>CAF</code>/<code>AFC</code>) — ver <a href="#">sección 19</a> para cómo se usan.</p>
+<p><strong>46 selecciones nacionales</strong> (<code>GameDatabase.selecciones</code>) — una por cada país de la creación de personaje, con <code>fuerza</code>/<code>prestigio</code> propios y su confederación (<code>UEFA</code>/<code>CONMEBOL</code>/<code>CONCACAF</code>/<code>CAF</code>/<code>AFC</code>) — ver <a href="#19-selecci%C3%B3n-nacional">sección 19</a> para cómo se usan.</p>
 <hr>
-<h2 id="22-interfaz-componentes-animaciones-y-responsive">22. Interfaz: componentes, animaciones y responsive</h2>
+<h2>22. Interfaz: componentes, animaciones y responsive</h2>
 <ul>
 <li><p><strong>Tokens de diseño</strong> centralizados en <code>:root</code> de <a href="css/style.css">css/style.css</a> (colores, radios) — compartidos por las 3 páginas.</p>
 </li>
@@ -1143,26 +1150,26 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <li><strong>Imágenes cross-origin en el canvas</strong>: la bandera del país sale de <a href="https://flagcdn.com">flagcdn.com</a>, un origen distinto al del juego. Dibujar una imagen así en el canvas sin marcarla <code>crossOrigin = &quot;anonymous&quot;</code> lo deja &quot;tainted&quot; (contaminado) y el navegador bloquea después cualquier intento de exportarlo (<code>toBlob</code>/<code>toDataURL</code>) con un <code>SecurityError</code> — rompía la tarjeta entera apenas la carrera incluía convocatorias a la selección. La bandera se carga ahora con <code>cargarImagenSeguraCrossOrigin</code> en vez de la función genérica <code>cargarImagenSegura</code> (reservada para assets propios del sitio); si el servidor remoto no coopera con CORS, cae sola al respaldo de emoji sin romper nada.</li>
 </ul>
 </li>
-<li><p><strong>Con la selección</strong>: cuando hubo convocatoria esa temporada, el spotlight y el historial muestran una línea aparte con la bandera del país + partidos/goles con la selección (ver <a href="#">sección 19</a>) — nunca mezclada con los números de club.</p>
+<li><p><strong>Con la selección</strong>: cuando hubo convocatoria esa temporada, el spotlight y el historial muestran una línea aparte con la bandera del país + partidos/goles con la selección (ver <a href="#19-selecci%C3%B3n-nacional">sección 19</a>) — nunca mezclada con los números de club.</p>
 </li>
 <li><p><strong>Chips del hero</strong> (edad, país, valor de mercado): los 3 comparten el mismo estilo neutro (texto blanco, borde translúcido) — el de valor de mercado (<code>.value-badge</code>) usaba antes el celeste <code>--accent-2</code>, distinto de los otros dos sin motivo aparente; ahora los 3 son visualmente el mismo tipo de dato.</p>
 </li>
 <li><p><strong>Altura real de viewport en mobile (<code>--vh-real</code>)</strong>: el layout de <code>carrera.html</code> (hero fijo / centro scrolleable / footer de decisiones fijo) depende de conocer la altura visible real de la pantalla. <code>100dvh</code> la calcula bien en Safari/iOS, pero varios navegadores mobile (Chrome/Firefox en Android, algunos in-app browsers) la calculan mal al cargar la página y dejan una franja del footer tapada. <code>actualizarAlturaViewport()</code> (<a href="js/carrera.js">carrera.js</a>, tope del archivo) mide <code>window.innerHeight</code> por JS al cargar y en cada resize/orientationchange, y esa variable pisa a <code>100dvh</code> en <code>.body--career</code> como última palabra — <code>100vh</code> y <code>100dvh</code> quedan como respaldo en cascada para cuando el JS todavía no corrió.</p>
 </li>
-<li><p><strong>Toast</strong> (<code>showToast</code>, definido igual en <code>carrera.js</code>/<code>script.js</code> — <code>equipo.js</code> ya no lo usa ni lo define, ver <a href="#">sección 5</a>): en <code>carrera.html</code> aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones. En mobile (<code>@media (max-width: 640px)</code> de <a href="css/style.css">css/style.css</a> y <a href="css/carrera.css">css/carrera.css</a>) ocupa casi todo el ancho de pantalla (<code>calc(100vw - 1.5rem)</code>) en vez de ajustarse solo al texto — más fácil de leer en una pantalla chica.</p>
+<li><p><strong>Toast</strong> (<code>showToast</code>, definido igual en <code>carrera.js</code>/<code>script.js</code> — <code>equipo.js</code> ya no lo usa ni lo define, ver <a href="#5-elecci%C3%B3n-de-club-inicial-equipohtml--jsequipojs">sección 5</a>): en <code>carrera.html</code> aparece debajo del hero en vez de abajo de la pantalla, porque ahí abajo siempre está el panel de decisiones. En mobile (<code>@media (max-width: 640px)</code> de <a href="css/style.css">css/style.css</a> y <a href="css/carrera.css">css/carrera.css</a>) ocupa casi todo el ancho de pantalla (<code>calc(100vw - 1.5rem)</code>) en vez de ajustarse solo al texto — más fácil de leer en una pantalla chica.</p>
 </li>
 <li><p><strong>Pie de versión</strong> (<code>GameConfig.VERSION</code>, <code>GameConfig.FECHA_PUBLICACION</code>, <code>GameConfig.footerHtml()</code> — <a href="js/config.js:11">config.js:11-19</a>): un único punto de verdad para el número de versión y la fecha de publicación, mostrado en las 3 pantallas (<code>#appFooter</code>). En <code>index.html</code>/<code>equipo.html</code> es el último elemento de la página (scroll normal); en <code>carrera.html</code> va dentro de <code>.career</code>, después del historial, para no restarle alto fijo al hero/spotlight/decisiones.</p>
 </li>
 </ul>
 <hr>
-<h2 id="23-persistencia-y-estado">23. Persistencia y estado</h2>
+<h2>23. Persistencia y estado</h2>
 <ul>
 <li><code>localStorage[&quot;leyendaPlayer&quot;]</code> es la <strong>única</strong> persistencia real: identidad del jugador + club/OVR inicial. Se escribe en <code>index.html</code> y se completa en <code>equipo.html</code>.</li>
 <li><strong>Toda la progresión de la carrera</strong> (temporada actual, historial, OVR, trofeos, valor de mercado, etc.) vive únicamente en variables de JavaScript en memoria, dentro de <code>carrera.html</code>. <strong>No hay guardado de partida</strong>: cerrar la pestaña o recargar la página pierde el progreso de la carrera (vuelve a arrancar la Temporada 1, con el mismo club/OVR inicial que sí quedó guardado).</li>
 <li>No hay backend, base de datos externa, ni llamadas de red propias del juego (aparte de pedir escudos/banderas/imágenes de trofeos como archivos estáticos, y las banderas de país a flagcdn.com).</li>
 </ul>
 <hr>
-<h2 id="24-tabla-completa-de-constantes-de-balance">24. Tabla completa de constantes de balance</h2>
+<h2>24. Tabla completa de constantes de balance</h2>
 <p>Todas viven en <a href="js/config.js"><code>js/config.js</code></a>. Cambiar cualquiera de estos números es la forma correcta de recalibrar el juego — nunca hay &quot;números mágicos&quot; repetidos sueltos en otros archivos.</p>
 <table>
 <thead>
@@ -1285,7 +1292,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <tr>
 <td><code>PESO_FACTOR_SOBRAR</code></td>
 <td>0.05</td>
-<td>Factor que aplica la distancia (en vez del 100%) cuando un club/liga &quot;sobra&quot; de poder en vez de quedar corto — ver <a href="#">sección 16.6</a></td>
+<td>Factor que aplica la distancia (en vez del 100%) cuando un club/liga &quot;sobra&quot; de poder en vez de quedar corto — ver <a href="#16-sistema-de-fichajes-y-ofertas">sección 16.6</a></td>
 </tr>
 <tr>
 <td><code>PROB_OFERTA_NOSTALGICA</code></td>
@@ -1354,7 +1361,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </tr>
 <tr>
 <td><code>GRUPOS_POSICION</code> / <code>PROPENSION_GOL</code> / <code>PROPENSION_ASISTENCIA</code></td>
-<td>ver <a href="#">sección 10</a></td>
+<td>ver <a href="#10-estad%C3%ADsticas-del-tramo-goles-asistencias-mvp-rating">sección 10</a></td>
 <td>Probabilidad base de gol/asistencia por posición (5 grupos: arquero/central/lateral/medio/ataque)</td>
 </tr>
 <tr>
@@ -1370,7 +1377,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <tr>
 <td><code>FACTOR_LIGA_MIN</code> / <code>MAX</code></td>
 <td>0.35 / 2.2</td>
-<td>Clamp del factor de competitividad de liga (ver <a href="#">sección 10</a>)</td>
+<td>Clamp del factor de competitividad de liga (ver <a href="#10-estad%C3%ADsticas-del-tramo-goles-asistencias-mvp-rating">sección 10</a>)</td>
 </tr>
 <tr>
 <td><code>PROB_SEGUNDO_GOL_FACTOR</code> / <code>_TERCER_GOL_FACTOR</code></td>
@@ -1400,7 +1407,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <tr>
 <td><code>RATING_FACTOR_COEFICIENTE</code></td>
 <td>1.3</td>
-<td>Cuánto empuja el <code>factor</code> de rendimiento la nota para arriba o para abajo (antes 2.5 — ver <a href="#">sección 10</a>)</td>
+<td>Cuánto empuja el <code>factor</code> de rendimiento la nota para arriba o para abajo (antes 2.5 — ver <a href="#10-estad%C3%ADsticas-del-tramo-goles-asistencias-mvp-rating">sección 10</a>)</td>
 </tr>
 <tr>
 <td><code>OVR_TRAMO_BASE</code></td>
@@ -1460,12 +1467,12 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <tr>
 <td><code>TALENTO_MIN</code> / <code>MAX</code></td>
 <td>0.85 / 1.2</td>
-<td>Multiplicador de talento oculto por carrera (acelera el crecimiento, atenúa el desgaste, y desde esta versión también pesa en <code>simularTramo</code> — ver <a href="#">sección 11.2</a>)</td>
+<td>Multiplicador de talento oculto por carrera (acelera el crecimiento, atenúa el desgaste, y desde esta versión también pesa en <code>simularTramo</code> — ver <a href="#112-talento-oculto-y-techo-de-potencial">sección 11.2</a>)</td>
 </tr>
 <tr>
 <td><code>UMBRAL_CRECIMIENTO_ACELERADO</code></td>
 <td>72</td>
-<td>OVR por debajo del cual aplica el &quot;salto de calidad&quot; del arranque de carrera (solo en Prime, ver <a href="#">sección 11.3</a>)</td>
+<td>OVR por debajo del cual aplica el &quot;salto de calidad&quot; del arranque de carrera (solo en Prime, ver <a href="#113-salto-de-calidad-del-arranque-de-carrera">sección 11.3</a>)</td>
 </tr>
 <tr>
 <td><code>CRECIMIENTO_ACELERADO_FACTOR_MAX</code></td>
@@ -1484,13 +1491,13 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </tr>
 <tr>
 <td><code>FORMA_CALIDAD</code></td>
-<td>ver <a href="#">sección 12</a></td>
+<td>ver <a href="#12-estado-de-forma">sección 12</a></td>
 <td>Calidad aportada por cada estado de forma a la fuerza de campaña</td>
 </tr>
 <tr>
 <td><code>FORMA_PESO_ACUMULACION</code></td>
 <td>0.5</td>
-<td>Fracción del camino hacia el objetivo de forma que se recorre por decisión (ver <a href="#">sección 12</a>)</td>
+<td>Fracción del camino hacia el objetivo de forma que se recorre por decisión (ver <a href="#12-estado-de-forma">sección 12</a>)</td>
 </tr>
 <tr>
 <td><code>PESO_TITULAR_INICIAL</code></td>
@@ -1540,7 +1547,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <tr>
 <td><code>PREMIOS_CANDIDATOS_N</code></td>
 <td>24</td>
-<td>Candidatos fantasma generados por temporada para los premios mundiales — ver <a href="#">sección 14.2</a></td>
+<td>Candidatos fantasma generados por temporada para los premios mundiales — ver <a href="#14-sistema-de-competiciones-liga-copas-clasificaci%C3%B3n-internacional">sección 14.2</a></td>
 </tr>
 <tr>
 <td><code>PREMIOS_OVR_MIN</code> / <code>_MAX</code></td>
@@ -1575,7 +1582,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <tr>
 <td><code>UMBRAL_OVR_CONVOCATORIA_BASE</code> / <code>_FACTOR</code></td>
 <td>50 / 0.35</td>
-<td>Fórmula del OVR de referencia (50/50 de convocatoria) según la fuerza de tu selección — ver <a href="#">sección 19</a></td>
+<td>Fórmula del OVR de referencia (50/50 de convocatoria) según la fuerza de tu selección — ver <a href="#19-selecci%C3%B3n-nacional">sección 19</a></td>
 </tr>
 <tr>
 <td><code>PROB_CONVOCATORIA_PENDIENTE_OVR</code></td>
@@ -1609,7 +1616,7 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </tr>
 <tr>
 <td><code>FORMA_BONUS_PARTICIPACION</code></td>
-<td>ver <a href="#">sección 9</a></td>
+<td>ver <a href="#9-participaci%C3%B3n-cu%C3%A1ntos-partidos-jug%C3%A1s-vos">sección 9</a></td>
 <td>Bono/malus de participación por estado de forma</td>
 </tr>
 <tr>
@@ -1689,17 +1696,17 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </tr>
 </tbody></table>
 <hr>
-<h2 id="25-limitaciones-conocidas-y-notas-para-el-futuro">25. Limitaciones conocidas y notas para el futuro</h2>
+<h2>25. Limitaciones conocidas y notas para el futuro</h2>
 <ul>
 <li><strong>Sin guardado de partida</strong>: es una decisión de diseño actual (juego de sesión única), no una limitación técnica — se podría agregar con <code>localStorage</code> guardando <code>temporadaActual</code>/<code>temporadasFinalizadas</code> serializados.</li>
 <li><strong><code>dev/test.js</code> / <code>dev/test.html</code></strong> son una herramienta interna para inspeccionar la base de datos y la distribución de OVR inicial durante el desarrollo — no están enlazados desde ninguna pantalla del juego y pueden ignorarse (o borrarse) de cara a producción.</li>
 <li><strong><code>pierna</code> hábil</strong> se guarda pero no se usa en ninguna fórmula todavía — es puramente cosmético en la ficha/camiseta.</li>
-<li>Los números de partidos por competición (<a href="#">sección 21</a>) son una referencia realista, no oficiales fijos, para ligas/copas cuyo formato cambió seguido en la realidad (Argentina, México, Colombia) — están documentados caso por caso en los comentarios de <code>database.js</code>.</li>
-<li>23 de los 46 países de la creación de personaje tienen liga propia cargada (subió de 5 con la incorporación de 19 ligas nuevas); el resto arranca &quot;de extranjero&quot; en las 5 grandes ligas europeas — es coherente con el diseño actual (documentado en <a href="#">sección 5</a>), no un bug, pero sigue siendo la superficie más obvia para sumar más ligas locales a futuro.</li>
+<li>Los números de partidos por competición (<a href="#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs">sección 21</a>) son una referencia realista, no oficiales fijos, para ligas/copas cuyo formato cambió seguido en la realidad (Argentina, México, Colombia) — están documentados caso por caso en los comentarios de <code>database.js</code>.</li>
+<li>23 de los 46 países de la creación de personaje tienen liga propia cargada (subió de 5 con la incorporación de 19 ligas nuevas); el resto arranca &quot;de extranjero&quot; en las 5 grandes ligas europeas — es coherente con el diseño actual (documentado en <a href="#5-elecci%C3%B3n-de-club-inicial-equipohtml--jsequipojs">sección 5</a>), no un bug, pero sigue siendo la superficie más obvia para sumar más ligas locales a futuro.</li>
 <li><strong>Rusia sigue cargada como confederación <code>UEFA</code></strong>, aunque sus clubes están suspendidos de las competiciones de UEFA desde 2022 — el juego no modela esa suspensión, así que un club ruso con la fuerza suficiente sí puede &quot;clasificar&quot; a la Champions/Europa League en la ficción del juego. Es una simplificación deliberada (no hay ningún mecanismo de &quot;confederación con competiciones restringidas&quot;), no un error de tipeo.</li>
-<li><strong>La Liga Premier de Ucrania quedó con 16 equipos</strong> en vez de los 20 reales de esta temporada (ver <a href="#">sección 21</a>) — se prefirió no completarla con clubes inventados sin escudo real.</li>
+<li><strong>La Liga Premier de Ucrania quedó con 16 equipos</strong> en vez de los 20 reales de esta temporada (ver <a href="#21-base-de-datos-de-ligas-y-equipos-jsdatabasejs">sección 21</a>) — se prefirió no completarla con clubes inventados sin escudo real.</li>
 <li><strong>Turquía, Grecia, Rusia, China, El Salvador y Ucrania</strong> tienen liga y equipos cargados pero todavía no son nacionalidades elegibles en la creación de personaje — se puede fichar por sus clubes durante la carrera, pero no arrancarla siendo local ahí.</li>
 <li><strong>AFC todavía no tiene copa continental de segundo nivel</strong> (a diferencia de UEFA/CONMEBOL) — un club japonés o chino solo puede clasificar a la AFC Champions League Elite, nunca a un equivalente de la Europa League/Sudamericana.</li>
-<li><strong>CAF no tiene ninguna liga doméstica de club cargada</strong> — solo existe como confederación de selecciones nacionales (para la Copa Africana de Naciones, <a href="#">sección 19</a>); ningún club africano es fichable todavía.</li>
+<li><strong>CAF no tiene ninguna liga doméstica de club cargada</strong> — solo existe como confederación de selecciones nacionales (para la Copa Africana de Naciones, <a href="#19-selecci%C3%B3n-nacional">sección 19</a>); ningún club africano es fichable todavía.</li>
 </ul>
 

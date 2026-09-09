@@ -122,6 +122,9 @@
 <blockquote>
 <p>Este documento describe <strong>absolutamente toda la lógica del juego</strong>: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás &quot;cómo se juega&quot; en términos de jugador, ver el <em>Manual de Juego</em> aparte.</p>
 </blockquote>
+<blockquote>
+<p><strong>Nota de desarrollo (no forma parte del juego publicado):</strong> en la rama <code>feature/vue-migration</code> (carpeta <a href="app/"><code>app/</code></a>) hay una reescritura completa del frontend a <strong>Vue 3 + TypeScript + Pinia + Vite</strong>, todavía en curso y sin mergear a <code>main</code>. Es un <em>port</em>, no un rediseño: mismo motor, mismas fórmulas, mismas reglas de balance descritas en todo este documento — la reescritura solo cambia cómo está armada la interfaz (componentes en vez de manipulación directa del DOM, estado reactivo en vez de variables globales mutables), no qué hace el juego. Mientras esa rama no se mergee, la versión que corre de verdad — y la que describe el resto de esta referencia técnica — sigue siendo la vanilla de la raíz del repo (<code>index.html</code>/<code>equipo.html</code>/<code>carrera.html</code> + <code>js/</code>).</p>
+</blockquote>
 <hr>
 <h2>Índice</h2>
 <ol>
@@ -184,10 +187,14 @@
 │       ├── ligas/             Escudos/logos de cada liga
 │       └── trofeos/            Siluetas de trofeos reales (se pintan de dorado vía CSS mask)
 │
-└── dev/
-    └── test.html / test.js    Herramienta interna de depuración (tablas de la base de datos,
-                                distribución de OVR inicial simulada) — no forma parte del juego,
-                                es solo para calibrar balance durante el desarrollo.
+├── dev/
+│   └── test.html / test.js    Herramienta interna de depuración (tablas de la base de datos,
+│                               distribución de OVR inicial simulada) — no forma parte del juego,
+│                               es solo para calibrar balance durante el desarrollo.
+│
+└── app/                     Reescritura en curso a Vue 3 + TypeScript + Pinia (rama
+                                `feature/vue-migration`, no mergeada — ver la nota de desarrollo
+                                al principio de este documento). No forma parte del juego publicado.
 </code></pre>
 <p><strong>Orden de carga de scripts</strong> (importa: cada archivo asume que el anterior ya está cargado):</p>
 <ul>
@@ -195,7 +202,7 @@
 <li><code>equipo.html</code> → <code>config.js</code> → <code>database.js</code> → <code>equipo.js</code></li>
 <li><code>carrera.html</code> → <code>config.js</code> → <code>database.js</code> → <code>events.js</code> → <code>carrera.js</code></li>
 </ul>
-<p>Todo vive en objetos globales (<code>GameConfig</code>, <code>GameDatabase</code>, <code>GameEvents</code>) — no hay módulos ES, ni bundler, ni build.</p>
+<p>Todo vive en objetos globales (<code>GameConfig</code>, <code>GameDatabase</code>, <code>GameEvents</code>) — no hay módulos ES, ni bundler, ni build. (La excepción es <code>app/</code>, que sí usa módulos ES + build — ver la nota de desarrollo arriba.)</p>
 <hr>
 <h2 id="3-flujo-general-del-juego">3. Flujo general del juego</h2>
 <pre><code>index.html (crear personaje)

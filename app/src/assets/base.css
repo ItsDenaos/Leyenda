@@ -1,86 +1,345 @@
-/* color palette from <https://github.com/vuejs/theme> */
+/* Tokens de diseño y reset global — compartidos por todas las vistas.
+   Portado de css/style.css (proyecto vanilla original); acá solo lo
+   genuinamente global. Lo específico de cada pantalla (creación de
+   personaje, elección de club, carrera) vive scoped en su propio
+   componente, no acá. */
 :root {
-  --vt-c-white: #ffffff;
-  --vt-c-white-soft: #f8f8f8;
-  --vt-c-white-mute: #f2f2f2;
-
-  --vt-c-black: #181818;
-  --vt-c-black-soft: #222222;
-  --vt-c-black-mute: #282828;
-
-  --vt-c-indigo: #2c3e50;
-
-  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
-  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
-  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
-  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
-
-  --vt-c-text-light-1: var(--vt-c-indigo);
-  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
-  --vt-c-text-dark-1: var(--vt-c-white);
-  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  --bg: #0d1120;
+  --bg-soft: #131a2e;
+  --card: #171f38;
+  --card-border: #262f4d;
+  --text: #eef1fb;
+  --text-dim: #9aa3c2;
+  --accent: #ffb703;
+  --accent-soft: #ffb70333;
+  --accent-2: #22d3ee;
+  /* Dorado propio de los trofeos, distinto del `--accent` (ese mismo
+     ámbar se repite en botones, nivel "oro" del OVR, etc. — si el trofeo
+     usara el mismo color, se perdería entre el resto de la interfaz en
+     vez de leerse como un logro aparte). Más profundo y menos anaranjado
+     que --accent, para que se sienta a "metal" y no compita con él. */
+  --trophy-gold: #d4af37;
+  --trophy-gold-soft: #d4af3733;
+  --pitch: #1b2a4a;
+  --pitch-line: #3a4d7a;
+  --danger: #ef4444;
+  --radius: 14px;
+  font-size: 16px;
 }
 
-/* semantic color variables for this project */
-:root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
-
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
-
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
-}
-
-*,
-*::before,
-*::after {
+* {
   box-sizing: border-box;
-  margin: 0;
-  font-weight: normal;
+}
+
+html {
+  background: var(--bg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--card-border) transparent;
+}
+html::-webkit-scrollbar {
+  width: 8px;
+}
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 4px;
+}
+html::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
 }
 
 body {
+  margin: 0;
   min-height: 100vh;
-  color: var(--color-text);
-  background: var(--color-background);
-  transition:
-    color 0.5s,
-    background-color 0.5s;
-  line-height: 1.6;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    Oxygen,
-    Ubuntu,
-    Cantarell,
-    'Fira Sans',
-    'Droid Sans',
-    'Helvetica Neue',
-    sans-serif;
-  font-size: 15px;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background: radial-gradient(circle at 20% 0%, #1a2340 0%, var(--bg) 55%);
+  color: var(--text);
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  padding-bottom: 6rem;
+}
+
+/* HEADER compartido por index.html/equipo.html (carrera.html tiene su
+   propio .hero, más rico — ver carrera.css cuando se porte). */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 2rem;
+  border-bottom: 1px solid var(--card-border);
+  background:
+    linear-gradient(120deg, rgba(255, 183, 3, 0.12), rgba(34, 211, 238, 0.05) 55%, transparent),
+    rgba(13, 17, 32, 0.85);
+  backdrop-filter: blur(6px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.brand__logo {
+  height: 3.1rem;
+  width: auto;
+  display: block;
+}
+.brand__tagline {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+/* BANDERAS (imagen real; si no carga, cae a un <span> con el emoji) */
+.flag-img {
+  display: inline-block;
+  width: 20px;
+  height: 15px;
+  object-fit: cover;
+  border-radius: 3px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+.flag-img--lg {
+  width: 30px;
+  height: 22px;
+  border-radius: 4px;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translate(-50%, 120%);
+  background: var(--card);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  padding: 0.85rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  box-shadow: 0 12px 30px -10px #000a;
+  transition: transform 0.3s ease;
+  z-index: 20;
+}
+.toast--visible {
+  transform: translate(-50%, 0);
+}
+
+/* ESCUDOS (equipo/liga) — compartidos por EquipoView y las vistas de
+   carrera (hero, spotlight, historial, decisiones); ver CrestImg.vue. */
+.team-crest {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, var(--crest-a, var(--accent-2)), var(--crest-b, #1d4ed8));
+  text-shadow: 0 1px 2px #0006;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.team-crest--xs {
+  width: 18px;
+  height: 18px;
+  font-size: 0.5rem;
+  border-radius: 6px;
+}
+.team-crest--sm {
+  width: 32px;
+  height: 32px;
+  font-size: 0.7rem;
+  border-radius: 9px;
+}
+.team-crest--md {
+  width: 40px;
+  height: 40px;
+  font-size: 0.8rem;
+  border-radius: 10px;
+}
+.team-crest--avatar {
+  width: 54px;
+  height: 54px;
+  font-size: 1.2rem;
+  border-radius: 50%;
+}
+/* Escudos de liga: solo el logo, sin el fondo degradado que llevan los de
+   equipo (las ligas no tienen colores propios, así que ese fondo solo se
+   justifica como respaldo de iniciales si la imagen falla). */
+.team-crest--liga {
+  background: none;
+  text-shadow: none;
+  border-radius: 0;
+}
+
+/* INSIGNIA DE OVR — hero, historial y resumen de carrera. */
+.ovr-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 2px solid var(--ovr-color, var(--text-dim));
+  color: var(--ovr-color, var(--text));
+  font-weight: 900;
+  font-size: 1.05rem;
+  line-height: 1;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.2);
+}
+.ovr-badge__label {
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+.ovr-badge--sm {
+  width: 38px;
+  height: 38px;
+  font-size: 0.9rem;
+}
+.ovr-badge--hero {
+  width: 64px;
+  height: 64px;
+  font-size: 1.4rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.ovr-badge--hero .ovr-badge__label {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* TROFEOS — spotlight (temporada en foco) e historial de carrera. */
+.trophies {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.trophy-card {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--trophy-gold-soft);
+  border: 1px solid var(--trophy-gold);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem 0.3rem 0.4rem;
+}
+/* Solo ícono (historial): sin la píldora de fondo/borde, el trofeo solo,
+   bien más grande para que se note (con nombre al lado, en el spotlight,
+   la píldora sigue teniendo sentido y queda como estaba). */
+.trophy-card--icon-only {
+  background: none;
+  border: none;
+  padding: 0;
+}
+.trophy-card--icon-only .trophy-card__icon-img {
+  width: 2.1rem;
+  height: 2.1rem;
+}
+.trophy-card--icon-only .trophy-card__icon {
+  font-size: 1.9rem;
+}
+.trophy-card__icon {
+  font-size: 0.95rem;
+}
+.trophy-card__icon-img {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  display: inline-block;
+  background-color: var(--trophy-gold);
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+.trophy-card__name {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--trophy-gold);
+}
+/* Nombre del trofeo en el historial de móvil: apilado y bien chico debajo
+   de cada ícono, oculto por default (se despliega al tocar la tarjeta
+   entera — ver `.timeline-item--expandida` en TimelineList). */
+.trophy-card--stacked {
+  flex-direction: column;
+  gap: 0.15rem;
+  text-align: center;
+}
+.trophy-card__name-under {
+  font-size: 0.5rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--trophy-gold);
+  max-width: 4.4rem;
+  display: none;
+}
+.timeline-item--expandida .trophy-card__name-under {
+  display: block;
+}
+
+/* ESTADÍSTICA EN GRILLA — spotlight y resumen de carrera. */
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  background: var(--bg-soft);
+  border-radius: 10px;
+  padding: 0.7rem 0.3rem;
+}
+.stat__value {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+.stat__label {
+  font-size: 0.64rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* ETIQUETA DE CAMPO — creación de personaje y modales de carrera. */
+.field__label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+/* PIE DE VERSIÓN */
+.app-footer {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  padding: 1.5rem 1rem;
+  opacity: 0.7;
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    padding: 1rem 1.25rem;
+    gap: 0.75rem;
+  }
+  .brand__logo {
+    height: 2.5rem;
+  }
+  .brand__tagline {
+    font-size: 0.78rem;
+  }
+  .toast {
+    width: calc(100vw - 1.5rem);
+    max-width: calc(100vw - 1.5rem);
+    box-sizing: border-box;
+    text-align: center;
+  }
 }
