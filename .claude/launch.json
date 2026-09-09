@@ -6,6 +6,12 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["--yes", "serve", "-l", "5173", "."],
       "port": 5173
+    },
+    {
+      "name": "leyenda-vue-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "app", "run", "dev"],
+      "port": 5174
     }
   ]
 }
