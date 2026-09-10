@@ -4,6 +4,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import ResumenModal from '../ResumenModal.vue'
 import { useCareerStore } from '../../../stores/career'
 import { GameDatabase } from '../../../data/database'
+import { GameConfig } from '../../../game/config'
 import type { Player, DecisionCard } from '../../../game/career-types'
 
 // jsdom no implementa un contexto 2D de canvas real — se mockea la
@@ -37,22 +38,35 @@ function jugadorDePrueba(overrides: Partial<Player> = {}): Player {
   }
 }
 
+// simularTramoYAvanzar demora el paso al siguiente checkpoint hasta que
+// termina la animación del spotlight (ver career.ts), así que este loop
+// necesita temporizadores falsos para no esperar ~1s por cada tramo — se
+// restauran los reales antes de volver, para no interferir con los
+// flushPromises() de los tests de "Compartir resumen" que corren después.
 function correrCarreraCompleta(store: ReturnType<typeof useCareerStore>, maxIters = 3000) {
-  let iters = 0
-  while (!store.carreraFinalizada && iters < maxIters) {
-    iters++
-    const t = store.temporadaActual
-    if (!t) break
-    const lote = t.loteActual
-    if (lote.length === 0) break
-    const primero = lote[0]!
-    if ('esInformeLesion' in primero && primero.esInformeLesion) {
-      store.simularTramoYAvanzar()
-    } else if ('tipoOferta' in primero) {
-      store.resolveOferta(primero)
-    } else {
-      store.resolveDecisionEvento((primero as DecisionCard).id, 0)
+  vi.useFakeTimers()
+  try {
+    let iters = 0
+    while (!store.carreraFinalizada && iters < maxIters) {
+      iters++
+      const t = store.temporadaActual
+      if (!t) break
+      const lote = t.loteActual
+      if (lote.length === 0) break
+      const primero = lote[0]!
+      if ('esInformeLesion' in primero && primero.esInformeLesion) {
+        store.simularTramoYAvanzar()
+        vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+      } else if ('tipoOferta' in primero) {
+        store.resolveOferta(primero)
+      } else {
+        store.resolveDecisionEvento((primero as DecisionCard).id, 0)
+        vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+      }
     }
+    return iters
+  } finally {
+    vi.useRealTimers()
   }
 }
 

@@ -6,10 +6,9 @@
 // (usada en un conic-gradient) no son propiedades que una transición CSS
 // pueda animar por sí sola.
 import { ref, watch, onUnmounted, type Ref } from 'vue'
+import { GameConfig } from '@/game/config'
 
-const DURACION_MS = 900
-
-export function useAnimatedNumber(source: () => number, duracionMs = DURACION_MS): Ref<number> {
+export function useAnimatedNumber(source: () => number, duracionMs = GameConfig.ANIMACION_TRAMO_MS): Ref<number> {
   const valorMostrado = ref(source())
   let frameId: number | null = null
 

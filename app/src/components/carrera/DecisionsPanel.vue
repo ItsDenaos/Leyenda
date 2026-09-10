@@ -57,6 +57,11 @@ const contador = computed(() => {
   if (lote.value.length === 0) return 'Resuelto'
   return esOferta.value ? 'Elige una opción' : `${lote.value.length} pendiente${lote.value.length === 1 ? '' : 's'}`
 })
+// Mismo mensaje vacío que renderDecisions() en el original: mientras se
+// espera a que termine la animación del spotlight antes de avanzar el
+// checkpoint (ver simularTramoYAvanzar en el store), acá no hay "ofertas"
+// de por medio, así que el texto genérico de ofertas quedaría raro.
+const mensajeVacio = computed(() => (esOferta.value ? 'No hay más ofertas por ahora.' : 'Avanzando la temporada…'))
 
 function itemKey(item: LoteItem): string {
   return esInformeLesion(item) ? 'lesion-informe' : (item as DecisionCard | OfertaItem).id
@@ -91,7 +96,7 @@ function volverInicio() {
           <OfertaCardItem v-else-if="esOfertaItem(item)" :oferta="item" />
           <DecisionCardItem v-else :decision="item as DecisionCard" />
         </template>
-        <p v-if="lote.length === 0" key="__empty" class="decisions__empty">No hay más ofertas por ahora.</p>
+        <p v-if="lote.length === 0" key="__empty" class="decisions__empty">{{ mensajeVacio }}</p>
       </TransitionGroup>
     </div>
   </Transition>

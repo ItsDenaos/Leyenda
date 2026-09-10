@@ -166,6 +166,7 @@ interface GameConfigShape {
   PROB_OFERTA_NOSTALGICA: number;
 
   TOTAL_TRAMOS_TEMPORADA: number;
+  ANIMACION_TRAMO_MS: number;
   CALENDARIO_PAUSA_ANTES_MITAD_MIN: number;
   CALENDARIO_PAUSA_ANTES_MITAD_MAX: number;
   CALENDARIO_PAUSA_ULTIMO_MOMENTO_MIN: number;
@@ -993,6 +994,7 @@ export const GameConfig: GameConfigShape = {
   // temporada (ver comentario ahí).
   // ============================================================
   TOTAL_TRAMOS_TEMPORADA: 3, // un bloque de partidos simulado por cada pausa de evento
+  ANIMACION_TRAMO_MS: 900, // duración de la interpolación del anillo/contadores del spotlight (ver useAnimatedNumber)
   CALENDARIO_PAUSA_ANTES_MITAD_MIN: 5, CALENDARIO_PAUSA_ANTES_MITAD_MAX: 45,
   CALENDARIO_PAUSA_ULTIMO_MOMENTO_MIN: 92, CALENDARIO_PAUSA_ULTIMO_MOMENTO_MAX: 99,
 

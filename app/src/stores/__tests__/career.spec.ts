@@ -1,7 +1,8 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useCareerStore } from '../career'
 import { GameDatabase } from '../../data/database'
+import { GameConfig } from '../../game/config'
 import type { Player, DecisionCard } from '../../game/career-types'
 
 function jugadorDePrueba(overrides: Partial<Player> = {}): Player {
@@ -24,25 +25,37 @@ function jugadorDePrueba(overrides: Partial<Player> = {}): Player {
 // Corre una carrera completa resolviendo siempre la primera opción/oferta
 // disponible — mismo criterio de automatización que se usó toda la
 // migración para validar el motor original en el navegador.
+//
+// simularTramoYAvanzar demora el paso al siguiente checkpoint hasta que
+// termina la animación del spotlight (ver career.ts), así que este loop
+// necesita temporizadores falsos para no esperar ~1s por cada tramo — se
+// restauran los reales antes de volver, para no afectar a otros tests.
 function correrCarreraCompleta(store: ReturnType<typeof useCareerStore>, maxIters = 3000) {
-  let iters = 0
-  while (!store.carreraFinalizada && iters < maxIters) {
-    iters++
-    const t = store.temporadaActual
-    if (!t) break
-    const lote = t.loteActual
-    if (lote.length === 0) break
+  vi.useFakeTimers()
+  try {
+    let iters = 0
+    while (!store.carreraFinalizada && iters < maxIters) {
+      iters++
+      const t = store.temporadaActual
+      if (!t) break
+      const lote = t.loteActual
+      if (lote.length === 0) break
 
-    const primero = lote[0]!
-    if ('esInformeLesion' in primero && primero.esInformeLesion) {
-      store.simularTramoYAvanzar()
-    } else if ('tipoOferta' in primero) {
-      store.resolveOferta(primero)
-    } else {
-      store.resolveDecisionEvento((primero as DecisionCard).id, 0)
+      const primero = lote[0]!
+      if ('esInformeLesion' in primero && primero.esInformeLesion) {
+        store.simularTramoYAvanzar()
+        vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+      } else if ('tipoOferta' in primero) {
+        store.resolveOferta(primero)
+      } else {
+        store.resolveDecisionEvento((primero as DecisionCard).id, 0)
+        vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+      }
     }
+    return iters
+  } finally {
+    vi.useRealTimers()
   }
-  return iters
 }
 
 describe('useCareerStore', () => {
@@ -105,20 +118,31 @@ describe('useCareerStore', () => {
 
     let temporadaDeCorte: number | null = null
     let iters = 0
-    while (!store.carreraFinalizada && iters < 200) {
-      iters++
-      const t = store.temporadaActual
-      if (!t) break
-      const primero = t.loteActual[0]
-      if (primero && 'tipoOferta' in primero && primero.tipoOferta === 'retiro' && !primero.forzoso) {
-        temporadaDeCorte = t.numero
-        break
+    vi.useFakeTimers()
+    try {
+      while (!store.carreraFinalizada && iters < 200) {
+        iters++
+        const t = store.temporadaActual
+        if (!t) break
+        const primero = t.loteActual[0]
+        if (primero && 'tipoOferta' in primero && primero.tipoOferta === 'retiro' && !primero.forzoso) {
+          temporadaDeCorte = t.numero
+          break
+        }
+        if (!primero) break
+        if ('esInformeLesion' in primero && primero.esInformeLesion) {
+          store.simularTramoYAvanzar()
+          vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+        } else if ('tipoOferta' in primero) {
+          store.resolveOferta(primero)
+        } else {
+          store.resolveDecisionEvento((primero as DecisionCard).id, 0)
+          vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+        }
+        if (t.ovr > 45) t.ovr = 45 // mantener el nivel bajo para forzar el corte
       }
-      if (!primero) break
-      if ('esInformeLesion' in primero && primero.esInformeLesion) store.simularTramoYAvanzar()
-      else if ('tipoOferta' in primero) store.resolveOferta(primero)
-      else store.resolveDecisionEvento((primero as DecisionCard).id, 0)
-      if (t.ovr > 45) t.ovr = 45 // mantener el nivel bajo para forzar el corte
+    } finally {
+      vi.useRealTimers()
     }
 
     expect(temporadaDeCorte).toBe(5) // gracia de 4 temporadas + la 5ta ya sin gracia

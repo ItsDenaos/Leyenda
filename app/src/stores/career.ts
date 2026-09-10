@@ -646,8 +646,15 @@ export const useCareerStore = defineStore('career', () => {
     t.bufferRendimiento = 0
     t.bufferEquipo = 0
 
-    avanzarCheckpoint()
-    guardar()
+    // Se demora el paso al siguiente checkpoint hasta que termina la
+    // animación del spotlight (ver useAnimatedNumber) — igual que el
+    // setTimeout(avanzarCheckpoint, ANIMACION_TRAMO_MS + 150) del original,
+    // para que la próxima tanda de decisiones no aparezca a mitad de la
+    // interpolación y la corte de golpe.
+    setTimeout(() => {
+      avanzarCheckpoint()
+      guardar()
+    }, GameConfig.ANIMACION_TRAMO_MS + 150)
   }
 
   // ---------------- PREMIOS MUNDIALES ----------------
