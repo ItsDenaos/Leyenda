@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import { useCareerStore } from '@/stores/career'
 import { equipoDe, ligaDe } from '@/data/database-helpers'
 import { GameConfig } from '@/game/config'
+import { useAnimatedNumber } from '@/composables/useAnimatedNumber'
 import CrestImg from '@/components/CrestImg.vue'
 import FlagImg from '@/components/FlagImg.vue'
 import TrophyBadges from './TrophyBadges.vue'
@@ -17,10 +18,24 @@ const s = computed(() => career.temporadaActual!)
 const equipo = computed(() => equipoDe(s.value.equipoId))
 const liga = computed(() => ligaDe(equipo.value))
 const forma = computed(() => GameConfig.FORM_STATES[s.value.forma])
-const progreso = computed(() => Math.round(s.value.progreso))
 const lesionado = computed(() => Boolean(s.value.lesionActiva))
 const formaPillStyle = computed(() => ({ background: `${forma.value.color}22`, color: forma.value.color }))
-const progressStyle = computed(() => ({ '--progress': progreso.value }))
+
+// El anillo y los contadores interpolan su valor viejo al nuevo en vez de
+// saltar directo (ver useAnimatedNumber) — misma animación de 900ms que
+// animarAnilloProgreso()/animarNumero() en el original. La barra móvil no
+// necesita esto: su ancho es una propiedad CSS común, así que una
+// transición normal (ver <style>) ya la anima sola al cambiar el % reactivo.
+const progresoAnimado = useAnimatedNumber(() => s.value.progreso)
+const progreso = computed(() => Math.round(progresoAnimado.value))
+const progressStyle = computed(() => ({ '--progress': progresoAnimado.value }))
+const progresoMobile = computed(() => Math.round(s.value.progreso))
+
+const partidosAnimado = useAnimatedNumber(() => s.value.partidos)
+const golesAnimado = useAnimatedNumber(() => s.value.goles)
+const asistenciasAnimado = useAnimatedNumber(() => s.value.asistencias)
+const mvpAnimado = useAnimatedNumber(() => s.value.mvp)
+const promedioAnimado = useAnimatedNumber(() => s.value.promedio)
 </script>
 
 <template>
@@ -59,11 +74,11 @@ const progressStyle = computed(() => ({ '--progress': progreso.value }))
       </div>
 
       <div class="spotlight-card__stats">
-        <div class="stat"><span class="stat__value">{{ s.partidos }}</span><span class="stat__label">Partidos</span></div>
-        <div class="stat"><span class="stat__value">{{ s.goles }}</span><span class="stat__label">Goles</span></div>
-        <div class="stat"><span class="stat__value">{{ s.asistencias }}</span><span class="stat__label">Asistencias</span></div>
-        <div class="stat"><span class="stat__value">{{ s.mvp }}</span><span class="stat__label">MVP</span></div>
-        <div class="stat"><span class="stat__value">{{ s.promedio.toFixed(1) }}</span><span class="stat__label">Promedio</span></div>
+        <div class="stat"><span class="stat__value">{{ Math.round(partidosAnimado) }}</span><span class="stat__label">Partidos</span></div>
+        <div class="stat"><span class="stat__value">{{ Math.round(golesAnimado) }}</span><span class="stat__label">Goles</span></div>
+        <div class="stat"><span class="stat__value">{{ Math.round(asistenciasAnimado) }}</span><span class="stat__label">Asistencias</span></div>
+        <div class="stat"><span class="stat__value">{{ Math.round(mvpAnimado) }}</span><span class="stat__label">MVP</span></div>
+        <div class="stat"><span class="stat__value">{{ promedioAnimado.toFixed(1) }}</span><span class="stat__label">Promedio</span></div>
       </div>
     </div>
 
@@ -91,15 +106,15 @@ const progressStyle = computed(() => ({ '--progress': progreso.value }))
       <FlagImg :code="s.seleccion!.paisCode" :emoji="s.seleccion!.paisFlag" class-css="flag-img" />
       Selección: {{ s.seleccionPartidos }} PJ · {{ s.seleccionGoles }} G
     </div>
-    <div class="spotlight-mobile__bar" :title="`${progreso}% de la temporada`">
-      <div class="spotlight-mobile__bar-fill" :style="{ width: `${progreso}%` }"></div>
+    <div class="spotlight-mobile__bar" :title="`${progresoMobile}% de la temporada`">
+      <div class="spotlight-mobile__bar-fill" :style="{ width: `${progresoMobile}%` }"></div>
     </div>
     <div class="spotlight-mobile__stats">
-      <span><b>{{ s.partidos }}</b>PJ</span>
-      <span><b>{{ s.goles }}</b>Goles</span>
-      <span><b>{{ s.asistencias }}</b>Asist.</span>
-      <span><b>{{ s.mvp }}</b>MVP</span>
-      <span><b>{{ s.promedio.toFixed(1) }}</b>Prom.</span>
+      <span><b>{{ Math.round(partidosAnimado) }}</b>PJ</span>
+      <span><b>{{ Math.round(golesAnimado) }}</b>Goles</span>
+      <span><b>{{ Math.round(asistenciasAnimado) }}</b>Asist.</span>
+      <span><b>{{ Math.round(mvpAnimado) }}</b>MVP</span>
+      <span><b>{{ promedioAnimado.toFixed(1) }}</b>Prom.</span>
     </div>
     <div v-if="s.trofeos.length > 0" class="spotlight-mobile__trophies">
       <TrophyBadges :trofeos="s.trofeos" solo-icono />
