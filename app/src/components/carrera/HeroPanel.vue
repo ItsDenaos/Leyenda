@@ -222,11 +222,12 @@ const ovrStyle = computed(() => ({ '--ovr-color': ovrTierColor(temporada.value.o
 }
 
 @media (max-width: 640px) {
-  .hero__pos-full {
-    display: none;
+  .hero {
+    padding: calc(0.65rem + env(safe-area-inset-top)) 0.85rem 0.65rem;
   }
-  .hero__pos-abbr {
-    display: inline;
+  .hero__main {
+    flex-wrap: nowrap;
+    gap: 0.55rem;
   }
   .hero__avatar {
     width: 34px;
@@ -236,6 +237,52 @@ const ovrStyle = computed(() => ({ '--ovr-color': ovrTierColor(temporada.value.o
     width: 34px;
     height: 34px;
     font-size: 0.8rem;
+  }
+  .hero__id {
+    flex-basis: auto;
+  }
+  .hero__name {
+    font-size: 0.95rem;
+  }
+  .hero__meta {
+    font-size: 0.66rem;
+    white-space: nowrap;
+    flex-wrap: nowrap;
+  }
+  .hero__pos-full {
+    display: none;
+  }
+  .hero__pos-abbr {
+    display: inline;
+  }
+  .hero__meta > span:last-child {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ovr-badge--hero {
+    width: 36px;
+    height: 36px;
+    font-size: 0.74rem;
+    margin-left: 0.35rem;
+  }
+  .ovr-badge--hero .ovr-badge__label {
+    display: none;
+  }
+
+  .hero__chips {
+    margin-top: 0.5rem;
+    gap: 0.35rem;
+  }
+  .chip,
+  .value-badge {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.68rem;
+    gap: 0.3rem;
+  }
+  .hero__chips .chip:first-child > span:first-child,
+  .value-badge > span:first-child {
+    display: none;
   }
 }
 </style>
