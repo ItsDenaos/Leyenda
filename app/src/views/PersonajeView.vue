@@ -3,7 +3,7 @@
 // Wizard de 3 pasos con ficha en vivo; portado 1:1 en comportamiento,
 // reescrito a Vue: el DOM manual (querySelector, classList.toggle,
 // innerHTML) pasa a ser estado reactivo + bindings de plantilla.
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { GameConfig } from '@/game/config'
 import { COUNTRIES, type Country } from '@/data/countries'
@@ -101,9 +101,15 @@ const STEP_ORDER: PasoKey[] = ['identidad', 'nacionalidad', 'posicion']
 const pasoAbierto = ref<PasoKey | null>('identidad')
 const pasoCompletadoAntes = reactive<Record<PasoKey, boolean>>({ identidad: false, nacionalidad: false, posicion: false })
 
-function enfocarPasoSiMovil(key: PasoKey | null) {
+async function enfocarPasoSiMovil(key: PasoKey | null) {
   if (!key || typeof window.matchMedia !== 'function') return
   if (!window.matchMedia('(max-width: 900px)').matches) return
+  // Espera al próximo tick para que Vue ya haya expandido la tarjeta en el
+  // DOM antes de medir dónde hacer scroll — si se llama en el mismo tick
+  // que el cambio de pasoAbierto, todavía está colapsada y el scroll
+  // termina apuntando a una posición que el contenido recién expandido
+  // corre para abajo, dejando el campo fuera de pantalla.
+  await nextTick()
   document.getElementById(`card-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 }
 
@@ -114,7 +120,7 @@ function avanzarSiCorresponde(key: PasoKey, ok: boolean) {
   if (ok && !pasoCompletadoAntes[key] && pasoAbierto.value === key) {
     const antes = pasoAbierto.value
     pasoAbierto.value = STEP_ORDER[STEP_ORDER.indexOf(key) + 1] ?? null
-    if (pasoAbierto.value !== antes) enfocarPasoSiMovil(pasoAbierto.value)
+    if (pasoAbierto.value !== antes) void enfocarPasoSiMovil(pasoAbierto.value)
   }
   pasoCompletadoAntes[key] = ok
 }
