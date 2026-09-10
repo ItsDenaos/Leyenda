@@ -10,7 +10,6 @@ export function useToast(duracionMs = 3200) {
   const message = ref('')
   const visible = ref(false)
   let timer: ReturnType<typeof setTimeout> | undefined
-  let drenando = false
 
   function show(mensaje: string) {
     message.value = mensaje
@@ -21,22 +20,15 @@ export function useToast(duracionMs = 3200) {
     }, duracionMs)
   }
 
-  // Muestra los mensajes de `cola` de a uno, espaciados, vaciándola a
-  // medida que avanza — pensado para invocarse cada vez que la cola
-  // (un array reactivo del store) recibe un mensaje nuevo.
+  // Vacía `cola` mostrando cada mensaje de una — igual que showToast() en
+  // el original, que nunca encolaba: si ya había un toast visible y salía
+  // uno nuevo, simplemente le pisaba el texto y reiniciaba el timer, en
+  // vez de esperar a que el anterior termine para mostrar el siguiente.
   function drainQueue(cola: string[]) {
-    if (drenando) return
-    drenando = true
-    const paso = () => {
-      const siguiente = cola.shift()
-      if (siguiente === undefined) {
-        drenando = false
-        return
-      }
+    let siguiente: string | undefined
+    while ((siguiente = cola.shift()) !== undefined) {
       show(siguiente)
-      setTimeout(paso, duracionMs + 200)
     }
-    paso()
   }
 
   return { message, visible, show, drainQueue }

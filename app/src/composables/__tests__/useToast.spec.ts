@@ -33,28 +33,22 @@ describe('useToast', () => {
     expect(toast.message.value).toBe('Segundo')
   })
 
-  it('drainQueue vacía la cola de a un mensaje por vez, en orden', () => {
+  it('drainQueue vacía la cola de una — el último mensaje es el que queda visible', () => {
+    // Igual que showToast() en el original: nunca encolaba, así que si
+    // llegan varios mensajes juntos el último simplemente le pisa el
+    // texto al anterior, sin esperar a que termine para mostrarse.
     const toast = useToast(1000)
     const cola = ['uno', 'dos', 'tres']
     toast.drainQueue(cola)
 
-    expect(toast.message.value).toBe('uno')
-    expect(cola).toEqual(['dos', 'tres'])
-
-    vi.advanceTimersByTime(1200)
-    expect(toast.message.value).toBe('dos')
-    expect(cola).toEqual(['tres'])
-
-    vi.advanceTimersByTime(1200)
-    expect(toast.message.value).toBe('tres')
     expect(cola).toEqual([])
+    expect(toast.message.value).toBe('tres')
+    expect(toast.visible.value).toBe(true)
   })
 
-  it('drainQueue no arranca un segundo drenado mientras uno ya está en curso', () => {
+  it('drainQueue con la cola vacía no hace nada', () => {
     const toast = useToast(1000)
-    const cola = ['uno', 'dos']
-    toast.drainQueue(cola)
-    toast.drainQueue(cola) // llamada concurrente — no debería robarle 'dos' antes de tiempo
-    expect(cola).toEqual(['dos'])
+    toast.drainQueue([])
+    expect(toast.visible.value).toBe(false)
   })
 })
