@@ -26,16 +26,23 @@ const formaPillStyle = computed(() => ({ background: `${forma.value.color}22`, c
 // animarAnilloProgreso()/animarNumero() en el original. La barra móvil no
 // necesita esto: su ancho es una propiedad CSS común, así que una
 // transición normal (ver <style>) ya la anima sola al cambiar el % reactivo.
-const progresoAnimado = useAnimatedNumber(() => s.value.progreso)
+//
+// El número de temporada se pasa como resetKey: al cerrar una temporada,
+// finalizarTemporada() (ver career.ts) arranca la siguiente desde cero —
+// no es un tramo más de la misma racha, así que ese salto puntual no debe
+// animarse (el original tampoco lo hacía, ver renderSpotlight() directo
+// en finalizarTemporada() de carrera.js).
+const temporadaKey = computed(() => s.value.numero)
+const progresoAnimado = useAnimatedNumber(() => s.value.progreso, undefined, () => temporadaKey.value)
 const progreso = computed(() => Math.round(progresoAnimado.value))
 const progressStyle = computed(() => ({ '--progress': progresoAnimado.value }))
 const progresoMobile = computed(() => Math.round(s.value.progreso))
 
-const partidosAnimado = useAnimatedNumber(() => s.value.partidos)
-const golesAnimado = useAnimatedNumber(() => s.value.goles)
-const asistenciasAnimado = useAnimatedNumber(() => s.value.asistencias)
-const mvpAnimado = useAnimatedNumber(() => s.value.mvp)
-const promedioAnimado = useAnimatedNumber(() => s.value.promedio)
+const partidosAnimado = useAnimatedNumber(() => s.value.partidos, undefined, () => temporadaKey.value)
+const golesAnimado = useAnimatedNumber(() => s.value.goles, undefined, () => temporadaKey.value)
+const asistenciasAnimado = useAnimatedNumber(() => s.value.asistencias, undefined, () => temporadaKey.value)
+const mvpAnimado = useAnimatedNumber(() => s.value.mvp, undefined, () => temporadaKey.value)
+const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () => temporadaKey.value)
 </script>
 
 <template>

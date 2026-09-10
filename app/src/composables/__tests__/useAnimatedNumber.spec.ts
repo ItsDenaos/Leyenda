@@ -66,4 +66,31 @@ describe('useAnimatedNumber', () => {
     vi.advanceTimersByTime(900)
     expect(animado.value).toBe(10)
   })
+
+  it('si resetKey cambia junto con el valor, salta directo sin animar (temporada nueva, no un tramo más)', async () => {
+    const source = ref(80)
+    const temporada = ref(1)
+    const animado = useAnimatedNumber(() => source.value, 900, () => temporada.value)
+
+    source.value = 0
+    temporada.value = 2
+    await nextTick()
+    vi.advanceTimersByTime(1) // ni un frame de animación debería alcanzar a correr
+    expect(animado.value).toBe(0)
+  })
+
+  it('si resetKey no cambia, un cambio de valor sí anima como siempre', async () => {
+    const source = ref(0)
+    const temporada = ref(1)
+    const animado = useAnimatedNumber(() => source.value, 900, () => temporada.value)
+
+    source.value = 100
+    await nextTick()
+    vi.advanceTimersByTime(1)
+    expect(animado.value).toBeGreaterThanOrEqual(0)
+    expect(animado.value).toBeLessThan(20)
+
+    vi.advanceTimersByTime(1000)
+    expect(animado.value).toBe(100)
+  })
 })
