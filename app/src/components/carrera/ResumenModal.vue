@@ -3,6 +3,7 @@
 // renderResumenCarrera()/ovrArcoSvg()/trofeosResumenHtml() en carrera.js.
 import { computed, ref } from 'vue'
 import { useCareerStore } from '@/stores/career'
+import { resetZoom } from '@/composables/resetZoom'
 import { GameConfig } from '@/game/config'
 import { ovrTierColor, formatMarketValue, POSITION_NAMES } from '@/game/format'
 import { calcularArcoOvr } from '@/game/ovr-chart'
@@ -13,6 +14,15 @@ import TrofeoIcon from './TrofeoIcon.vue'
 
 defineProps<{ mostrar: boolean }>()
 const emit = defineEmits<{ cerrar: [] }>()
+
+// El botón "✕" sigue enfocado cuando el modal pasa a [hidden] — sin
+// blurearlo antes, el navegador decide solo a dónde mover el foco (ver
+// el mismo ajuste en NumeroModal.vue).
+function cerrar() {
+  ;(document.activeElement as HTMLElement | null)?.blur()
+  resetZoom()
+  emit('cerrar')
+}
 
 const career = useCareerStore()
 
@@ -76,7 +86,7 @@ async function copiarResumenComoImagen() {
         <button type="button" class="modal-card__close" aria-label="Compartir resumen" title="Compartir resumen" :disabled="compartiendo" @click="copiarResumenComoImagen">
           {{ compartiendo ? '⏳' : '📤' }}
         </button>
-        <button type="button" class="modal-card__close" aria-label="Cerrar" @click="emit('cerrar')">✕</button>
+        <button type="button" class="modal-card__close" aria-label="Cerrar" @click="cerrar">✕</button>
       </div>
 
       <div v-if="mostrar" class="modal-card__scroll">

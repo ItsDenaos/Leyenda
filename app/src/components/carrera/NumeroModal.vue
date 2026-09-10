@@ -6,6 +6,7 @@
 // mensajes del store, no lo maneja este componente.
 import { ref, watch } from 'vue'
 import { useCareerStore } from '@/stores/career'
+import { resetZoom } from '@/composables/resetZoom'
 
 const props = defineProps<{ mostrar: boolean }>()
 const emit = defineEmits<{ cerrar: [] }>()
@@ -20,9 +21,19 @@ watch(
   },
 )
 
+// El botón tocado (o el input) sigue enfocado cuando el modal pasa a
+// [hidden] — sin blurearlo antes, el navegador decide solo a dónde mover
+// el foco. Cerrar el modal no navega de ruta, así que el reseteo de zoom
+// del router (ver resetZoom.ts) tampoco corre acá — se dispara aparte.
+function cerrar() {
+  ;(document.activeElement as HTMLElement | null)?.blur()
+  resetZoom()
+  emit('cerrar')
+}
+
 function confirmar() {
   career.confirmarCambioNumero(numero.value)
-  emit('cerrar')
+  cerrar()
 }
 </script>
 
@@ -36,7 +47,7 @@ function confirmar() {
         <input v-model.number="numero" type="number" min="1" max="99" />
       </label>
       <div class="modal-card__actions">
-        <button type="button" class="btn btn--ghost" @click="emit('cerrar')">Ahora no</button>
+        <button type="button" class="btn btn--ghost" @click="cerrar">Ahora no</button>
         <button type="button" class="btn" @click="confirmar">Solicitar</button>
       </div>
     </div>
