@@ -40,16 +40,28 @@ onMounted(() => {
     return
   }
 
+  // A diferencia del original (carrera.html se carga como página nueva,
+  // con la barra de Safari ya asentada), acá se llega por navegación de
+  // ruta del SPA — si veníamos de una vista con scroll normal (equipo/
+  // personaje), Safari puede haber ocultado su barra de direcciones, y
+  // --vh-real quedaría fijado a ese alto "de más" apenas se expanda de
+  // nuevo. overflow:hidden también en <html> (no solo en <body>) evita
+  // que ese desfase momentáneo se traduzca en scroll de toda la página —
+  // el original nunca lo necesitó porque no tiene ese salto de contexto.
+  document.documentElement.classList.add('html--career')
   document.body.classList.add('body--career')
   actualizarAlturaViewport()
   window.addEventListener('resize', actualizarAlturaViewport)
   window.addEventListener('orientationchange', actualizarAlturaViewport)
+  window.visualViewport?.addEventListener('resize', actualizarAlturaViewport)
 })
 
 onUnmounted(() => {
+  document.documentElement.classList.remove('html--career')
   document.body.classList.remove('body--career')
   window.removeEventListener('resize', actualizarAlturaViewport)
   window.removeEventListener('orientationchange', actualizarAlturaViewport)
+  window.visualViewport?.removeEventListener('resize', actualizarAlturaViewport)
 })
 
 watch(
@@ -109,6 +121,13 @@ watch(
    árbol de componentes) mientras esta vista está montada — ver el toggle
    de la clase `body--career` en onMounted/onUnmounted arriba. Portado de
    la parte de layout de carrera.css que scoped no puede alcanzar. */
+/* Ver el comentario de html--career en onMounted (CarreraView.vue) sobre
+   por qué hace falta bloquear el scroll también en <html> acá, a
+   diferencia del original. */
+.html--career {
+  height: 100%;
+  overflow: hidden;
+}
 .body--career {
   height: 100vh;
   height: 100dvh;

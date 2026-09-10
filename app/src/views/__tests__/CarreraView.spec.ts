@@ -17,6 +17,7 @@ describe('CarreraView', () => {
     localStorage.clear()
     push.mockClear()
     document.body.className = ''
+    document.documentElement.className = ''
   })
 
   it('redirige a / cuando no hay carrera activa ni guardada', () => {
@@ -46,6 +47,7 @@ describe('CarreraView', () => {
     expect(push).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('PEREZ')
     expect(document.body.classList.contains('body--career')).toBe(true)
+    expect(document.documentElement.classList.contains('html--career')).toBe(true)
   })
 
   it('con una carrera guardada en localStorage (sin estado en memoria), la carga y la muestra', async () => {
