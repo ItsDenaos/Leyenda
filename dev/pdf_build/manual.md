@@ -203,6 +203,7 @@ Cosas para tener en cuenta:
 - **Recién fichado a un club, tenés 2 temporadas de tranquilidad** (**4** si es tu primer club, el de la creación de personaje — te dan el doble de margen por ser tu debut real): por más que tu nivel no termine de convencer, ese club no te va a dejar ir hasta que hayas tenido esas temporadas completas para demostrar algo.
 - **Desde los 36 años** podés elegir **retirarte voluntariamente** aunque tu club te siga queriendo — ocupa una de las 4 cartas.
 - Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de "Quedarme" se reemplaza por una de retiro forzoso — todavía podés fichar por otro club en esa misma pausa, si hay ofertas. Igual, si veniste de cerrar una temporada realmente brillante (muchos goles/asistencias, gran promedio), eso puede salvarte el contrato aunque el número de OVR no haya llegado del todo — el club no te evalúa solo por un número, también por cómo jugaste de verdad.
+- **Si tu club todavía confía en vos a largo plazo pero no te está dando minutos** (poco protagonismo y bajo rendimiento cuando jugaste, todavía dentro de tu período de tranquilidad), en vez de la ventana normal vas a ver solo 2 cartas: "Quedarme" y un **préstamo** a otro club por esa temporada, para que sumes minutos en otro lado. Al cerrar esa temporada volvés solo a tu club dueño, sin pedirte nada — pero tenés que volver a ganarte el puesto ahí, no en el club prestado.
 
 ---
 
