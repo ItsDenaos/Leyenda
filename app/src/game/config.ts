@@ -156,6 +156,10 @@ interface GameConfigShape {
   CONTRATO_RENDIMIENTO_SALVAVIDAS: number;
   contratoDebeTerminar(equipo: Equipo, liga: Liga, ovr: number, promedioTemporadaAnterior?: number | null): boolean;
 
+  PRESTAMO_PESO_TITULAR_UMBRAL: number;
+  PRESTAMO_PROMEDIO_UMBRAL: number;
+  clubDebePrestar(pesoTitular: number, promedioTemporadaAnterior: number): boolean;
+
   EDAD_POTENCIAL_BONUS_MAX: number;
   EDAD_POTENCIAL_BONUS_HASTA: number;
   EDAD_POTENCIAL_PENALIZACION_DESDE: number;
@@ -944,6 +948,24 @@ export const GameConfig: GameConfigShape = {
       return false;
     }
     return true;
+  },
+
+  // ============================================================
+  // PRÉSTAMOS
+  // Un caso distinto de "esto no está funcionando" al de arriba: acá el
+  // club SÍ te quiere a largo plazo (por eso solo aplica dentro del
+  // período de gracia — ver generarLoteOfertas en el store, que no
+  // ofrece préstamo una vez pasada la gracia, ahí rige contratoDebeTerminar
+  // como siempre), pero no te está dando minutos. Hacen falta las DOS
+  // condiciones — poco Y mal — para que dispare; cualquiera de las dos
+  // sola es normal en una carrera larga y no amerita una cesión.
+  // ============================================================
+  PRESTAMO_PESO_TITULAR_UMBRAL: 0.35, // no te estás ganando el puesto
+  PRESTAMO_PROMEDIO_UMBRAL: 6.0,      // por debajo de RATING_BASE (6.5, "neutral")
+
+  clubDebePrestar(pesoTitular, promedioTemporadaAnterior) {
+    return pesoTitular < GameConfig.PRESTAMO_PESO_TITULAR_UMBRAL
+      && promedioTemporadaAnterior < GameConfig.PRESTAMO_PROMEDIO_UMBRAL;
   },
 
   // ============================================================

@@ -232,6 +232,22 @@ describe('GameConfig — contratoDebeTerminar y gracia de contrato', () => {
   })
 })
 
+describe('GameConfig — clubDebePrestar (préstamos)', () => {
+  it('necesita las dos condiciones a la vez — poco Y mal', () => {
+    const umbralPeso = GameConfig.PRESTAMO_PESO_TITULAR_UMBRAL
+    const umbralPromedio = GameConfig.PRESTAMO_PROMEDIO_UMBRAL
+
+    // Poco (pesoTitular bajo) pero bien (promedio alto): no dispara.
+    expect(GameConfig.clubDebePrestar(umbralPeso - 0.1, umbralPromedio + 1)).toBe(false)
+    // Bien (pesoTitular alto) pero mal (promedio bajo): no dispara.
+    expect(GameConfig.clubDebePrestar(umbralPeso + 0.1, umbralPromedio - 1)).toBe(false)
+    // Poco y mal a la vez: sí dispara.
+    expect(GameConfig.clubDebePrestar(umbralPeso - 0.1, umbralPromedio - 1)).toBe(true)
+    // Bien en las dos: no dispara.
+    expect(GameConfig.clubDebePrestar(umbralPeso + 0.1, umbralPromedio + 1)).toBe(false)
+  })
+})
+
 describe('GameConfig — Balón de Oro exige trofeo real', () => {
   it('con las mismas estadísticas, ganar un trofeo real sube la calidad', () => {
     const sinTrofeo = GameConfig.calcularCalidadBalonDeOro(9.0, 35, false)

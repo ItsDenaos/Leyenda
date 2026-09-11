@@ -100,13 +100,28 @@ export interface OfertaRetiro {
   forzoso?: boolean
 }
 
-export type OfertaItem = OfertaClub | OfertaQuedarme | OfertaRetiro
+// El club dueño te cede a otro por una temporada — ver clubDebePrestar en
+// config.ts y clubDuenoId en Temporada más abajo. `equipo`/`liga` acá son
+// el destino (donde jugarías), no tu club dueño.
+export interface OfertaPrestamo {
+  id: string
+  tipoOferta: 'prestamo'
+  equipo: Equipo
+  liga: import('../data/database').Liga
+  desc: string
+}
+
+export type OfertaItem = OfertaClub | OfertaQuedarme | OfertaRetiro | OfertaPrestamo
 export type LoteItem = DecisionCard | OfertaItem | InformeLesion
 
 export interface Temporada {
   numero: number
   anio: string
   equipoId: string
+  // Si no es null, esta temporada jugás a préstamo: `equipoId` es el club
+  // donde jugás, `clubDuenoId` el dueño de tu ficha — al cerrar la
+  // temporada volvés ahí solo, sin pedirte nada (ver finalizarTemporada).
+  clubDuenoId: string | null
   ovr: number
   partidos: number
   goles: number

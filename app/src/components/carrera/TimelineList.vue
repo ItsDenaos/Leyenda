@@ -23,6 +23,7 @@ const filas = computed(() =>
       color: ovrTierColor(s.ovr),
       edad: Number(career.player!.edad) + (s.numero - 1),
       tieneTrofeos: Boolean(s.trofeos && s.trofeos.length > 0),
+      aPrestamo: s.clubDuenoId !== null,
     })),
 )
 
@@ -56,7 +57,7 @@ function toggleExpandida(numero: number, tieneTrofeos: boolean) {
           :initials="fila.equipo.initials"
           :style-vars="{ '--crest-a': fila.equipo.a, '--crest-b': fila.equipo.b }"
         />
-        <span class="timeline-item__team">{{ fila.equipo.nombre }}</span>
+        <span class="timeline-item__team">{{ fila.equipo.nombre }}<template v-if="fila.aPrestamo"> (préstamo)</template></span>
         <TrophyBadges v-if="fila.tieneTrofeos" :trofeos="fila.temporada.trofeos" solo-icono />
         <span v-else class="timeline-item__notrophy">Sin trofeos</span>
         <span class="ovr-badge ovr-badge--sm" :style="{ '--ovr-color': fila.color }">
@@ -87,7 +88,7 @@ function toggleExpandida(numero: number, tieneTrofeos: boolean) {
             :style-vars="{ '--crest-a': fila.equipo.a, '--crest-b': fila.equipo.b }"
           />
           <div class="timeline-item__mid">
-            <span class="timeline-item__mteam">{{ fila.equipo.nombre }}</span>
+            <span class="timeline-item__mteam">{{ fila.equipo.nombre }}<template v-if="fila.aPrestamo"> (préstamo)</template></span>
             <span class="timeline-item__mmeta"
               >T{{ fila.temporada.numero }} · {{ fila.temporada.anio }} · {{ fila.edad }} años · {{ fila.temporada.partidos }} PJ ·
               {{ fila.temporada.goles }} G · {{ fila.temporada.asistencias }} A</span

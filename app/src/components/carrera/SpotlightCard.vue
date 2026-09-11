@@ -17,6 +17,7 @@ const career = useCareerStore()
 const s = computed(() => career.temporadaActual!)
 const equipo = computed(() => equipoDe(s.value.equipoId))
 const liga = computed(() => ligaDe(equipo.value))
+const estaAPrestamo = computed(() => s.value.clubDuenoId !== null)
 const forma = computed(() => GameConfig.FORM_STATES[s.value.forma])
 const lesionado = computed(() => Boolean(s.value.lesionActiva))
 const formaPillStyle = computed(() => ({ background: `${forma.value.color}22`, color: forma.value.color }))
@@ -87,6 +88,7 @@ const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () 
         <span class="current-tag">EN CURSO</span>
         <span class="forma-pill" :style="formaPillStyle">{{ forma.icon }} {{ forma.label }}</span>
         <span class="lineup-tag" :class="s.titular ? 'lineup-tag--titular' : 'lineup-tag--suplente'">{{ s.titular ? 'Titular' : 'Suplente' }}</span>
+        <span v-if="estaAPrestamo" class="lineup-tag lineup-tag--prestamo">A préstamo</span>
       </div>
     </div>
 
@@ -124,7 +126,7 @@ const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () 
         :initials="equipo.initials"
         :style-vars="{ '--crest-a': equipo.a, '--crest-b': equipo.b }"
       />
-      <span class="spotlight-mobile__clubname">{{ equipo.nombre }}</span>
+      <span class="spotlight-mobile__clubname">{{ equipo.nombre }}<template v-if="estaAPrestamo"> (préstamo)</template></span>
       <span class="lineup-tag" :class="s.titular ? 'lineup-tag--titular' : 'lineup-tag--suplente'">{{ s.titular ? 'Titular' : 'Suplente' }}</span>
     </div>
     <div v-if="s.seleccionPartidos > 0" class="spotlight-mobile__seleccion">
@@ -249,6 +251,11 @@ const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () 
 .lineup-tag--suplente {
   color: var(--text-dim);
   background: var(--bg-soft);
+}
+.lineup-tag--prestamo {
+  color: #38bdf8;
+  border-color: #38bdf8;
+  background: #38bdf81a;
 }
 
 .spotlight-card__body {

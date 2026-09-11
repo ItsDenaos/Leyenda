@@ -150,6 +150,7 @@ export const useCareerStore = defineStore('career', () => {
       numero,
       anio: String(new Date().getFullYear() + (numero - 1)),
       equipoId,
+      clubDuenoId: null,
       ovr,
       partidos: 0,
       goles: 0,
@@ -386,6 +387,15 @@ export const useCareerStore = defineStore('career', () => {
     const contratoTerminado = !enGraciaDeContrato && GameConfig.contratoDebeTerminar(equipoActual, ligaActual, ovr, promedioTemporadaAnterior)
     const puedeElegirRetiro = !contratoTerminado && edad >= GameConfig.EDAD_RETIRO_OFERTA
 
+    // El club todavía te quiere (seguís en gracia de contrato), pero no te
+    // está dando minutos — en vez de la ventana de fichajes normal, te
+    // ofrece cederte a otro club por esta temporada. Pasada la gracia, el
+    // caso "no rendís" ya lo cubre contratoDebeTerminar de arriba (venta/
+    // no renovación), así que el préstamo no compite con esa lógica.
+    const debeSerPrestado = enGraciaDeContrato
+      && promedioTemporadaAnterior !== null
+      && GameConfig.clubDebePrestar(t.pesoTitular, promedioTemporadaAnterior)
+
     const disponibles = GameDatabase.equipos.filter((e) => e.id !== t.equipoId)
     const pool = disponibles.length > 0 ? disponibles : GameDatabase.equipos
 
@@ -405,6 +415,26 @@ export const useCareerStore = defineStore('career', () => {
       elegibles = candidatos.filter((c) => GameConfig.equipoElegibleParaOvr(c.equipo, c.liga, ovr))
     }
     if (elegibles.length === 0) elegibles = candidatos
+
+    if (debeSerPrestado) {
+      const [destino] = GameConfig.elegirMejorEncaje(elegibles, pesoFn, 1)
+      const cartaQuedarme: OfertaItem = {
+        id: `quedarme-${Math.random().toString(36).slice(2, 8)}`,
+        tipoOferta: 'quedarme',
+        equipo: equipoActual,
+        liga: ligaActual,
+        desc: `Seguir en ${equipoActual.nombre} y pelear tu lugar en ${ligaActual.nombre}.`,
+      }
+      if (!destino) return [cartaQuedarme]
+      const cartaPrestamo: OfertaItem = {
+        id: `prestamo-${destino.equipo.id}-${Math.random().toString(36).slice(2, 8)}`,
+        tipoOferta: 'prestamo',
+        equipo: destino.equipo,
+        liga: destino.liga,
+        desc: `${equipoActual.nombre} decide cederte a ${destino.equipo.nombre} para que sumes minutos esta temporada.`,
+      }
+      return [cartaQuedarme, cartaPrestamo]
+    }
 
     const enTransicionRetiro = !contratoTerminado && edad >= edadRetiroForzoso.value - GameConfig.EDAD_RETIRO_TRANSICION
     const cantidadOfertasClub = enTransicionRetiro ? 1 : puedeElegirRetiro ? 2 : 3
@@ -808,14 +838,30 @@ export const useCareerStore = defineStore('career', () => {
     const ovrHeredado = t.ovr
     const equipoAcumuladoCerrado = t.equipoAcumuladoTemporada
     const pesoTitularCerrado = t.pesoTitular
+
+    // Si esta temporada fue a préstamo, la próxima arranca sola de vuelta
+    // en el club dueño — sin pedirte nada, la cesión ya terminó. No
+    // heredás pesoTitular (te lo tenés que volver a ganar ahí, no en el
+    // club prestado) ni clasificación internacional (es del club dueño,
+    // y no hay forma de saber cómo le fue mientras no estabas — mismo
+    // criterio que ya usa un traspaso real, que tampoco la hereda).
+    const volviendoDePrestamo = t.clubDuenoId !== null
+    const equipoIdProxima = volviendoDePrestamo ? t.clubDuenoId! : t.equipoId
+    const equipoProxima = volviendoDePrestamo ? equipoDe(equipoIdProxima) : equipo
+    const ligaProxima = volviendoDePrestamo ? ligaDe(equipoProxima) : liga
+
     temporadaActual.value = crearTemporada(
       numeroCerrada + 1,
-      t.equipoId,
+      equipoIdProxima,
       ovrHeredado,
-      GameConfig.calcularValorMercado(ovrHeredado, equipo, liga),
-      clasificacionProxima,
-      pesoTitularCerrado,
+      GameConfig.calcularValorMercado(ovrHeredado, equipoProxima, ligaProxima),
+      volviendoDePrestamo ? null : clasificacionProxima,
+      volviendoDePrestamo ? undefined : pesoTitularCerrado,
     )
+
+    if (volviendoDePrestamo) {
+      mensajesFinales.push(`Tu préstamo en ${equipo.nombre} terminó — volvés a ${equipoProxima.nombre}.`)
+    }
 
     puedeSolicitarNumero.value = true
     contextoSolicitudNumero.value = { ovr: ovrHeredado, rendimiento: equipoAcumuladoCerrado }
@@ -930,6 +976,20 @@ export const useCareerStore = defineStore('career', () => {
       t.competiciones = inicializarCompeticionesTemporada(item.equipo.id, null)
       temporadasEnClubActual.value = 0
       esPrimerClub.value = false
+      t.titular = false
+      t.pesoTitular = GameConfig.PESO_TITULAR_INICIAL
+      t.forma = 'regular'
+      t.valorMercado = GameConfig.calcularValorMercado(t.ovr, item.equipo, item.liga)
+    }
+
+    if (item.tipoOferta === 'prestamo') {
+      // A diferencia de un traspaso real: seguís siendo del club dueño
+      // (temporadasEnClubActual/esPrimerClub no se tocan — su reloj de
+      // contrato sigue corriendo esta temporada también, ver finalizarTemporada
+      // para la vuelta automática al cerrar la temporada).
+      t.clubDuenoId = t.equipoId
+      t.equipoId = item.equipo.id
+      t.competiciones = inicializarCompeticionesTemporada(item.equipo.id, null)
       t.titular = false
       t.pesoTitular = GameConfig.PESO_TITULAR_INICIAL
       t.forma = 'regular'

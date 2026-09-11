@@ -16,6 +16,7 @@ const career = useCareerStore()
 const player = computed(() => career.player!)
 const temporada = computed(() => career.temporadaActual!)
 const equipo = computed(() => equipoDe(temporada.value.equipoId))
+const estaAPrestamo = computed(() => temporada.value.clubDuenoId !== null)
 const edad = computed(() => career.getEdadActual())
 const posicionNombre = computed(() => POSITION_NAMES[player.value.posicion] ?? player.value.posicion)
 
@@ -55,7 +56,7 @@ const ovrStyle = computed(() => ({ '--ovr-color': ovrTierColor(temporada.value.o
           >
             ✎
           </button>
-          <span>{{ equipo.nombre }}</span>
+          <span>{{ equipo.nombre }}<template v-if="estaAPrestamo"> (préstamo)</template></span>
         </span>
       </div>
 

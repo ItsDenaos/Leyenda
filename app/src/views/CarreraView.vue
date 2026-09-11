@@ -366,6 +366,13 @@ watch(
   background: #34d39926;
   color: #34d399;
 }
+.decision-card--prestamo {
+  border-left-color: #38bdf8;
+}
+.decision-card--prestamo .decision-card__tag {
+  background: #38bdf826;
+  color: #38bdf8;
+}
 .decision-card--retiro {
   border-left-color: #f97316;
 }

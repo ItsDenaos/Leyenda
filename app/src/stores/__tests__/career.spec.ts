@@ -3,7 +3,7 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useCareerStore } from '../career'
 import { GameDatabase } from '../../data/database'
 import { GameConfig } from '../../game/config'
-import type { Player, DecisionCard } from '../../game/career-types'
+import type { Player, DecisionCard, OfertaItem } from '../../game/career-types'
 
 function jugadorDePrueba(overrides: Partial<Player> = {}): Player {
   const equipo = GameDatabase.equipos[0]!
@@ -171,5 +171,85 @@ describe('useCareerStore', () => {
     const store = useCareerStore()
     expect(store.hayCarreraGuardada()).toBe(false)
     expect(store.cargar()).toBe(false)
+  })
+
+  it('cede a otro club por bajo rendimiento (préstamo) y vuelve solo al club dueño', () => {
+    const store = useCareerStore()
+    store.iniciarCarrera(jugadorDePrueba())
+
+    vi.useFakeTimers()
+    try {
+      // Termina la temporada 1 resolviendo lo que vaya saliendo — justo
+      // antes de que se cierre (el lote queda vacío, con el cierre ya
+      // encolado en el setTimeout de la animación, todavía sin correr) se
+      // fuerza un pesoTitular y un promedio bajos, para que la temporada 2
+      // arranque en condición de préstamo.
+      let iters = 0
+      while (store.temporadaActual!.numero === 1 && iters < 50) {
+        iters++
+        const t = store.temporadaActual!
+        const primero = t.loteActual[0]
+        if (!primero) break
+        if ('esInformeLesion' in primero && primero.esInformeLesion) {
+          store.simularTramoYAvanzar()
+        } else if ('tipoOferta' in primero) {
+          store.resolveOferta(primero)
+        } else {
+          store.resolveDecisionEvento((primero as DecisionCard).id, 0)
+        }
+        if (t.numero === 1 && t.loteActual.length === 0) {
+          t.pesoTitular = 0.1
+          t.sumaRating = 5.0 * Math.max(t.partidos, 1)
+          t.promedio = 5.0
+        }
+        vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+      }
+
+      expect(store.temporadaActual!.numero).toBe(2)
+      const lote = store.temporadaActual!.loteActual
+      const tipos = lote.map((x) => ('tipoOferta' in x ? x.tipoOferta : null))
+      expect(tipos).toEqual(['quedarme', 'prestamo'])
+
+      const clubDuenoId = store.temporadaActual!.equipoId
+      const temporadasEnClubAntes = store.temporadasEnClubActual
+      const esPrimerClubAntes = store.esPrimerClub
+      const oferta = lote.find((x) => 'tipoOferta' in x && x.tipoOferta === 'prestamo') as OfertaItem
+
+      store.resolveOferta(oferta)
+
+      expect(store.temporadaActual!.equipoId).toBe(oferta.equipo.id)
+      expect(store.temporadaActual!.equipoId).not.toBe(clubDuenoId)
+      expect(store.temporadaActual!.clubDuenoId).toBe(clubDuenoId)
+      expect(store.temporadaActual!.pesoTitular).toBe(GameConfig.PESO_TITULAR_INICIAL)
+      // A diferencia de un traspaso real, el reloj del club dueño sigue corriendo.
+      expect(store.temporadasEnClubActual).toBe(temporadasEnClubAntes)
+      expect(store.esPrimerClub).toBe(esPrimerClubAntes)
+
+      // Termina la temporada de préstamo (resolviendo lo que vaya saliendo)
+      // hasta que arranque la 3 — debería volver sola al club dueño.
+      iters = 0
+      while (store.temporadaActual!.numero === 2 && iters < 50) {
+        iters++
+        const t = store.temporadaActual!
+        const primero = t.loteActual[0]
+        if (!primero) break
+        if ('esInformeLesion' in primero && primero.esInformeLesion) {
+          store.simularTramoYAvanzar()
+        } else if ('tipoOferta' in primero) {
+          store.resolveOferta(primero)
+        } else {
+          store.resolveDecisionEvento((primero as DecisionCard).id, 0)
+        }
+        vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+      }
+
+      expect(store.temporadaActual!.numero).toBe(3)
+      expect(store.temporadaActual!.equipoId).toBe(clubDuenoId)
+      expect(store.temporadaActual!.clubDuenoId).toBeNull()
+      expect(store.temporadaActual!.pesoTitular).toBe(GameConfig.PESO_TITULAR_INICIAL)
+      expect(store.mensajes.some((m) => m.includes('préstamo'))).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

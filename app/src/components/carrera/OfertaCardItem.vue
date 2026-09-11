@@ -17,9 +17,10 @@ const career = useCareerStore()
 const esQuedarme = computed(() => props.oferta.tipoOferta === 'quedarme')
 const esRetiro = computed(() => props.oferta.tipoOferta === 'retiro')
 const esForzoso = computed(() => props.oferta.tipoOferta === 'retiro' && Boolean(props.oferta.forzoso))
+const esPrestamo = computed(() => props.oferta.tipoOferta === 'prestamo')
 
-const tag = computed(() => (esForzoso.value ? 'Fin de carrera' : esRetiro.value ? 'Retiro' : esQuedarme.value ? 'Tu club' : 'Oferta'))
-const boton = computed(() => (esRetiro.value ? 'Retirarme' : esQuedarme.value ? 'Quedarme' : 'Aceptar oferta'))
+const tag = computed(() => (esForzoso.value ? 'Fin de carrera' : esRetiro.value ? 'Retiro' : esQuedarme.value ? 'Tu club' : esPrestamo.value ? 'Préstamo' : 'Oferta'))
+const boton = computed(() => (esRetiro.value ? 'Retirarme' : esQuedarme.value ? 'Quedarme' : esPrestamo.value ? 'Aceptar préstamo' : 'Aceptar oferta'))
 
 function elegir() {
   career.resolveOferta(props.oferta)
@@ -29,7 +30,7 @@ function elegir() {
 <template>
   <article
     class="decision-card decision-card--oferta-club"
-    :class="{ 'decision-card--quedarme': esQuedarme, 'decision-card--retiro': esRetiro, 'decision-card--retiro-forzoso': esForzoso }"
+    :class="{ 'decision-card--quedarme': esQuedarme, 'decision-card--retiro': esRetiro, 'decision-card--retiro-forzoso': esForzoso, 'decision-card--prestamo': esPrestamo }"
   >
     <span class="decision-card__tag">{{ tag }}</span>
     <div class="decision-card__team">

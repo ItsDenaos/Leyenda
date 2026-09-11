@@ -6,7 +6,7 @@ Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso).
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
-> **Nota de desarrollo (no forma parte del juego publicado):** en la rama `feature/vue-migration` (carpeta [`app/`](app/)) hay una reescritura completa del frontend a **Vue 3 + TypeScript + Pinia + Vite**, todavía en curso y sin mergear a `main`. Es un *port*, no un rediseño: mismo motor, mismas fórmulas, mismas reglas de balance descritas en todo este documento — la reescritura solo cambia cómo está armada la interfaz (componentes en vez de manipulación directa del DOM, estado reactivo en vez de variables globales mutables), no qué hace el juego. **Excepción:** un puñado de ajustes de balance nacieron directo en Vue y todavía no se portaron de vuelta a esta versión vanilla — cuántos partidos jugás según tu nivel (antes casi no pesaba), el peso del OVR al decidir si sos titular, qué tan dominante es un club de élite para pelear la liga o una final de copa internacional (antes un Bayern München con una temporada personal neutra terminaba con chances de título parecidas a las de un club mediano), y la propensión a gol/asistencia por **posición individual** en vez de por los 5 grupos de siempre (un DC ahora goleador claramente más que un extremo, en vez de rendir idéntico por compartir el grupo "ataque"). Las secciones 9, 10 y 14 de este documento siguen describiendo los números originales, que son los que corre la versión publicada. Mientras esa rama no se mergee, la versión que corre de verdad — y la que describe el resto de esta referencia técnica — sigue siendo la vanilla de la raíz del repo (`index.html`/`equipo.html`/`carrera.html` + `js/`).
+> **Nota de desarrollo (no forma parte del juego publicado):** en la rama `feature/vue-migration` (carpeta [`app/`](app/)) hay una reescritura completa del frontend a **Vue 3 + TypeScript + Pinia + Vite**, todavía en curso y sin mergear a `main`. Es un *port*, no un rediseño: mismo motor, mismas fórmulas, mismas reglas de balance descritas en todo este documento — la reescritura solo cambia cómo está armada la interfaz (componentes en vez de manipulación directa del DOM, estado reactivo en vez de variables globales mutables), no qué hace el juego. **Excepción:** un puñado de ajustes de balance nacieron directo en Vue y todavía no se portaron de vuelta a esta versión vanilla — cuántos partidos jugás según tu nivel (antes casi no pesaba), el peso del OVR al decidir si sos titular, qué tan dominante es un club de élite para pelear la liga o una final de copa internacional (antes un Bayern München con una temporada personal neutra terminaba con chances de título parecidas a las de un club mediano), y la propensión a gol/asistencia por **posición individual** en vez de por los 5 grupos de siempre (un DC ahora goleador claramente más que un extremo, en vez de rendir idéntico por compartir el grupo "ataque"). Las secciones 9, 10 y 14 de este documento siguen describiendo los números originales, que son los que corre la versión publicada. **Distinto de lo anterior** (que son solo números recalibrados de algo que ya existía): Vue también suma un mecanismo entero que esta vanilla no tiene — los **préstamos** (ver sección 16.9), que cede al jugador a otro club por una temporada cuando rinde mal dentro del período de gracia de contrato. Mientras esa rama no se mergee, la versión que corre de verdad — y la que describe el resto de esta referencia técnica — sigue siendo la vanilla de la raíz del repo (`index.html`/`equipo.html`/`carrera.html` + `js/`).
 
 ---
 
@@ -709,6 +709,25 @@ Un solo clic resuelve toda la pausa (`resolveOferta`, [carrera.js:1696-1743](js/
 - **Quedarme** → sin cambios.
 
 Ninguna de las dos dispara un toast — el nuevo hero/spotlight (o, si te quedás, la ausencia de cambios) ya lo comunica solo; antes un mensaje de "Fichaste por X"/"Decidiste quedarte en X" se sentía redundante, la única pausa del juego donde SIEMPRE hay un toast aunque no haya nada nuevo que contar.
+
+### 16.9 Préstamos (solo en la reescritura Vue — no existe en esta versión)
+
+La reescritura a Vue (ver la nota de desarrollo al principio de este documento) agrega un mecanismo que esta versión no tiene: si tu club te quiere a largo plazo pero no te está dando minutos, te cede a otro por una temporada en vez de solo "te vende o te quedás".
+
+Se decide en la misma (única) pausa de fichajes de arriba, y reemplaza la ventana normal cuando las DOS condiciones siguientes se cumplen a la vez, dentro del período de gracia de contrato (16.2):
+
+```
+pesoTitular < 0.35                (PRESTAMO_PESO_TITULAR_UMBRAL — no te estás ganando el puesto)
+promedioTemporadaAnterior < 6.0   (PRESTAMO_PROMEDIO_UMBRAL — por debajo del neutral, 6.5)
+```
+
+(`clubDebePrestar`, `app/src/game/config.ts`). Pasado el período de gracia, sigue rigiendo 16.3 sin cambios — un préstamo solo tiene sentido mientras el club todavía te quiere conservar a largo plazo.
+
+Si corresponde, la pausa muestra solo 2 cartas: "Quedarme" (igual que siempre) y "Préstamo", con un club destino elegido con el mismo criterio de encaje de 16.6 (misma ventana de OVR de 16.5, mismo peso por cercanía de nivel). Aceptarlo actualiza club/competiciones/pesoTitular/forma igual que un traspaso real de 16.8 — pero, a diferencia de un traspaso, **no** resetea `temporadasEnClubActual` ni `esPrimerClub`: seguís siendo del club dueño, así que su reloj de contrato sigue corriendo esa temporada también.
+
+Al cerrar la temporada de préstamo, volvés automáticamente al club dueño — sin pedirte nada, sin heredar `pesoTitular` (te lo tenés que volver a ganar ahí, no en el club prestado) ni clasificación internacional (es del club dueño, y no hay forma de saber cómo le fue mientras no estabas — mismo criterio que ya usa un traspaso real, que tampoco la hereda).
+
+(`generarLoteOfertas`/`resolveOferta`/`finalizarTemporada`, `app/src/stores/career.ts`)
 
 ---
 
