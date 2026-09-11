@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import { setActivePinia, createPinia } from 'pinia'
 import SpotlightCard from '../SpotlightCard.vue'
 import { useCareerStore } from '../../../stores/career'
 import { GameDatabase } from '../../../data/database'
-import type { Player } from '../../../game/career-types'
+import type { Player, Temporada } from '../../../game/career-types'
 
 function jugadorDePrueba(overrides: Partial<Player> = {}): Player {
   const equipo = GameDatabase.equipos[0]!
@@ -100,5 +101,29 @@ describe('SpotlightCard', () => {
     wrapper = mount(SpotlightCard)
     expect(wrapper.find('.spotlight-card--lesionado').exists()).toBe(true)
     expect(wrapper.find('.spotlight-mobile--lesionado').exists()).toBe(true)
+  })
+
+  it('al arrancar una temporada nueva, la barra móvil salta a 0% sin animar (no queda "retrocediendo")', async () => {
+    const career = useCareerStore()
+    career.iniciarCarrera(jugadorDePrueba())
+    career.temporadaActual!.progreso = 60
+
+    const wrapper = mount(SpotlightCard)
+    const barFillEl = () => wrapper.find('.spotlight-mobile__bar-fill').element as HTMLElement
+    expect(barFillEl().style.transition).toBe('')
+
+    // Temporada nueva: no es un tramo más de la misma, es un objeto de
+    // temporada distinto arrancando en blanco (ver finalizarTemporada en career.ts).
+    career.temporadaActual = { ...career.temporadaActual!, numero: 2, progreso: 0 } as Temporada
+    await nextTick()
+    expect(barFillEl().style.transition).toBe('none')
+    expect(barFillEl().style.width).toBe('0%')
+
+    // Deja correr el resto del watcher (nextTick interno + reflow) hasta
+    // que reactiva la transición para los próximos tramos.
+    await nextTick()
+    await nextTick()
+    await nextTick()
+    expect(barFillEl().style.transition).toBe('')
   })
 })

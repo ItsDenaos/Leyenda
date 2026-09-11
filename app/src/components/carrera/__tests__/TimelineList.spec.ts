@@ -82,4 +82,13 @@ describe('TimelineList', () => {
     const wrapper = mount(TimelineList)
     expect(wrapper.text()).toContain('2 PJ · 1 G')
   })
+
+  it('la fila móvil incluye las asistencias, no solo partidos y goles', () => {
+    const career = useCareerStore()
+    career.iniciarCarrera(jugadorDePrueba())
+    career.temporadasFinalizadas = [{ ...career.temporadaActual!, partidos: 20, goles: 5, asistencias: 8 } as Temporada]
+
+    const wrapper = mount(TimelineList)
+    expect(wrapper.find('.timeline-item__mmeta').text()).toContain('8 A')
+  })
 })

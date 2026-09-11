@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { GameConfig } from '../config'
 import { GameDatabase } from '../../data/database'
 
@@ -105,6 +105,93 @@ describe('GameConfig — ajustarOvrTramo (crecimiento/declive)', () => {
     // fuerte (declive ya empezando) — factorAprendizajeJoven da 1x fuera de Prime.
     expect(GameConfig.factorAprendizajeJoven(50, 35)).toBe(1)
     expect(GameConfig.factorAprendizajeJoven(50, 25)).toBeGreaterThan(1)
+  })
+})
+
+describe('GameConfig — probabilidadJugar (participación según OVR)', () => {
+  // Referencia (55 de OVR, rendimiento/forma neutros, no titular): sin
+  // cambios respecto al valor base.
+  it('en la referencia, devuelve exactamente PARTICIPACION_BASE', () => {
+    const prob = GameConfig.probabilidadJugar(55, 0, 'regular', false)
+    expect(prob).toBeCloseTo(GameConfig.PARTICIPACION_BASE, 5)
+  })
+
+  it('un novato en el piso real de OVR inicial casi no juega', () => {
+    const prob = GameConfig.probabilidadJugar(GameConfig.OVR_INICIAL_MIN, 0, 'regular', false)
+    expect(prob).toBeCloseTo(0.25, 5)
+  })
+
+  it('un novato en el techo de OVR inicial ya juega bastante', () => {
+    const prob = GameConfig.probabilidadJugar(GameConfig.OVR_INICIAL_MAX, 0, 'regular', false)
+    expect(prob).toBeCloseTo(0.85, 5)
+  })
+
+  it('ni el mejor jugador del mundo llega al 100% — el techo es PARTICIPACION_MAX', () => {
+    const prob = GameConfig.probabilidadJugar(GameConfig.OVR_CARRERA_MAX, 10, 'inspirado', true)
+    expect(prob).toBe(GameConfig.PARTICIPACION_MAX)
+  })
+
+  it('por debajo de la referencia castiga más fuerte que por encima (pendiente asimétrica)', () => {
+    const cincoAbajo = GameConfig.PARTICIPACION_BASE - GameConfig.probabilidadJugar(50, 0, 'regular', false)
+    const cincoArriba = GameConfig.probabilidadJugar(60, 0, 'regular', false) - GameConfig.PARTICIPACION_BASE
+    expect(cincoAbajo).toBeGreaterThan(cincoArriba)
+  })
+})
+
+describe('GameConfig — calcularFuerzaTitulo (título de liga/copa internacional)', () => {
+  const bundesliga = GameDatabase.ligas.find((l) => l.id === 'bundesliga')!
+  const bayern = GameDatabase.equipos.find((e) => e.id === 'bayern-munich')!
+  const frankfurt = GameDatabase.equipos.find((e) => e.id === 'eintracht-frankfurt')!
+
+  it('con un jugador de rendimiento neutro, pesa la calidad del club mucho más que la fuerza de campaña compartida', () => {
+    const fuerzaCampana = GameConfig.calcularFuerzaCampana(bayern, bundesliga, 'regular', 0, null)
+    const fuerzaTitulo = GameConfig.calcularFuerzaTitulo(bayern, bundesliga, 'regular', 0, null)
+    expect(fuerzaTitulo).toBeGreaterThan(fuerzaCampana)
+  })
+
+  it('un candidato real al título (Bayern) queda claramente por delante de un club de mitad de tabla (Frankfurt)', () => {
+    const fuerzaBayern = GameConfig.calcularFuerzaTitulo(bayern, bundesliga, 'regular', 0, null)
+    const fuerzaFrankfurt = GameConfig.calcularFuerzaTitulo(frankfurt, bundesliga, 'regular', 0, null)
+    const probBayern = GameConfig.probGanarLiga(fuerzaBayern)
+    const probFrankfurt = GameConfig.probGanarLiga(fuerzaFrankfurt)
+
+    expect(probBayern).toBeGreaterThan(0.4) // ya candidato de entrada, sin necesitar una temporada perfecta
+    expect(probBayern).toBeGreaterThan(probFrankfurt + 0.1) // separación real entre ambos
+  })
+
+  it('una gran temporada personal sigue empujando la fuerza de título más arriba', () => {
+    const neutro = GameConfig.calcularFuerzaTitulo(bayern, bundesliga, 'regular', 0, null)
+    const granTemporada = GameConfig.calcularFuerzaTitulo(bayern, bundesliga, 'inspirado', GameConfig.FUERZA_EQUIPO_ACUMULADO_REFERENCIA, 9)
+    expect(granTemporada).toBeGreaterThan(neutro)
+  })
+})
+
+describe('GameConfig — calcularTitular (peso del OVR)', () => {
+  // pesoTitular neutro (0.5) y sin rendimiento acumulado: la probabilidad
+  // exacta queda en pesoTitular + (ovr - TITULAR_OVR_REFERENCIA) * TITULAR_OVR_PESO
+  // (sin el clamp interno, que acá no llega a activarse). Un Math.random()
+  // apenas por debajo de esa probabilidad da titular=true, apenas por
+  // encima da false — demuestra que el cálculo interno usa exactamente
+  // ese valor, o sea que TITULAR_OVR_PESO de verdad se está aplicando.
+  it('el ajuste de OVR pesa el doble que antes (0.02, no el 0.01 viejo)', () => {
+    const pesoTitular = 0.5
+    const randomSpy = vi.spyOn(Math, 'random')
+
+    const ovrBajo = 45 // 10 puntos por debajo de la referencia
+    const probBaja = pesoTitular + (ovrBajo - GameConfig.TITULAR_OVR_REFERENCIA) * GameConfig.TITULAR_OVR_PESO
+    randomSpy.mockReturnValue(probBaja - 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovrBajo, 0)).toBe(true)
+    randomSpy.mockReturnValue(probBaja + 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovrBajo, 0)).toBe(false)
+
+    const ovrAlto = 65 // 10 puntos por encima de la referencia
+    const probAlta = pesoTitular + (ovrAlto - GameConfig.TITULAR_OVR_REFERENCIA) * GameConfig.TITULAR_OVR_PESO
+    randomSpy.mockReturnValue(probAlta - 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovrAlto, 0)).toBe(true)
+    randomSpy.mockReturnValue(probAlta + 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovrAlto, 0)).toBe(false)
+
+    randomSpy.mockRestore()
   })
 })
 

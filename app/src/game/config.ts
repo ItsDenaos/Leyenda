@@ -250,6 +250,8 @@ interface GameConfigShape {
   PESO_TITULAR_AJUSTE_MAX: number;
   PESO_TITULAR_CASTIGO_SIN_MINUTOS: number;
   PESO_TITULAR_CASTIGO_LESION: number;
+  TITULAR_OVR_REFERENCIA: number;
+  TITULAR_OVR_PESO: number;
   ajustarPesoTitular(pesoActual: number, ratingTramo: number | null, estabaLesionado: boolean): number;
   calcularTitular(pesoTitular: number, ovr: number, rendimientoAcumulado: number): boolean;
 
@@ -263,6 +265,12 @@ interface GameConfigShape {
   FUERZA_RENDIMIENTO_PROMEDIO_RANGO: number;
   calidadFuerzaClub(equipo: Equipo, liga: Liga): number;
   calcularFuerzaCampana(equipo: Equipo, liga: Liga, forma: Forma, equipoAcumuladoTemporada: number, promedioJugador?: number | null): number;
+
+  FUERZA_TITULO_PESO_CLUB: number;
+  FUERZA_TITULO_PESO_FORMA: number;
+  FUERZA_TITULO_PESO_EQUIPO_ACUMULADO: number;
+  FUERZA_TITULO_PESO_RENDIMIENTO_JUGADOR: number;
+  calcularFuerzaTitulo(equipo: Equipo, liga: Liga, forma: Forma, equipoAcumuladoTemporada: number, promedioJugador?: number | null): number;
 
   probGanarLiga(fuerza: number): number;
   probGanarCopa(fuerza: number): number;
@@ -310,7 +318,10 @@ interface GameConfigShape {
 
   FORMA_BONUS_PARTICIPACION: Record<Forma, number>;
   PARTICIPACION_OVR_REFERENCIA: number;
+  PARTICIPACION_OVR_PESO_BAJO: number;
+  PARTICIPACION_OVR_PESO_ALTO: number;
   PARTICIPACION_MIN: number;
+  PARTICIPACION_MAX: number;
   PARTICIPACION_BASE: number;
   PARTICIPACION_BONUS_TITULAR: number;
   probabilidadJugar(ovr: number, rendimientoAcumulado: number, forma: Forma, esTitular: boolean): number;
@@ -1396,8 +1407,17 @@ export const GameConfig: GameConfigShape = {
   // un jugador claramente mejor que el resto del plantel tenga ventaja
   // incluso saliendo de una mala racha) y las decisiones del tramo
   // aportan su granito, pero ya no deciden todo un sorteo desde cero.
+  //
+  // TITULAR_OVR_PESO al doble de lo que era (0.01 → 0.02): quedaba
+  // desactualizado frente a probabilidadJugar, que ya pesa el OVR mucho
+  // más fuerte — un novato flojo podía seguir saliendo "Titular" seguido
+  // (pesoTitular + ese empujón casi nulo alcanzaba igual) aunque esa
+  // misma fórmula ya le diera pocos partidos ese tramo.
+  TITULAR_OVR_REFERENCIA: 55,
+  TITULAR_OVR_PESO: 0.02,
+
   calcularTitular(pesoTitular, ovr, rendimientoAcumulado) {
-    const ajusteOvr = (ovr - 55) * 0.01;
+    const ajusteOvr = (ovr - GameConfig.TITULAR_OVR_REFERENCIA) * GameConfig.TITULAR_OVR_PESO;
     const prob = GameConfig.clamp(pesoTitular + ajusteOvr + rendimientoAcumulado * 0.03, 0.08, 0.95);
     return Math.random() < prob;
   },
@@ -1470,7 +1490,45 @@ export const GameConfig: GameConfigShape = {
     return GameConfig.clamp(fuerza, 0, 1);
   },
 
-  // Título de liga: curva empinada, casi exclusiva de los clubes top.
+  // calcularFuerzaCampana le da a tu temporada personal el 60% del peso
+  // (forma + decisiones + rendimiento) — a propósito, porque avanzar de
+  // ronda en una copa y ganar la copa nacional están pensados para que
+  // TU aporte pese mucho. Pero para pelear un título grande (la liga, o
+  // la final de una copa internacional — ver probGanarLiga) eso diluye
+  // demasiado la calidad real del club: un Bayern München (calidadClub
+  // ~0.90) con un jugador de rendimiento neutro terminaba con una fuerza
+  // de campaña de ~0.66, casi igual a la de un club mediano de la misma
+  // liga — el equipo más ganador de Europa no se sentía distinto de uno
+  // de mitad de tabla. Esta variante le da al club el 85% del peso, para
+  // que los grandes de verdad se sientan candidatos de entrada, y vos
+  // (con una gran temporada) los empujes más arriba todavía.
+  FUERZA_TITULO_PESO_CLUB: 0.85,
+  FUERZA_TITULO_PESO_FORMA: 0.04,
+  FUERZA_TITULO_PESO_EQUIPO_ACUMULADO: 0.05,
+  FUERZA_TITULO_PESO_RENDIMIENTO_JUGADOR: 0.06,
+
+  calcularFuerzaTitulo(equipo, liga, forma, equipoAcumuladoTemporada, promedioJugador = null) {
+    const calidadClub = GameConfig.calidadFuerzaClub(equipo, liga);
+    const calidadForma = GameConfig.FORMA_CALIDAD[forma] ?? 0.5;
+    const calidadEquipoAcumulado = GameConfig.clamp(
+      0.5 + equipoAcumuladoTemporada / (2 * GameConfig.FUERZA_EQUIPO_ACUMULADO_REFERENCIA), 0, 1
+    );
+    const calidadRendimientoJugador = promedioJugador
+      ? GameConfig.clamp(
+          (promedioJugador - GameConfig.FUERZA_RENDIMIENTO_PROMEDIO_PISO) / GameConfig.FUERZA_RENDIMIENTO_PROMEDIO_RANGO,
+          0, 1
+        )
+      : 0.5;
+    const fuerza = GameConfig.FUERZA_TITULO_PESO_CLUB * calidadClub
+      + GameConfig.FUERZA_TITULO_PESO_FORMA * calidadForma
+      + GameConfig.FUERZA_TITULO_PESO_EQUIPO_ACUMULADO * calidadEquipoAcumulado
+      + GameConfig.FUERZA_TITULO_PESO_RENDIMIENTO_JUGADOR * calidadRendimientoJugador;
+    return GameConfig.clamp(fuerza, 0, 1);
+  },
+
+  // Título de liga (y final de copa internacional — ver finalizarTemporada
+  // en el store, que le pasa calcularFuerzaTitulo en vez de la fuerza de
+  // campaña compartida): curva empinada, casi exclusiva de los clubes top.
   probGanarLiga(fuerza) {
     return GameConfig.clamp(0.02 + 0.85 * Math.pow(fuerza, 3.5), 0, 0.85);
   },
@@ -1654,13 +1712,28 @@ export const GameConfig: GameConfigShape = {
   // solo decorativo (se mostraba el badge, pero no cambiaba en nada
   // cuántos minutos te tocaban) — ahora si el club te para de arranque
   // efectivamente jugás más.
+  //
+  // El peso del OVR es asimétrico a propósito: por debajo de la
+  // referencia castiga fuerte (PESO_BAJO) y por encima suma suave
+  // (PESO_ALTO). Con un solo coeficiente parejo, un novato del piso real
+  // de OVR inicial (OVR_INICIAL_MIN = 50) todavía terminaba jugando más
+  // de la mitad de la temporada — nada de "suplente de verdad" — y para
+  // castigar eso con un coeficiente único, el techo de los novatos
+  // buenos (OVR_INICIAL_MAX = 65) saturaba de entrada al 100%, sin dejar
+  // margen para diferenciar a un jugador ya asentado.
   // ============================================================
   FORMA_BONUS_PARTICIPACION: {
     inspirado: 0.15, plenitud: 0.12, animado: 0.06, regular: 0,
     desanimado: -0.08, bajo: -0.15, lesionado: -0.35,
   },
   PARTICIPACION_OVR_REFERENCIA: 55,
+  PARTICIPACION_OVR_PESO_BAJO: 0.08,
+  PARTICIPACION_OVR_PESO_ALTO: 0.02,
   PARTICIPACION_MIN: 0.15,
+  // Ni el mejor jugador del mundo juega el 100% de los partidos siempre
+  // (rotación, descanso, algún golpe menor que ni cuenta como lesión) —
+  // se deja un margen del 8% aun en el mejor de los casos.
+  PARTICIPACION_MAX: 0.92,
   // Base subida de 0.5 a 0.65: un jugador ya asentado en el plantel
   // (OVR/forma/rendimiento neutros) debería jugar bastante de entrada,
   // no la mitad de los partidos por defecto — así bajar de ahí (mala
@@ -1671,9 +1744,11 @@ export const GameConfig: GameConfigShape = {
   probabilidadJugar(ovr, rendimientoAcumulado, forma, esTitular) {
     const bonusForma = GameConfig.FORMA_BONUS_PARTICIPACION[forma] ?? 0;
     const bonusTitular = esTitular ? GameConfig.PARTICIPACION_BONUS_TITULAR : 0;
-    const prob = GameConfig.PARTICIPACION_BASE + (ovr - GameConfig.PARTICIPACION_OVR_REFERENCIA) * 0.01
+    const diferenciaOvr = ovr - GameConfig.PARTICIPACION_OVR_REFERENCIA;
+    const pesoOvr = diferenciaOvr < 0 ? GameConfig.PARTICIPACION_OVR_PESO_BAJO : GameConfig.PARTICIPACION_OVR_PESO_ALTO;
+    const prob = GameConfig.PARTICIPACION_BASE + diferenciaOvr * pesoOvr
       + rendimientoAcumulado * 0.03 + bonusForma + bonusTitular;
-    return GameConfig.clamp(prob, GameConfig.PARTICIPACION_MIN, 1);
+    return GameConfig.clamp(prob, GameConfig.PARTICIPACION_MIN, GameConfig.PARTICIPACION_MAX);
   },
 
   // ============================================================

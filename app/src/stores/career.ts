@@ -752,9 +752,14 @@ export const useCareerStore = defineStore('career', () => {
     const equipo = equipoDe(t.equipoId)
     const liga = ligaDe(equipo)
     const fuerza = GameConfig.calcularFuerzaCampana(equipo, liga, t.forma, t.equipoAcumuladoTemporada, t.partidos > 0 ? t.promedio : null)
+    // Título de liga y final de copa internacional pesan mucho más la
+    // calidad real del club que la campaña compartida (ver el comentario
+    // de calcularFuerzaTitulo) — la copa nacional y la clasificación a
+    // torneos internacionales de la próxima temporada siguen usando `fuerza`.
+    const fuerzaTitulo = GameConfig.calcularFuerzaTitulo(equipo, liga, t.forma, t.equipoAcumuladoTemporada, t.partidos > 0 ? t.promedio : null)
     const mensajesFinales: string[] = []
 
-    const ganasteLiga = Math.random() < GameConfig.probGanarLiga(fuerza)
+    const ganasteLiga = Math.random() < GameConfig.probGanarLiga(fuerzaTitulo)
     if (ganasteLiga && t.competiciones.liga.competicion) {
       const comp = t.competiciones.liga.competicion
       t.trofeos.push({ nombre: comp.nombre, imagen: comp.trofeoImagen })
@@ -775,7 +780,7 @@ export const useCareerStore = defineStore('career', () => {
 
     const copaInternacional = t.competiciones.copaInternacional
     if (copaInternacional && copaInternacional.llegoALaFinal) {
-      if (Math.random() < GameConfig.probGanarLiga(fuerza)) {
+      if (Math.random() < GameConfig.probGanarLiga(fuerzaTitulo)) {
         t.trofeos.push({ nombre: copaInternacional.competicion.nombre, imagen: copaInternacional.competicion.trofeoImagen })
         mensajesFinales.push(`¡Campeón de ${copaInternacional.competicion.nombre}!`)
       } else {

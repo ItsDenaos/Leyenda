@@ -3,7 +3,7 @@
 // variantes de markup (desktop con anillo de progreso, mobile chata con
 // barra lineal) conviven en el DOM; el CSS decide cuál mostrar según el
 // ancho, igual que en el original.
-import { computed } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import { useCareerStore } from '@/stores/career'
 import { equipoDe, ligaDe } from '@/data/database-helpers'
 import { GameConfig } from '@/game/config'
@@ -37,6 +37,24 @@ const progresoAnimado = useAnimatedNumber(() => s.value.progreso, undefined, () 
 const progreso = computed(() => Math.round(progresoAnimado.value))
 const progressStyle = computed(() => ({ '--progress': progresoAnimado.value }))
 const progresoMobile = computed(() => Math.round(s.value.progreso))
+
+// La barra móvil anima el ancho con una transición CSS normal (ver
+// <style>), pero esa transición no distingue "avanzó un tramo" de
+// "arrancó una temporada nueva" como sí hace useAnimatedNumber con
+// resetKey — sin esto, al cerrar la temporada la barra se veía
+// retrocediendo visualmente hasta 0 en vez de saltar directo. Misma idea
+// que animarBarraMobile() en el original, pero para el caso contrario:
+// en vez de forzar la transición, se la desactiva un instante (con un
+// reflow de por medio para que el navegador la deje sin efecto) y
+// después se reactiva para que los próximos tramos sigan animando.
+const barraMobileRef = ref<HTMLElement | null>(null)
+const barraMobileSinTransicion = ref(false)
+watch(temporadaKey, async () => {
+  barraMobileSinTransicion.value = true
+  await nextTick()
+  void barraMobileRef.value?.offsetHeight
+  barraMobileSinTransicion.value = false
+})
 
 const partidosAnimado = useAnimatedNumber(() => s.value.partidos, undefined, () => temporadaKey.value)
 const golesAnimado = useAnimatedNumber(() => s.value.goles, undefined, () => temporadaKey.value)
@@ -114,7 +132,11 @@ const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () 
       Selección: {{ s.seleccionPartidos }} PJ · {{ s.seleccionGoles }} G
     </div>
     <div class="spotlight-mobile__bar" :title="`${progresoMobile}% de la temporada`">
-      <div class="spotlight-mobile__bar-fill" :style="{ width: `${progresoMobile}%` }"></div>
+      <div
+        ref="barraMobileRef"
+        class="spotlight-mobile__bar-fill"
+        :style="{ width: `${progresoMobile}%`, transition: barraMobileSinTransicion ? 'none' : undefined }"
+      ></div>
     </div>
     <div class="spotlight-mobile__stats">
       <span><b>{{ Math.round(partidosAnimado) }}</b>PJ</span>

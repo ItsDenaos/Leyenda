@@ -90,7 +90,7 @@ function toggleExpandida(numero: number, tieneTrofeos: boolean) {
             <span class="timeline-item__mteam">{{ fila.equipo.nombre }}</span>
             <span class="timeline-item__mmeta"
               >T{{ fila.temporada.numero }} · {{ fila.temporada.anio }} · {{ fila.edad }} años · {{ fila.temporada.partidos }} PJ ·
-              {{ fila.temporada.goles }} G</span
+              {{ fila.temporada.goles }} G · {{ fila.temporada.asistencias }} A</span
             >
             <span v-if="fila.temporada.seleccionPartidos > 0" class="timeline-item__mmeta timeline-item__seleccion">
               <FlagImg :code="fila.temporada.seleccion!.paisCode" :emoji="fila.temporada.seleccion!.paisFlag" class-css="flag-img" />
