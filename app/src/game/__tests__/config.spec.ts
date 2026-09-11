@@ -52,13 +52,13 @@ describe('GameConfig — factorPorFuerzaLiga (competitividad de liga)', () => {
 
 describe('GameConfig — simularTramo', () => {
   it('sin partidos jugados no genera estadísticas', () => {
-    const r = GameConfig.simularTramo({ partidos: 0, grupo: 'ataque', ovr: 80, rendimientoAcumulado: 0 })
+    const r = GameConfig.simularTramo({ partidos: 0, posicion: 'DC', ovr: 80, rendimientoAcumulado: 0 })
     expect(r).toEqual({ goles: 0, asistencias: 0, mvp: 0, sumaRating: 0 })
   })
 
   it('el rating de cada partido nunca sale de 5-10', () => {
     // factorTalento alto + OVR tope: el caso mas favorable para pisar el techo.
-    const r = GameConfig.simularTramo({ partidos: 200, grupo: 'ataque', ovr: 99, rendimientoAcumulado: 12, factorTalento: 1.2 })
+    const r = GameConfig.simularTramo({ partidos: 200, posicion: 'DC', ovr: 99, rendimientoAcumulado: 12, factorTalento: 1.2 })
     const promedio = r.sumaRating / 200
     expect(promedio).toBeGreaterThanOrEqual(5)
     expect(promedio).toBeLessThanOrEqual(10)
@@ -69,11 +69,42 @@ describe('GameConfig — simularTramo', () => {
     const promedioGoles = (ovr: number) => {
       let total = 0
       for (let i = 0; i < N; i++) {
-        total += GameConfig.simularTramo({ partidos: 34, grupo: 'ataque', ovr, rendimientoAcumulado: 0 }).goles
+        total += GameConfig.simularTramo({ partidos: 34, posicion: 'DC', ovr, rendimientoAcumulado: 0 }).goles
       }
       return total / N
     }
     expect(promedioGoles(85)).toBeGreaterThan(promedioGoles(60))
+  })
+
+  it('cada posición tiene su propia propensión — un DC ya no rinde igual que un extremo', () => {
+    const N = 500
+    const promedios = (posicion: string) => {
+      let goles = 0
+      let asistencias = 0
+      for (let i = 0; i < N; i++) {
+        const r = GameConfig.simularTramo({ partidos: 34, posicion, ovr: 80, rendimientoAcumulado: 0 })
+        goles += r.goles
+        asistencias += r.asistencias
+      }
+      return { goles: goles / N, asistencias: asistencias / N }
+    }
+
+    const dc = promedios('DC')
+    const ei = promedios('EI')
+    const mco = promedios('MCO')
+    const mcd = promedios('MCD')
+
+    // El DC es el mayor goleador de la cancha, por encima incluso del extremo.
+    expect(dc.goles).toBeGreaterThan(ei.goles)
+    // El extremo, en cambio, reparte más entre asistencia y gol.
+    expect(ei.asistencias).toBeGreaterThan(dc.asistencias)
+    // El MCO es el mediocampista más ofensivo — por delante del MCD, el más contenedor.
+    expect(mco.goles + mco.asistencias).toBeGreaterThan(mcd.goles + mcd.asistencias)
+  })
+
+  it('una posición desconocida cae al perfil neutral (MC), sin romper', () => {
+    const r = GameConfig.simularTramo({ partidos: 10, posicion: 'NO_EXISTE', ovr: 80, rendimientoAcumulado: 0 })
+    expect(r.sumaRating).toBeGreaterThan(0)
   })
 })
 
@@ -83,7 +114,7 @@ describe('GameConfig — talento oculto también pesa en estadísticas', () => {
     const promedioGoles = (factorTalento: number) => {
       let total = 0
       for (let i = 0; i < N; i++) {
-        total += GameConfig.simularTramo({ partidos: 34, grupo: 'ataque', ovr: 60, rendimientoAcumulado: 0, factorTalento }).goles
+        total += GameConfig.simularTramo({ partidos: 34, posicion: 'DC', ovr: 60, rendimientoAcumulado: 0, factorTalento }).goles
       }
       return total / N
     }

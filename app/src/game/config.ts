@@ -45,7 +45,7 @@ export interface ResultadoTramo {
 
 export interface SimularTramoParams {
   partidos: number;
-  grupo: GrupoPosicion;
+  posicion: string;
   ovr: number;
   rendimientoAcumulado: number;
   fuerzaLiga?: number | null;
@@ -174,8 +174,8 @@ interface GameConfigShape {
   crearCalendarioTemporada(numeroTemporada: number): PausaCalendario[];
 
   GRUPOS_POSICION: Record<string, GrupoPosicion>;
-  PROPENSION_GOL: Record<GrupoPosicion, number>;
-  PROPENSION_ASISTENCIA: Record<GrupoPosicion, number>;
+  PROPENSION_GOL_POSICION: Record<string, number>;
+  PROPENSION_ASISTENCIA_POSICION: Record<string, number>;
   PROBABILIDAD_MVP_BASE: number;
   BONUS_MVP_POR_GOL: number;
   BONUS_MVP_POR_ASISTENCIA: number;
@@ -283,6 +283,7 @@ interface GameConfigShape {
   PREMIOS_OVR_MIN: number;
   PREMIOS_OVR_MAX: number;
   PREMIOS_PESO_GRUPO: Partial<Record<GrupoPosicion, number>>;
+  POSICION_REPRESENTATIVA_GRUPO: Record<GrupoPosicion, string>;
   sortearOvrCandidatoPremio(): number;
   sortearGrupoCandidatoPremio(): GrupoPosicion;
 
@@ -1023,9 +1024,12 @@ export const GameConfig: GameConfigShape = {
 
   // ============================================================
   // ESTADÍSTICAS POR TRAMO
-  // Cada posición pertenece a un grupo con distinta propensión a
-  // convertir goles/asistencias. El OVR y el rendimiento acumulado
-  // del tramo (por las decisiones tomadas) escalan esa propensión.
+  // Cada posición tiene su propia propensión a convertir goles/
+  // asistencias (antes se agrupaban en 5 perfiles compartidos — ver
+  // GRUPOS_POSICION, que sigue existiendo para el sorteo de candidatos
+  // a premios individuales, sin relación con esto). El OVR y el
+  // rendimiento acumulado del tramo (por las decisiones tomadas) escalan
+  // esa propensión por igual para todas.
   // ============================================================
   // "central" y "lateral" antes eran un solo grupo "defensa" con la misma
   // propensión — un lateral que centra todo el partido y un central que
@@ -1041,12 +1045,26 @@ export const GameConfig: GameConfigShape = {
 
   // Estas son las propensiones en el punto NEUTRAL de la curva de OVR
   // (factor ×1, ver ESTADISTICAS_OVR_* más abajo — hoy cae en un OVR de
-  // profesional sólido, ~75-78, no en uno mediocre). Perfil por posición:
-  // delanteros dominan en goles; medios y laterales reparten más
-  // asistencias que goles (los laterales, bastante más); centrales suman
-  // goles ocasionales de pelota parada y casi no asisten.
-  PROPENSION_GOL: { arquero: 0.003, central: 0.03, lateral: 0.02, medio: 0.07, ataque: 0.20 },
-  PROPENSION_ASISTENCIA: { arquero: 0.003, central: 0.02, lateral: 0.09, medio: 0.12, ataque: 0.09 },
+  // profesional sólido, ~75-78, no en uno mediocre).
+  //
+  // Ya no comparten perfil por grupo: un DC es el mayor goleador de la
+  // cancha (más que un extremo, que reparte más entre gol y asistencia),
+  // el MCO es el mediocampista más ofensivo (cerca del nivel de un
+  // extremo), y dentro del mediocampo hay su propio orden — el MCD
+  // (el más contenedor) aporta menos que el MC, y los de banda (MI/MD)
+  // asisten un poco más que el MC por los centros.
+  PROPENSION_GOL_POSICION: {
+    POR: 0.003,
+    DFC: 0.03, LI: 0.02, LD: 0.02,
+    MCD: 0.04, MC: 0.06, MI: 0.06, MD: 0.06, MCO: 0.11,
+    EI: 0.20, ED: 0.20, DC: 0.27,
+  },
+  PROPENSION_ASISTENCIA_POSICION: {
+    POR: 0.003,
+    DFC: 0.02, LI: 0.09, LD: 0.09,
+    MCD: 0.08, MC: 0.11, MI: 0.13, MD: 0.13, MCO: 0.15,
+    EI: 0.09, ED: 0.09, DC: 0.05,
+  },
   PROBABILIDAD_MVP_BASE: 0.09,
 
   // Cuánto suma un gol/asistencia a la chance de MVP y al rating de ESE
@@ -1145,13 +1163,17 @@ export const GameConfig: GameConfigShape = {
     return goles;
   },
 
-  simularTramo({ partidos, grupo, ovr, rendimientoAcumulado, fuerzaLiga = null, factorTalento = 1 }) {
+  simularTramo({ partidos, posicion, ovr, rendimientoAcumulado, fuerzaLiga = null, factorTalento = 1 }) {
     const factorOvr = GameConfig.factorEstadisticoPorOvr(ovr);
     const factorForma = 1 + GameConfig.clamp(rendimientoAcumulado, -12, 12) * 0.05;
     const factorLiga = GameConfig.factorPorFuerzaLiga(ovr, fuerzaLiga);
     const factor = Math.max(0.3, factorOvr * factorForma * factorLiga * factorTalento);
-    const probGol = GameConfig.clamp(GameConfig.PROPENSION_GOL[grupo] * factor, 0, 0.9);
-    const probAsistencia = GameConfig.clamp(GameConfig.PROPENSION_ASISTENCIA[grupo] * factor, 0, 0.9);
+    // MC como respaldo de una posición desconocida — mediocampista
+    // central, el perfil más "neutral" del campo.
+    const propensionGol = GameConfig.PROPENSION_GOL_POSICION[posicion] ?? GameConfig.PROPENSION_GOL_POSICION.MC!;
+    const propensionAsistencia = GameConfig.PROPENSION_ASISTENCIA_POSICION[posicion] ?? GameConfig.PROPENSION_ASISTENCIA_POSICION.MC!;
+    const probGol = GameConfig.clamp(propensionGol * factor, 0, 0.9);
+    const probAsistencia = GameConfig.clamp(propensionAsistencia * factor, 0, 0.9);
 
     let goles = 0, asistencias = 0, mvp = 0, sumaRating = 0;
     for (let i = 0; i < partidos; i++) {
@@ -1570,6 +1592,15 @@ export const GameConfig: GameConfigShape = {
   // central (P. ej. Van Dijk no gana la Bota de Oro), así que esos dos
   // grupos quedan afuera del sorteo de candidatos.
   PREMIOS_PESO_GRUPO: { ataque: 0.55, medio: 0.25, lateral: 0.12, central: 0.08 },
+
+  // simularTramo ya no toma un grupo (5 perfiles) sino una posición
+  // individual (12 perfiles, ver PROPENSION_GOL_POSICION) — un candidato
+  // a premio se sortea por grupo (PREMIOS_PESO_GRUPO), así que necesita
+  // una posición representativa de ESE grupo para poder simular sus
+  // estadísticas. Elegida por ser la más "típica" de cada perfil: el
+  // DC es el delantero de referencia (el mayor goleador de todos), el
+  // MCO el mediocampista más ofensivo, etc.
+  POSICION_REPRESENTATIVA_GRUPO: { arquero: 'POR', central: 'DFC', lateral: 'LI', medio: 'MCO', ataque: 'DC' },
 
   // OVR sesgado hacia el centro del rango (82-99) promediando 3 tiradas
   // en vez de una sola uniforme — son candidatos genuinos al premio, no

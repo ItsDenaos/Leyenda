@@ -565,7 +565,6 @@ export const useCareerStore = defineStore('career', () => {
     const t = temporadaActual.value!
     const equipo = equipoDe(t.equipoId)
     const liga = ligaDe(equipo)
-    const grupo = GameConfig.GRUPOS_POSICION[player.value!.posicion] ?? 'medio'
     const tramoIndex = t.tramoIndex
 
     const fuerza = GameConfig.calcularFuerzaCampana(
@@ -596,7 +595,7 @@ export const useCareerStore = defineStore('career', () => {
 
     const resultado = GameConfig.simularTramo({
       partidos: partidosJugador,
-      grupo,
+      posicion: player.value!.posicion,
       ovr: t.ovr,
       rendimientoAcumulado: t.bufferRendimiento,
       fuerzaLiga: liga.fuerza,
@@ -681,7 +680,7 @@ export const useCareerStore = defineStore('career', () => {
       const factorTalentoCandidato = GameConfig.sortearFactorTalento()
       const resultado = GameConfig.simularTramo({
         partidos: competicion.partidosMinimos,
-        grupo,
+        posicion: GameConfig.POSICION_REPRESENTATIVA_GRUPO[grupo],
         ovr,
         rendimientoAcumulado: 0,
         fuerzaLiga: liga.fuerza,
@@ -875,10 +874,9 @@ export const useCareerStore = defineStore('career', () => {
       }
     }
 
-    const grupo = GameConfig.GRUPOS_POSICION[player.value!.posicion] ?? 'medio'
     const { goles } = GameConfig.simularTramo({
       partidos,
-      grupo,
+      posicion: player.value!.posicion,
       ovr: t.ovr,
       rendimientoAcumulado: t.bufferRendimiento,
       fuerzaLiga: seleccion.fuerza,
