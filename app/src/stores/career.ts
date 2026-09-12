@@ -696,17 +696,33 @@ export const useCareerStore = defineStore('career', () => {
       .filter((x): x is { liga: Liga; competicion: Competicion } => Boolean(x.competicion))
     if (ligasConCompeticion.length === 0) return []
 
+    // Todos los equipos de todas las ligas con competición cargada, listos
+    // para filtrar por "ventana de OVR" — mismo pool que usaría un fichaje
+    // real (ver generarLoteOfertas), para que el club de cada candidato
+    // tenga sentido con su nivel (antes el club y el OVR se sorteaban
+    // sin relación entre sí, y podía salir p. ej. un delantero de 96 OVR
+    // y 38 goles en un club chico sin ningún poder real para eso).
+    const poolEquipos = ligasConCompeticion.flatMap(({ liga, competicion }) =>
+      GameDatabase.equipos.filter((e) => e.ligaId === liga.id).map((equipo) => ({ liga, equipo, competicion })),
+    )
+
     const candidatos: { liga: Liga; equipo: Equipo; grupo: string; ovr: number; goles: number; asistencias: number; promedio: number; ganoTrofeo: boolean }[] = []
     for (let i = 0; i < GameConfig.PREMIOS_CANDIDATOS_N; i++) {
-      const elegido = GameConfig.elegirPonderado(ligasConCompeticion, (x) => x.liga.fuerza, 1)[0]
+      const ovr = GameConfig.sortearOvrCandidatoPremio()
+
+      // Misma "ventana de OVR"/cercanía de nivel que ya usa el sistema de
+      // fichajes real (sección 16.5/16.6) — así un candidato de nivel alto
+      // aparece en un club de ese nivel, no en cualquiera al azar.
+      let elegibles = poolEquipos.filter((x) => GameConfig.equipoElegibleParaOvr(x.equipo, x.liga, ovr))
+      if (elegibles.length === 0) elegibles = poolEquipos
+      const poderObjetivoVal = GameConfig.poderObjetivo(ovr)
+      const pesoFn = (x: (typeof elegibles)[number]) =>
+        GameConfig.pesoPorCercaniaNivel(GameConfig.poderEquipo(x.equipo, x.liga), GameConfig.poderLiga(x.liga), poderObjetivoVal)
+      const [elegido] = GameConfig.elegirMejorEncaje(elegibles, pesoFn, 1)
       if (!elegido) continue
-      const { liga, competicion } = elegido
-      const equiposLiga = GameDatabase.equipos.filter((e) => e.ligaId === liga.id)
-      const equipo = equiposLiga.length > 0 ? GameConfig.elegirPonderado(equiposLiga, (e) => e.fuerza, 1)[0] : null
-      if (!equipo) continue
+      const { liga, equipo, competicion } = elegido
 
       const grupo = GameConfig.sortearGrupoCandidatoPremio()
-      const ovr = GameConfig.sortearOvrCandidatoPremio()
       const factorTalentoCandidato = GameConfig.sortearFactorTalento()
       const resultado = GameConfig.simularTramo({
         partidos: competicion.partidosMinimos,
@@ -743,7 +759,8 @@ export const useCareerStore = defineStore('career', () => {
     const grupoJugador = GameConfig.GRUPOS_POSICION[player.value!.posicion] ?? 'medio'
 
     const mejorGoleador = candidatos.reduce((mejor, c) => (c.goles > mejor.goles ? c : mejor))
-    if (t.goles >= mejorGoleador.goles) {
+    const ganasteBotaDeOro = t.goles >= mejorGoleador.goles
+    if (ganasteBotaDeOro) {
       t.trofeos.push({ nombre: 'Bota de Oro', imagen: 'bota-de-oro.png' })
       mensajesLocal.push('¡Ganaste la Bota de Oro como máximo goleador del mundo!')
     } else {
@@ -753,23 +770,33 @@ export const useCareerStore = defineStore('career', () => {
       }
     }
 
-    const candidatosMismoGrupo = candidatos.filter((c) => c.grupo === grupoJugador)
-    if (candidatosMismoGrupo.length > 0) {
-      const mejorDelGrupo = candidatosMismoGrupo.reduce((mejor, c) => (c.promedio > mejor.promedio ? c : mejor))
-      if (t.promedio >= mejorDelGrupo.promedio - GameConfig.ONCE_IDEAL_MARGEN_PROMEDIO) {
-        t.trofeos.push({ nombre: 'Once Ideal', imagen: 'once-ideal.png' })
-        mensajesLocal.push('¡Entraste al Once Ideal del año!')
-      }
-    }
-
     const calidadJugador = GameConfig.calcularCalidadBalonDeOro(t.promedio, t.goles + t.asistencias, ganasteTrofeoDeEquipoOSeleccion)
     const mejorCalidad = candidatos.reduce((mejor, c) => {
       const calidad = GameConfig.calcularCalidadBalonDeOro(c.promedio, c.goles + c.asistencias, c.ganoTrofeo)
       return calidad > mejor ? calidad : mejor
     }, -1)
-    if (calidadJugador >= mejorCalidad) {
+    const ganasteBalonDeOro = calidadJugador >= mejorCalidad
+    if (ganasteBalonDeOro) {
       t.trofeos.push({ nombre: 'Balón de Oro', imagen: 'balon-de-oro.png' })
       mensajesLocal.push('¡Ganaste el Balón de Oro, el mejor jugador del mundo esta temporada!')
+    }
+
+    // Ganar la Bota de Oro o el Balón de Oro ya garantiza un lugar en el
+    // Once Ideal — no tendría sentido ser el goleador o el mejor jugador
+    // del mundo y quedar afuera del mejor 11 de tu propia posición. Si no
+    // ganaste ninguno de los dos, se evalúa como siempre contra el resto
+    // de candidatos de tu mismo grupo de posición.
+    let entraOnceIdeal = ganasteBotaDeOro || ganasteBalonDeOro
+    if (!entraOnceIdeal) {
+      const candidatosMismoGrupo = candidatos.filter((c) => c.grupo === grupoJugador)
+      if (candidatosMismoGrupo.length > 0) {
+        const mejorDelGrupo = candidatosMismoGrupo.reduce((mejor, c) => (c.promedio > mejor.promedio ? c : mejor))
+        entraOnceIdeal = t.promedio >= mejorDelGrupo.promedio - GameConfig.ONCE_IDEAL_MARGEN_PROMEDIO
+      }
+    }
+    if (entraOnceIdeal) {
+      t.trofeos.push({ nombre: 'Once Ideal', imagen: 'once-ideal.png' })
+      mensajesLocal.push('¡Entraste al Once Ideal del año!')
     }
 
     return mensajesLocal

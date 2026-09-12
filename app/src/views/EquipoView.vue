@@ -6,6 +6,7 @@ import { GameConfig } from '@/game/config'
 import type { Equipo, Liga } from '@/data/database'
 import { ligaDe, generarOfertasInicialesParaJugador } from '@/game/initial-offers'
 import { loadPlayerDraft, clearPlayerDraft } from '@/game/player-draft'
+import { resetZoom } from '@/composables/resetZoom'
 import { useCareerStore } from '@/stores/career'
 import CrestImg from '@/components/CrestImg.vue'
 import FlagImg from '@/components/FlagImg.vue'
@@ -24,6 +25,10 @@ const ofertas = ref<Oferta[]>([])
 const eligiendo = ref(false)
 
 onMounted(() => {
+  // Primero calibrar el zoom (ver resetZoom.ts): si veníamos de otra
+  // vista con un zoom de iOS todavía activo, cualquier medición de layout
+  // hecha antes de recalibrar quedaría en base a ese zoom "fantasma".
+  resetZoom()
   document.title = 'Leyenda — Elige tu equipo'
 
   const draft = loadPlayerDraft()

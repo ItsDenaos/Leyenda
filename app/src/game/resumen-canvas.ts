@@ -34,6 +34,74 @@ function cargarImagenSeguraCrossOrigin(src: string): Promise<HTMLImageElement | 
   })
 }
 
+// Los archivos de trofeo son siluetas negras sobre transparente (el color
+// real del PNG no importa, solo su alpha — mismo criterio que el
+// mask-image de TrofeoIcon.vue en la interfaz). El canvas no tiene
+// mask-image: se logra el mismo resultado dibujando la imagen y pintando
+// encima con `source-atop`, que solo afecta los píxeles ya no-transparentes
+// que acaba de dejar el `drawImage` — pero eso tiene que pasar en un canvas
+// aparte, en blanco: hacerlo directo sobre el canvas principal, encima del
+// fondo translúcido del chip ya dibujado, dejaría CUALQUIER píxel del
+// recuadro como "ya no-transparente" (por el fondo de abajo) y el
+// `fillRect` tiñe el cuadrado entero en vez de solo la silueta.
+function dibujarIconoTrofeo(ctx: CanvasRenderingContext2D, img: HTMLImageElement, x: number, y: number, size: number, color: string) {
+  const off = document.createElement('canvas')
+  off.width = size
+  off.height = size
+  const offCtx = off.getContext('2d')!
+  offCtx.drawImage(img, 0, 0, size, size)
+  offCtx.globalCompositeOperation = 'source-atop'
+  offCtx.fillStyle = color
+  offCtx.fillRect(0, 0, size, size)
+  ctx.drawImage(off, x, y)
+}
+
+// Los 3 premios individuales (Bota de Oro, Balón de Oro, Once Ideal) son
+// siluetas más "llenas" que las de trofeos de equipo — mismo ajuste que
+// `trophy-card__icon-img--premio` en la interfaz (ver TrofeoIcon.vue).
+const PREMIOS_INDIVIDUALES = new Set(['bota-de-oro.png', 'balon-de-oro.png', 'once-ideal.png'])
+const TROFEO_ICONO_SIZE = 24
+const TROFEO_ICONO_GAP = 10
+
+// Mide (y opcionalmente dibuja, si se pasan ctx/fx/fy) el chip de un
+// trofeo — compartido entre el paso de medición de filas y el de dibujo
+// real para que ambos calculen exactamente el mismo ancho. Sin imagen
+// real cargada, el 🏆 de respaldo va inline en el texto (sin ícono aparte).
+function chipTrofeo(
+  ctx: CanvasRenderingContext2D,
+  t: ResumenCarrera['trofeos'][number],
+  img: HTMLImageElement | null,
+  fx: number,
+  fy: number,
+  dibujar: boolean,
+): number {
+  const sufijo = t.cantidad > 1 ? ` ×${t.cantidad}` : ''
+  const etiqueta = img ? `${t.nombre}${sufijo}` : `🏆 ${t.nombre}${sufijo}`
+  ctx.font = '700 20px "Segoe UI", sans-serif'
+  const anchoIcono = img ? TROFEO_ICONO_SIZE + TROFEO_ICONO_GAP : 0
+  const anchoChip = ctx.measureText(etiqueta).width + 36 + anchoIcono
+
+  if (dibujar) {
+    ctx.beginPath()
+    ctx.roundRect(fx, fy, anchoChip, 40, 999)
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.2)'
+    ctx.fill()
+    ctx.strokeStyle = '#d4af37'
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+    if (img) {
+      const esPremio = t.imagen ? PREMIOS_INDIVIDUALES.has(t.imagen) : false
+      const size = esPremio ? TROFEO_ICONO_SIZE * 0.8 : TROFEO_ICONO_SIZE
+      dibujarIconoTrofeo(ctx, img, fx + 16, fy + (40 - size) / 2, size, '#d4af37')
+    }
+    ctx.fillStyle = '#d4af37'
+    ctx.textAlign = 'left'
+    ctx.fillText(etiqueta, fx + 18 + anchoIcono, fy + 27)
+  }
+
+  return anchoChip
+}
+
 type Forma = 'circulo' | 'redondeado'
 
 // Recorta el contexto actual a un círculo o a un rectángulo redondeado
@@ -150,6 +218,13 @@ export async function generarTarjetaResumenCanvas(player: Player, r: ResumenCarr
   // Misma bandera real (no emoji) que usa el resto del juego — en Windows
   // los emoji de bandera no se dibujan ni en HTML, mucho menos en canvas.
   const imgBanderaSeleccion = r.seleccionPartidos > 0 ? await cargarImagenSeguraCrossOrigin(`${GameConfig.RUTA_BANDERAS}${player.paisCode}.png`) : null
+  // Mismo asset real que usa TrofeoIcon.vue en la interfaz (siluetas sobre
+  // transparente) — antes acá se dibujaba siempre el 🏆 genérico, sin
+  // relación con el trofeo real. `null` cuando el trofeo todavía no tiene
+  // imagen cargada: esa entrada cae sola al 🏆 de respaldo al dibujar.
+  const imgsTrofeos = await Promise.all(
+    r.trofeos.map((t) => (t.imagen ? cargarImagenSegura(`${GameConfig.RUTA_ESCUDOS_TROFEOS}${t.imagen}`) : Promise.resolve(null))),
+  )
 
   const W = 1080
   const canvas = document.createElement('canvas')
@@ -169,12 +244,10 @@ export async function generarTarjetaResumenCanvas(player: Player, r: ResumenCarr
 
   let filasTrofeos = 1
   if (r.trofeos.length > 0) {
-    ctx.font = '700 20px "Segoe UI", sans-serif'
     let fxMedido = 60
     const maxAncho = W - 60
-    r.trofeos.forEach((t) => {
-      const etiqueta = `🏆 ${t.nombre}${t.cantidad > 1 ? ` ×${t.cantidad}` : ''}`
-      const anchoChip = ctx.measureText(etiqueta).width + 36
+    r.trofeos.forEach((t, i) => {
+      const anchoChip = chipTrofeo(ctx, t, imgsTrofeos[i] ?? null, 0, 0, false)
       if (fxMedido + anchoChip > maxAncho) {
         fxMedido = 60
         filasTrofeos++
@@ -354,24 +427,14 @@ export async function generarTarjetaResumenCanvas(player: Player, r: ResumenCarr
     let fx = 60
     let fy = y
     const maxAncho = W - 60
-    r.trofeos.forEach((t) => {
-      const etiqueta = `🏆 ${t.nombre}${t.cantidad > 1 ? ` ×${t.cantidad}` : ''}`
-      ctx.font = '700 20px "Segoe UI", sans-serif'
-      const anchoChip = ctx.measureText(etiqueta).width + 36
+    r.trofeos.forEach((t, i) => {
+      const img = imgsTrofeos[i] ?? null
+      const anchoChip = chipTrofeo(ctx, t, img, 0, 0, false)
       if (fx + anchoChip > maxAncho) {
         fx = 60
         fy += 52
       }
-      ctx.beginPath()
-      ctx.roundRect(fx, fy, anchoChip, 40, 999)
-      ctx.fillStyle = 'rgba(212, 175, 55, 0.2)'
-      ctx.fill()
-      ctx.strokeStyle = '#d4af37'
-      ctx.lineWidth = 1.5
-      ctx.stroke()
-      ctx.fillStyle = '#d4af37'
-      ctx.textAlign = 'left'
-      ctx.fillText(etiqueta, fx + 18, fy + 27)
+      chipTrofeo(ctx, t, img, fx, fy, true)
       fx += anchoChip + 14
     })
   }

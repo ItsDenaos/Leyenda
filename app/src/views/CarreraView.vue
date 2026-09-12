@@ -9,6 +9,7 @@ import { onMounted, onUnmounted, watch, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCareerStore } from '@/stores/career'
 import { useToast } from '@/composables/useToast'
+import { resetZoom } from '@/composables/resetZoom'
 import { GameConfig } from '@/game/config'
 import HeroPanel from '@/components/carrera/HeroPanel.vue'
 import SpotlightCard from '@/components/carrera/SpotlightCard.vue'
@@ -32,6 +33,12 @@ function actualizarAlturaViewport() {
 }
 
 onMounted(() => {
+  // Primero calibrar el zoom (ver resetZoom.ts) — antes de medir nada de
+  // layout: si veníamos de otra vista con un zoom de iOS todavía activo,
+  // actualizarAlturaViewport() de abajo mediría window.innerHeight en
+  // base a ese zoom "fantasma" y --vh-real quedaría mal calibrado hasta
+  // el próximo resize real.
+  resetZoom()
   document.title = 'Leyenda — Mi carrera'
 
   if (!career.carreraIniciada) career.cargar()

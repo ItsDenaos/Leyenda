@@ -9,6 +9,7 @@ import { GameConfig } from '@/game/config'
 import { COUNTRIES, type Country } from '@/data/countries'
 import { savePlayerDraft } from '@/game/player-draft'
 import { useToast } from '@/composables/useToast'
+import { resetZoom } from '@/composables/resetZoom'
 import FlagImg from '@/components/FlagImg.vue'
 
 const router = useRouter()
@@ -177,6 +178,10 @@ function comenzarCarrera() {
 }
 
 onMounted(() => {
+  // Primero calibrar el zoom (ver resetZoom.ts): si veníamos de otra
+  // vista con un zoom de iOS todavía activo, cualquier medición de layout
+  // hecha antes de recalibrar quedaría en base a ese zoom "fantasma".
+  resetZoom()
   document.title = 'Leyenda — Crea tu jugador'
 })
 </script>
