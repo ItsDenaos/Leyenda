@@ -614,7 +614,9 @@ export const useCareerStore = defineStore('career', () => {
     const partidosClub = partidosLiga + resCopaNacional.partidos + resCopaInternacional.partidos
 
     const estabaLesionado = Boolean(t.lesionActiva)
-    const esTitularEsteTramo = estabaLesionado ? false : GameConfig.calcularTitular(t.pesoTitular, t.ovr, t.bufferRendimiento)
+    const esTitularEsteTramo = estabaLesionado
+      ? false
+      : GameConfig.calcularTitular(t.pesoTitular, t.ovr, t.bufferRendimiento, getEdadActual())
     let partidosJugador: number
     if (estabaLesionado) {
       partidosJugador = 0
@@ -1080,7 +1082,6 @@ export const useCareerStore = defineStore('career', () => {
       temporadasFinalizadas.value.push(t)
     }
     puedeSolicitarNumero.value = false
-    mensajes.value.push(`${player.value.apellido} se retira del fútbol profesional.`)
     guardar()
   }
 

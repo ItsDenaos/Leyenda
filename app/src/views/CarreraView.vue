@@ -24,12 +24,21 @@ const { message: toastMessage, visible: toastVisible, drainQueue } = useToast()
 
 const mostrarModalNumero = ref(false)
 const mostrarModalResumen = ref(false)
+let reintentoAlturaViewport: number | undefined
 
-// `window.innerHeight` sí refleja siempre el viewport real en el momento
-// en que se mide (a diferencia de 100dvh, que varios navegadores mobile
-// calculan mal al cargar) — ver --vh-real en el <style> global de abajo.
+// `visualViewport.height` (cuando está disponible) es más confiable que
+// window.innerHeight en Chrome/Android: esa API está pensada justo para
+// "cuánto se ve de verdad ahora", y ya descuenta el teclado en pantalla y
+// los ajustes de la barra de direcciones/gestos — con innerHeight solo se
+// vieron casos de layout "cortado" en Android, con --vh-real quedando
+// fijado a una medición de más (barra de direcciones todavía animando al
+// cargar) que nunca se corregía sola porque acá no hay scroll de página
+// real que dispare su ocultamiento. Con 100dvh también se vieron casos
+// mal calculados al cargar en varios navegadores mobile — ver --vh-real
+// en el <style> global de abajo.
 function actualizarAlturaViewport() {
-  document.documentElement.style.setProperty('--vh-real', `${window.innerHeight}px`)
+  const altura = window.visualViewport?.height ?? window.innerHeight
+  document.documentElement.style.setProperty('--vh-real', `${altura}px`)
 }
 
 onMounted(() => {
@@ -61,11 +70,18 @@ onMounted(() => {
   window.addEventListener('resize', actualizarAlturaViewport)
   window.addEventListener('orientationchange', actualizarAlturaViewport)
   window.visualViewport?.addEventListener('resize', actualizarAlturaViewport)
+  // En Android, la barra de direcciones puede seguir animando/asentándose
+  // un instante después de este primer montado (sin disparar 'resize' ni
+  // 'orientationchange' acá, porque no hay scroll de página real que la
+  // oculte) — una remedición corta después agarra ese valor ya asentado,
+  // por si la primera quedó de más.
+  reintentoAlturaViewport = window.setTimeout(actualizarAlturaViewport, 300)
 })
 
 onUnmounted(() => {
   document.documentElement.classList.remove('html--career')
   document.body.classList.remove('body--career')
+  window.clearTimeout(reintentoAlturaViewport)
   window.removeEventListener('resize', actualizarAlturaViewport)
   window.removeEventListener('orientationchange', actualizarAlturaViewport)
   window.visualViewport?.removeEventListener('resize', actualizarAlturaViewport)

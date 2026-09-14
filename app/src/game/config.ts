@@ -256,8 +256,11 @@ interface GameConfigShape {
   PESO_TITULAR_CASTIGO_LESION: number;
   TITULAR_OVR_REFERENCIA: number;
   TITULAR_OVR_PESO: number;
+  TITULAR_EDAD_NOVATO_PLATEAU_HASTA: number;
+  TITULAR_EDAD_NOVATO_HASTA: number;
+  TITULAR_PENALIZACION_NOVATO_MAX: number;
   ajustarPesoTitular(pesoActual: number, ratingTramo: number | null, estabaLesionado: boolean): number;
-  calcularTitular(pesoTitular: number, ovr: number, rendimientoAcumulado: number): boolean;
+  calcularTitular(pesoTitular: number, ovr: number, rendimientoAcumulado: number, edad: number): boolean;
 
   FORMA_CALIDAD: Record<Forma, number>;
   FUERZA_PESO_CLUB: number;
@@ -331,7 +334,7 @@ interface GameConfigShape {
   PARTICIPACION_MAX: number;
   PARTICIPACION_BASE: number;
   PARTICIPACION_BONUS_TITULAR: number;
-  PARTICIPACION_EDAD_NOVATO_DESDE: number;
+  PARTICIPACION_EDAD_NOVATO_PLATEAU_HASTA: number;
   PARTICIPACION_EDAD_NOVATO_HASTA: number;
   PARTICIPACION_PENALIZACION_NOVATO_MAX: number;
   PARTICIPACION_PESO_RENDIMIENTO_REAL: number;
@@ -378,8 +381,8 @@ export const GameConfig: GameConfigShape = {
   // que arma el texto — acá solo viven los datos).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada componente.
-  VERSION: "1.0.0",
-  FECHA_PUBLICACION: "14 de septiembre de 2026 · 01:03",
+  VERSION: "1.1.0",
+  FECHA_PUBLICACION: "14 de septiembre de 2026 · 11:25",
 
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
@@ -1473,9 +1476,34 @@ export const GameConfig: GameConfigShape = {
   TITULAR_OVR_REFERENCIA: 55,
   TITULAR_OVR_PESO: 0.02,
 
-  calcularTitular(pesoTitular, ovr, rendimientoAcumulado) {
+  // calcularTitular no sabía nada de tu edad — un novato de 17 con buen
+  // OVR de potencial (63, techo típico de novato) y el pesoTitular
+  // inicial (0.4) ya tenía ~56% de chance de ser titular cada tramo, sin
+  // importar la edad. Y si salía titular, se llevaba el +0.2 de
+  // PARTICIPACION_BONUS_TITULAR en probabilidadJugar — ese bonus solo
+  // terminaba neutralizando buena parte de la penalización de edad que
+  // ya tiene la participación (ver PARTICIPACION_PENALIZACION_NOVATO_MAX
+  // más abajo), así que un novato de 16-19 con números pobres seguía
+  // jugando de más. Mismo criterio de plateau (no un tapering desde el
+  // día 1): un club no empieza a confiar de a poco desde los 17, sigue
+  // dudando por igual hasta los 19 y recién ahí afloja hacia los 24.
+  // Constantes propias, no compartidas con PARTICIPACION_EDAD_NOVATO_* —
+  // convención del proyecto, cada mecánica tiene las suyas.
+  TITULAR_EDAD_NOVATO_PLATEAU_HASTA: 19,
+  TITULAR_EDAD_NOVATO_HASTA: 24,
+  TITULAR_PENALIZACION_NOVATO_MAX: 0.25,
+
+  calcularTitular(pesoTitular, ovr, rendimientoAcumulado, edad) {
     const ajusteOvr = (ovr - GameConfig.TITULAR_OVR_REFERENCIA) * GameConfig.TITULAR_OVR_PESO;
-    const prob = GameConfig.clamp(pesoTitular + ajusteOvr + rendimientoAcumulado * 0.03, 0.08, 0.95);
+    const progresoNovato = edad <= GameConfig.TITULAR_EDAD_NOVATO_PLATEAU_HASTA
+      ? 1
+      : GameConfig.clamp(
+          (GameConfig.TITULAR_EDAD_NOVATO_HASTA - edad)
+            / (GameConfig.TITULAR_EDAD_NOVATO_HASTA - GameConfig.TITULAR_EDAD_NOVATO_PLATEAU_HASTA),
+          0, 1
+        );
+    const penalizacionNovato = progresoNovato * GameConfig.TITULAR_PENALIZACION_NOVATO_MAX;
+    const prob = GameConfig.clamp(pesoTitular + ajusteOvr + rendimientoAcumulado * 0.03 - penalizacionNovato, 0.08, 0.95);
     return Math.random() < prob;
   },
 
@@ -1833,16 +1861,17 @@ export const GameConfig: GameConfigShape = {
   // metía 1 gol o 20. Dos correcciones, pensadas para ir juntas:
   //
   // 1) Penalización por edad: nadie te da la titularidad de entrada solo
-  //    porque tu OVR no es terrible a los 16-17 — te lo tenés que ganar
-  //    con el tiempo. Mismo criterio de curva (tapering lineal) que ya
-  //    usa EDAD_POTENCIAL_BONUS, pero restando y con su propio rango de
-  //    edad — no comparte constantes con esa curva a propósito.
+  //    porque tu OVR no es terrible a los 16-19 — te lo tenés que ganar
+  //    con el tiempo. Plateau, no un tapering desde el día 1: se sostiene
+  //    al máximo hasta PARTICIPACION_EDAD_NOVATO_PLATEAU_HASTA (un club
+  //    no empieza a confiar de a poco apenas cumplís 17) y recién ahí
+  //    empieza a bajar lineal hacia 0 en PARTICIPACION_EDAD_NOVATO_HASTA.
   // 2) Peso del rendimiento REAL de la temporada (promedio de rating —
   //    mismo dato que ya usa calcularFuerzaCampana, null en el primer
   //    tramo, todavía sin partidos): un tramo flojo de verdad te baja los
   //    minutos del tramo siguiente, y uno bueno te los sube, más allá de
   //    lo que digan las decisiones de evento.
-  PARTICIPACION_EDAD_NOVATO_DESDE: 17,
+  PARTICIPACION_EDAD_NOVATO_PLATEAU_HASTA: 19,
   PARTICIPACION_EDAD_NOVATO_HASTA: 24,
   PARTICIPACION_PENALIZACION_NOVATO_MAX: 0.35,
   PARTICIPACION_PESO_RENDIMIENTO_REAL: 0.06,
@@ -1853,11 +1882,13 @@ export const GameConfig: GameConfigShape = {
     const diferenciaOvr = ovr - GameConfig.PARTICIPACION_OVR_REFERENCIA;
     const pesoOvr = diferenciaOvr < 0 ? GameConfig.PARTICIPACION_OVR_PESO_BAJO : GameConfig.PARTICIPACION_OVR_PESO_ALTO;
 
-    const progresoNovato = GameConfig.clamp(
-      (GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA - edad)
-        / (GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA - GameConfig.PARTICIPACION_EDAD_NOVATO_DESDE),
-      0, 1
-    );
+    const progresoNovato = edad <= GameConfig.PARTICIPACION_EDAD_NOVATO_PLATEAU_HASTA
+      ? 1
+      : GameConfig.clamp(
+          (GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA - edad)
+            / (GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA - GameConfig.PARTICIPACION_EDAD_NOVATO_PLATEAU_HASTA),
+          0, 1
+        );
     const penalizacionNovato = -progresoNovato * GameConfig.PARTICIPACION_PENALIZACION_NOVATO_MAX;
     const bonusRendimientoReal = promedioTemporada != null
       ? (promedioTemporada - GameConfig.RATING_BASE) * GameConfig.PARTICIPACION_PESO_RENDIMIENTO_REAL

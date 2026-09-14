@@ -6,7 +6,6 @@
 // mensajes del store, no lo maneja este componente.
 import { ref, watch } from 'vue'
 import { useCareerStore } from '@/stores/career'
-import { resetZoom } from '@/composables/resetZoom'
 
 const props = defineProps<{ mostrar: boolean }>()
 const emit = defineEmits<{ cerrar: [] }>()
@@ -23,11 +22,13 @@ watch(
 
 // El botón tocado (o el input) sigue enfocado cuando el modal pasa a
 // [hidden] — sin blurearlo antes, el navegador decide solo a dónde mover
-// el foco. Cerrar el modal no navega de ruta, así que el reseteo de zoom
-// del router (ver resetZoom.ts) tampoco corre acá — se dispara aparte.
+// el foco. Ese blur ya dispara el listener global de `focusout` (ver
+// instalarResetZoomAlCerrarTeclado en App.vue), así que no hace falta
+// llamar resetZoom() acá también — hacerlo duplicaba el reseteo (uno por
+// el blur, otro por esta llamada), sin aportar nada y con más superficie
+// para un parpadeo de zoom en un dispositivo real.
 function cerrar() {
   ;(document.activeElement as HTMLElement | null)?.blur()
-  resetZoom()
   emit('cerrar')
 }
 

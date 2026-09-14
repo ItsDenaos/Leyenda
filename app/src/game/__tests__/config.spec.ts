@@ -173,16 +173,18 @@ describe('GameConfig — probabilidadJugar (participación según OVR)', () => {
     expect(cincoAbajo).toBeGreaterThan(cincoArriba)
   })
 
-  it('un novato de 16-17 años juega bastante menos que uno igual de grande', () => {
+  it('un novato de 16 a 19 años juega bastante menos que uno igual de grande (plateau, no tapering desde el día 1)', () => {
     // esTitular: false — con true, el bonus de titular ya empuja contra
     // PARTICIPACION_MAX y el clamp del techo distorsiona la diferencia.
-    const joven = GameConfig.probabilidadJugar(60, 0, 'regular', false, 16)
     const grande = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA)
-    expect(grande - joven).toBeCloseTo(GameConfig.PARTICIPACION_PENALIZACION_NOVATO_MAX, 5)
+    for (const edad of [16, 17, 18, 19]) {
+      const joven = GameConfig.probabilidadJugar(60, 0, 'regular', false, edad)
+      expect(grande - joven).toBeCloseTo(GameConfig.PARTICIPACION_PENALIZACION_NOVATO_MAX, 5)
+    }
   })
 
-  it('la penalización de novato baja lineal hasta desaparecer en PARTICIPACION_EDAD_NOVATO_HASTA', () => {
-    const mitad = (GameConfig.PARTICIPACION_EDAD_NOVATO_DESDE + GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA) / 2
+  it('la penalización de novato baja lineal recién después del plateau (19-24)', () => {
+    const mitad = (GameConfig.PARTICIPACION_EDAD_NOVATO_PLATEAU_HASTA + GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA) / 2
     const probMitad = GameConfig.probabilidadJugar(60, 0, 'regular', false, mitad)
     const probGrande = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA)
     expect(probGrande - probMitad).toBeCloseTo(GameConfig.PARTICIPACION_PENALIZACION_NOVATO_MAX / 2, 5)
@@ -269,6 +271,10 @@ describe('GameConfig — VENTAJA_DOMINANCIA_DOMESTICA (Bayern/PSG vs su liga)', 
 })
 
 describe('GameConfig — calcularTitular (peso del OVR)', () => {
+  // Edad "neutra" (sin penalización de novato) para aislar el efecto de
+  // OVR/pesoTitular en estos tests.
+  const EDAD_NEUTRA = GameConfig.TITULAR_EDAD_NOVATO_HASTA
+
   // pesoTitular neutro (0.5) y sin rendimiento acumulado: la probabilidad
   // exacta queda en pesoTitular + (ovr - TITULAR_OVR_REFERENCIA) * TITULAR_OVR_PESO
   // (sin el clamp interno, que acá no llega a activarse). Un Math.random()
@@ -282,16 +288,55 @@ describe('GameConfig — calcularTitular (peso del OVR)', () => {
     const ovrBajo = 45 // 10 puntos por debajo de la referencia
     const probBaja = pesoTitular + (ovrBajo - GameConfig.TITULAR_OVR_REFERENCIA) * GameConfig.TITULAR_OVR_PESO
     randomSpy.mockReturnValue(probBaja - 0.005)
-    expect(GameConfig.calcularTitular(pesoTitular, ovrBajo, 0)).toBe(true)
+    expect(GameConfig.calcularTitular(pesoTitular, ovrBajo, 0, EDAD_NEUTRA)).toBe(true)
     randomSpy.mockReturnValue(probBaja + 0.005)
-    expect(GameConfig.calcularTitular(pesoTitular, ovrBajo, 0)).toBe(false)
+    expect(GameConfig.calcularTitular(pesoTitular, ovrBajo, 0, EDAD_NEUTRA)).toBe(false)
 
     const ovrAlto = 65 // 10 puntos por encima de la referencia
     const probAlta = pesoTitular + (ovrAlto - GameConfig.TITULAR_OVR_REFERENCIA) * GameConfig.TITULAR_OVR_PESO
     randomSpy.mockReturnValue(probAlta - 0.005)
-    expect(GameConfig.calcularTitular(pesoTitular, ovrAlto, 0)).toBe(true)
+    expect(GameConfig.calcularTitular(pesoTitular, ovrAlto, 0, EDAD_NEUTRA)).toBe(true)
     randomSpy.mockReturnValue(probAlta + 0.005)
-    expect(GameConfig.calcularTitular(pesoTitular, ovrAlto, 0)).toBe(false)
+    expect(GameConfig.calcularTitular(pesoTitular, ovrAlto, 0, EDAD_NEUTRA)).toBe(false)
+
+    randomSpy.mockRestore()
+  })
+
+  it('un novato de 16-19 tiene bastante menos chance de ser titular que uno igual de grande', () => {
+    const randomSpy = vi.spyOn(Math, 'random')
+    const pesoTitular = 0.4
+    const ovr = 63
+
+    const probBase = pesoTitular + (ovr - GameConfig.TITULAR_OVR_REFERENCIA) * GameConfig.TITULAR_OVR_PESO
+    const probJoven = probBase - GameConfig.TITULAR_PENALIZACION_NOVATO_MAX
+
+    randomSpy.mockReturnValue(probJoven + 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovr, 0, 17)).toBe(false)
+    randomSpy.mockReturnValue(probJoven - 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovr, 0, 17)).toBe(true)
+
+    // A los 19 todavía está en el plateau — misma penalización máxima que a los 17.
+    randomSpy.mockReturnValue(probJoven - 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovr, 0, 19)).toBe(true)
+    randomSpy.mockReturnValue(probJoven + 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovr, 0, 19)).toBe(false)
+
+    randomSpy.mockRestore()
+  })
+
+  it('la penalización de titularidad por edad baja lineal recién después del plateau (19-24)', () => {
+    const randomSpy = vi.spyOn(Math, 'random')
+    const pesoTitular = 0.4
+    const ovr = 63
+    const probBase = pesoTitular + (ovr - GameConfig.TITULAR_OVR_REFERENCIA) * GameConfig.TITULAR_OVR_PESO
+
+    const mitad = (GameConfig.TITULAR_EDAD_NOVATO_PLATEAU_HASTA + GameConfig.TITULAR_EDAD_NOVATO_HASTA) / 2
+    const probMitad = probBase - GameConfig.TITULAR_PENALIZACION_NOVATO_MAX / 2
+
+    randomSpy.mockReturnValue(probMitad - 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovr, 0, mitad)).toBe(true)
+    randomSpy.mockReturnValue(probMitad + 0.005)
+    expect(GameConfig.calcularTitular(pesoTitular, ovr, 0, mitad)).toBe(false)
 
     randomSpy.mockRestore()
   })

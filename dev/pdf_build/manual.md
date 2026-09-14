@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 1.0.0 — publicada el 14 de septiembre de 2026 · 01:03**
+**Versión 1.1.0 — publicada el 14 de septiembre de 2026 · 11:25**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -129,7 +129,7 @@ Tu **forma** (visible como una píldora de color en el panel de temporada) va de
 
 Ser **titular** en un bloque de partidos también suma minutos reales — no es solo una etiqueta, un titular efectivamente juega más que un suplente. Y no es un sorteo nuevo cada vez: cuanto mejor rindas siendo titular, más te "ganás" el puesto de cara a los próximos bloques (e incluso de una temporada a la siguiente, mientras sigas en el mismo club) — una gran temporada no se olvida al arrancar la próxima. Al fichar por un club nuevo, ese progreso se resetea: ahí también hay que ganarse el puesto desde cero.
 
-**Si sos un novato de 16-17 años**, vas a jugar bastante menos que un jugador ya asentado con el mismo nivel — ningún club te da la titularidad de entrada solo por tu OVR a esa edad, te lo tenés que ganar con el tiempo (esa desventaja desaparece del todo hacia los 24 años). Y tus minutos ahora también responden a tu rendimiento REAL en cancha, no solo a tu forma y tus decisiones: si venís jugando bien de verdad, te ganás más minutos en el próximo bloque; si venís rindiendo flojo, te los recortan.
+**Si sos un novato de 16 a 19 años**, vas a jugar bastante menos que un jugador ya asentado con el mismo nivel, y te va a costar más ganarte la titularidad — ningún club te la da de entrada solo por tu OVR a esa edad, te lo tenés que ganar con el tiempo. Esa desventaja se mantiene pareja durante todos esos años de novato y recién a partir de los 19 empieza a aflojar de a poco, hasta desaparecer del todo hacia los 24. Y tus minutos ahora también responden a tu rendimiento REAL en cancha, no solo a tu forma y tus decisiones: si venís jugando bien de verdad, te ganás más minutos en el próximo bloque; si venís rindiendo flojo, te los recortan.
 
 ---
 

@@ -217,16 +217,22 @@ body {
   color: rgba(255, 255, 255, 0.6);
 }
 
-/* TROFEOS — spotlight (temporada en foco) e historial de carrera. */
+/* TROFEOS — spotlight (temporada en foco) e historial de carrera.
+   align-items: flex-start (no center) en las dos reglas de abajo: si el
+   nombre de un trofeo pasa a 2 líneas (pill angosta en mobile, o el modo
+   apilado del historial) mientras los demás quedan en 1 línea, centrar
+   verticalmente desalinea el ícono de esos trofeos más cortos respecto a
+   los más altos que sí ocupan 2 líneas — con flex-start todos arrancan
+   parejo arriba, sea cual sea su alto real. */
 .trophies {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   flex-wrap: wrap;
 }
 .trophy-card {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.4rem;
   background: var(--trophy-gold-soft);
   border: 1px solid var(--trophy-gold);
@@ -286,6 +292,7 @@ body {
    entera — ver `.timeline-item--expandida` en TimelineList). */
 .trophy-card--stacked {
   flex-direction: column;
+  align-items: center; /* con flex-direction: column, align-items pasa a ser el eje horizontal — sin esto, el flex-start heredado de .trophy-card dejaría el ícono pegado a la izquierda en vez de centrado arriba del nombre. */
   gap: 0.15rem;
   text-align: center;
 }
