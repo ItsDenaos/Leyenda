@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 1.0.0-RC — publicada el 9 de septiembre de 2026 · 10:22**
+**Versión 1.1.1 — publicada el 14 de septiembre de 2026 · 11:52**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -129,6 +129,8 @@ Tu **forma** (visible como una píldora de color en el panel de temporada) va de
 
 Ser **titular** en un bloque de partidos también suma minutos reales — no es solo una etiqueta, un titular efectivamente juega más que un suplente. Y no es un sorteo nuevo cada vez: cuanto mejor rindas siendo titular, más te "ganás" el puesto de cara a los próximos bloques (e incluso de una temporada a la siguiente, mientras sigas en el mismo club) — una gran temporada no se olvida al arrancar la próxima. Al fichar por un club nuevo, ese progreso se resetea: ahí también hay que ganarse el puesto desde cero.
 
+**Si sos un novato de 16 a 19 años**, vas a jugar bastante menos que un jugador ya asentado con el mismo nivel, y te va a costar más ganarte la titularidad — ningún club te la da de entrada solo por tu OVR a esa edad, te lo tenés que ganar con el tiempo. Esa desventaja se mantiene pareja durante todos esos años de novato y recién a partir de los 19 empieza a aflojar de a poco, hasta desaparecer del todo hacia los 24. Y tus minutos ahora también responden a tu rendimiento REAL en cancha, no solo a tu forma y tus decisiones: si venís jugando bien de verdad, te ganás más minutos en el próximo bloque; si venís rindiendo flojo, te los recortan.
+
 ---
 
 ## 10. Lesiones
@@ -203,6 +205,7 @@ Cosas para tener en cuenta:
 - **Recién fichado a un club, tenés 2 temporadas de tranquilidad** (**4** si es tu primer club, el de la creación de personaje — te dan el doble de margen por ser tu debut real): por más que tu nivel no termine de convencer, ese club no te va a dejar ir hasta que hayas tenido esas temporadas completas para demostrar algo.
 - **Desde los 36 años** podés elegir **retirarte voluntariamente** aunque tu club te siga queriendo — ocupa una de las 4 cartas.
 - Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de "Quedarme" se reemplaza por una de retiro forzoso — todavía podés fichar por otro club en esa misma pausa, si hay ofertas. Igual, si veniste de cerrar una temporada realmente brillante (muchos goles/asistencias, gran promedio), eso puede salvarte el contrato aunque el número de OVR no haya llegado del todo — el club no te evalúa solo por un número, también por cómo jugaste de verdad.
+- **Si tu club todavía confía en vos a largo plazo pero no te está dando minutos** (poco protagonismo y bajo rendimiento cuando jugaste, todavía dentro de tu período de tranquilidad), en vez de la ventana normal vas a ver solo 2 cartas: "Quedarme" y un **préstamo** a otro club por esa temporada, para que sumes minutos en otro lado. Al cerrar esa temporada volvés solo a tu club dueño, sin pedirte nada — pero tenés que volver a ganarte el puesto ahí, no en el club prestado.
 
 ---
 
