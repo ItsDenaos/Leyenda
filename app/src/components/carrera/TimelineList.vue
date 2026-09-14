@@ -250,10 +250,21 @@ function toggleExpandida(numero: number, tieneTrofeos: boolean) {
   .timeline-item__mtrophies {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
     gap: 0.35rem;
     padding-top: 0.4rem;
     border-top: 1px solid var(--card-border);
+  }
+  /* El contenedor flex real de las tarjetas no es este div sino
+     `.trophies` (renderizado adentro de TrophyBadges.vue, un componente
+     hijo) — .trophies--icon-only ya alinea por abajo por default (ver
+     base.css), que es lo correcto mientras el nombre está colapsado. Al
+     expandir la tarjeta, el nombre pasa a ser visible debajo del ícono
+     (.trophy-card--stacked) y ahí sí hace falta volver a flex-start: si
+     el nombre de un trofeo salta a 2 líneas mientras los demás quedan en
+     1, alinear por abajo recentraría verticalmente el ícono de ESE
+     trofeo respecto a los demás. */
+  .timeline-item--expandida .timeline-item__mtrophies :deep(.trophies) {
+    align-items: flex-start;
   }
 }
 </style>

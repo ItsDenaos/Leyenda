@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Aplicación web de una sola página (SPA), sin backend ni base de datos externa: todo el motor corre en el navegador, en **Vue 3 + TypeScript + Pinia + Vite**.
 
-**Versión:** 1.1.1 — publicada el 14 de septiembre de 2026 · 11:52.
+**Versión:** 1.1.2 — publicada el 14 de septiembre de 2026 · 14:43.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -654,20 +654,31 @@ Los tres empates (`>=` en vez de `>` en las tres comparaciones) los gana el juga
 
 ## 15. Valor de mercado
 
-`calcularValorMercado(ovr, equipo, liga)` ([config.ts:632](app/src/game/config.ts:632)) — curva exponencial sobre el OVR (cada punto extra cerca del techo vale desproporcionadamente más, como en la vida real), multiplicada por la economía y el prestigio del club/liga actual (a propósito, **no** por su fuerza — ver [sección 14.0](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)):
+`calcularValorMercado(ovr, equipo, liga)` ([config.ts:644](app/src/game/config.ts:644)) — curva exponencial sobre el OVR (cada punto extra cerca del techo vale desproporcionadamente más, como en la vida real), multiplicada por la economía y el prestigio del club/liga actual (a propósito, **no** por su fuerza — ver [sección 14.0](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)):
 
 ```
-valorPorOvr = 18000 × 1.185^(ovr − 45)          (VALOR_MERCADO_BASE, VALOR_MERCADO_CRECIMIENTO, config.ts:606-607)
+valorPorOvr = 3,000,000 × 1.08^(ovr − 45)       (VALOR_MERCADO_BASE, VALOR_MERCADO_CRECIMIENTO, config.ts:618-619)
 valorScore  = 0.6 × economía-efectiva + 0.4 × prestigio     (VALOR_PESO_ECONOMIA / _PRESTIGIO,
-              valorScoreEquipo/valorScoreLiga, config.ts:612-621)
+              valorScoreEquipo/valorScoreLiga, config.ts:624-634)
 multiplicadorClub = interpola entre 0.5 (valorScore más flojo) y 1.4 (más alto)
-                     combinando equipo y liga (55% / 45%, calcularMultiplicadorClub, config.ts:624-630)
+                     combinando equipo y liga (55% / 45%, calcularMultiplicadorClub, config.ts:636-642)
 valor = round(valorPorOvr × multiplicadorClub / 1000) × 1000    (redondeado al millar)
 ```
 
-Se recalcula cada vez que cambia el OVR (cada tramo) y cada vez que cambiás de club (con la economía/prestigio del club nuevo). Se muestra formateado con `formatMarketValue` ([game/format.ts:17](app/src/game/format.ts:17)): `€18K`, `€1.2M`, etc.
+`VALOR_MERCADO_BASE`/`_CRECIMIENTO` arrancaron en 18000/1.185, pero esa curva era demasiado "back-loaded": de OVR 90 a 99 el valor se multiplicaba por 4.6x, así que un 90 real — ya un techo raro, la mayoría de las carreras buenas terminan entre 80 y 95 (ver [sección 11.2](#112-talento-oculto-y-techo-de-potencial)) — quedaba infravalorado en plata (~€50M jugando en el Real Madrid, muy por debajo de lo que paga el mercado real por ese nivel). Con 3,000,000/1.08 la franja "estrella real" (85-92) sube mucho más en términos relativos, mientras el techo casi mítico (OVR 99) se mantiene en un rango creíble en vez de dispararse todavía más:
 
-Para las **ofertas de fichaje** se usa una variante cosmética, `valorOfrecidoPorClub` ([config.ts:644](app/src/game/config.ts:644)), que le suma un ±8% de variación aleatoria (`OFERTA_VARIACION_VALOR`) — para que dos clubes de poder parecido no muestren el mismísimo número al centavo en sus tarjetas. No afecta tu valor de mercado real, solo el texto "Te valoran en €X" de esa tarjeta puntual.
+| OVR | Real Madrid (multiplicadorClub ≈ 1.36) |
+|---|---|
+| 45 (piso) | ~€4.1M |
+| 60 | ~€12.9M |
+| 80 | ~€60.2M |
+| 90 | ~€130M |
+| 95 | ~€191M |
+| 99 (techo casi mítico) | ~€260M |
+
+Se recalcula cada vez que cambia el OVR (cada tramo) y cada vez que cambiás de club (con la economía/prestigio del club nuevo). Se muestra formateado con `formatMarketValue` ([game/format.ts:17](app/src/game/format.ts:17)): `€4.1M`, `€130M`, etc.
+
+Para las **ofertas de fichaje** se usa una variante cosmética, `valorOfrecidoPorClub` ([config.ts:656](app/src/game/config.ts:656)), que le suma un ±8% de variación aleatoria (`OFERTA_VARIACION_VALOR`) — para que dos clubes de poder parecido no muestren el mismísimo número al centavo en sus tarjetas. No afecta tu valor de mercado real, solo el texto "Te valoran en €X" de esa tarjeta puntual.
 
 ---
 
@@ -998,11 +1009,14 @@ La interfaz vanilla manipulaba el DOM a mano (funciones tipo `crestHtml`/`animar
 - **Banderas reales** vía [flagcdn.com](https://flagcdn.com) (los emoji de bandera no se dibujan en Windows) — `FlagImg.vue`, mismo patrón de fallback que `CrestImg.vue`, con el emoji como respaldo de texto si la imagen falla.
 - **Trofeos**: siluetas PNG en `assets/escudos/trofeos/`, pintadas vía `mask-image` con un dorado **propio** (`--trophy-gold: #d4af37`, [assets/base.css:21](app/src/assets/base.css:21)) — el color original del archivo no importa, solo su transparencia define la forma (`TrofeoIcon.vue`). Este dorado es deliberadamente distinto del `--accent` ámbar que usan los botones y el nivel "oro" del OVR: si el trofeo reutilizara ese mismo color, se perdería entre el resto de la interfaz en vez de leerse como un logro aparte.
   - **Historial en mobile**: el nombre del trofeo va apilado debajo de su ícono (no en un listado aparte) — oculto por default, se revela al tocar la tarjeta entera de esa temporada. `TimelineList.vue` lo maneja con un `Set` reactivo de temporadas expandidas (`expandidas`, [TimelineList.vue:32](app/src/components/carrera/TimelineList.vue:32)) y `.timeline-item--expandida` como clase condicional, en vez de un listener delegado sobre el DOM. En desktop el nombre completo ya está disponible al pasar el mouse (`title`).
-    - `.timeline-item__mtrophies` fija `align-items: flex-start` ([TimelineList.vue:253](app/src/components/carrera/TimelineList.vue:253)) — con el default (`stretch`), al revelar el nombre la tarjeta de ESE trofeo se alargaba y el resto de los íconos de la misma fila se re-centraban verticalmente para acompañar esa altura nueva, dando la sensación de que los trofeos "saltaban" o se agrandaban al tocar. Con `flex-start` los íconos quedan clavados arriba; solo crece el espacio de texto debajo.
-    - `.trophy-card__name-under` ([assets/base.css:292](app/src/assets/base.css:292)): `font-size: 0.35rem` — un 30% más chico que el original (0.5rem), que se leía grande al lado de los íconos de trofeo de equipo. Chico y angosto también en ancho — nombres largos ("Liga Premier Rusa", "UEFA Europa League") entrarían en 2-3 líneas con medidas más generosas, agravando el salto de altura.
-    - **Revelado suave**: antes era un toggle instantáneo (`display: none`/`block`) — la tarjeta "saltaba" de golpe a su alto nuevo al tocarla, porque `display` no se puede animar. Ahora transiciona `max-height` (0 → `2.5em`) y `opacity` (0 → 1) en 0.3s/0.25s ([assets/base.css:292-313](app/src/assets/base.css:292)), así que el texto se despliega y se repliega de forma gradual en vez de aparecer de golpe.
-  - **Alineación de los trofeos con su nombre**: `.trophies`/`.trophy-card` ([assets/base.css:227](app/src/assets/base.css:227) y [:233](app/src/assets/base.css:233)) usan `align-items: flex-start` (no `center`) — con `center`, si el nombre de un trofeo ocupaba 2 líneas en una pantalla angosta (el caso típico del resumen de carrera en mobile, `ResumenModal.vue`) mientras los trofeos vecinos quedaban en 1 sola línea, el ícono de los más cortos se re-centraba verticalmente contra el alto del más alto de la fila, desalineándolo del texto de su propio nombre. Con `flex-start` todos los íconos arrancan parejo arriba, sea cual sea el alto real de cada tarjeta. `.trophy-card--stacked` ([assets/base.css:293](app/src/assets/base.css:293)), al usar `flex-direction: column`, necesita revertir esto a `align-items: center` explícito — con `column`, `align-items` pasa a controlar el eje horizontal, así que heredar `flex-start` habría dejado el ícono pegado a la izquierda en vez de centrado arriba del nombre. La captura que genera el botón "📤" no se ve afectada por este bug — el `<canvas>` dibuja el texto de cada trofeo en una sola línea siempre (`fillText` no hace wrap), así que nunca tuvo el desalineamiento.
-  - **Premios individuales más chicos**: las siluetas de Bota de Oro/Balón de Oro/Once Ideal son visualmente más "llenas" que las copas de trofeos de equipo — al mismo tamaño de caja se leían más grandes al lado de esas. `TrofeoIcon.vue` detecta los 3 por nombre de archivo y les agrega la clase `trophy-card__icon-img--premio`, achicada un poco en los dos contextos de tamaño (pill normal e ícono solo, [assets/base.css:271-277](app/src/assets/base.css:271)).
+    - `.trophy-card__name-under` ([assets/base.css:336](app/src/assets/base.css:336)): `font-size: 0.35rem` — un 30% más chico que el original (0.5rem), que se leía grande al lado de los íconos de trofeo de equipo. Chico y angosto también en ancho — nombres largos ("Liga Premier Rusa", "UEFA Europa League") entrarían en 2-3 líneas con medidas más generosas, agravando el salto de altura.
+    - **Revelado suave**: antes era un toggle instantáneo (`display: none`/`block`) — la tarjeta "saltaba" de golpe a su alto nuevo al tocarla, porque `display` no se puede animar. Ahora transiciona `max-height` (0 → `2.5em`) y `opacity` (0 → 1) en 0.3s/0.25s ([assets/base.css:336-352](app/src/assets/base.css:336)), así que el texto se despliega y se repliega de forma gradual en vez de aparecer de golpe.
+  - **Alineación entre trofeos de equipo y premios individuales**: dos problemas superpuestos, uno de tamaño de caja y otro del contenido de cada imagen.
+    - **Modo ícono-solo (historial, desktop siempre / mobile mientras la tarjeta está colapsada)**: `TrophyBadges.vue` agrega la clase `trophies--icon-only` al contenedor cuando `soloIcono` ([TrophyBadges.vue](app/src/components/carrera/TrophyBadges.vue)), y `.trophies.trophies--icon-only` ([assets/base.css:248](app/src/assets/base.css:248)) usa `align-items: flex-end` — los premios individuales usan una caja de ícono más chica que los trofeos de equipo (`.trophy-card__icon-img--premio`, [assets/base.css:314-320](app/src/assets/base.css:314): 1.7rem contra 2.1rem en este modo), así que con el `flex-start` que se usaba antes sus cajas quedaban con el borde de abajo bastante más arriba que el de los trofeos de equipo. Alinear por abajo empareja el borde inferior de todas las cajas.
+    - Eso solo no alcanzaba: las siluetas de trofeo de equipo vienen dibujadas "apoyadas" bien abajo de su propio archivo PNG, con bastante margen transparente arriba (así se ven las copas reales, angostas y con base), mientras que las de los premios individuales casi no tienen margen y ocupan casi todo el archivo. Con `mask-position: center` (el default) cada silueta queda centrada según SU PROPIO margen interno — como esos márgenes son bien distintos entre categorías, las copas terminaban flotando bastante más abajo que los premios dentro de su propia caja, aun con las cajas ya alineadas por abajo. `.trophy-card--icon-only .trophy-card__icon-img` ([assets/base.css:306](app/src/assets/base.css:306)) fija `mask-position: bottom` para apoyar cada silueta contra el borde inferior de su caja, sin importar ese margen interno — acotado a icon-only nada más: en el modo píldora (nombre al lado, ver más abajo) el ícono es chico (1rem/0.8rem) y el mismo cambio hacía que la silueta colgara visiblemente más abajo que el texto, así que ahí se mantiene `center` ([assets/base.css:278-290](app/src/assets/base.css:278)).
+    - **Al expandir la tarjeta en el historial de mobile** (nombre visible debajo del ícono, `.trophy-card--stacked`), se vuelve a `align-items: flex-start` ([TimelineList.vue:266](app/src/components/carrera/TimelineList.vue:266), apuntando con `:deep()` al `.trophies` que renderiza el componente hijo) — ahí sí importa que un nombre de trofeo que salta a 2 líneas no re-centre verticalmente el ícono de esa tarjeta respecto a las demás, el mismo problema que en el modo píldora de abajo.
+    - **Modo píldora** (nombre al lado del ícono — spotlight desktop, resumen de carrera): `.trophies`/`.trophy-card` ([assets/base.css:227](app/src/assets/base.css:227) y [:251](app/src/assets/base.css:251)) usan `align-items: flex-start` — si el nombre de un trofeo ocupaba 2 líneas en una pantalla angosta mientras los trofeos vecinos quedaban en 1 sola línea, centrar re-centraba verticalmente el ícono de los más cortos, desalineándolo del texto de su propio nombre. `.trophy-card--stacked` ([assets/base.css:330](app/src/assets/base.css:330)), al usar `flex-direction: column`, necesita revertir esto a `align-items: center` explícito — con `column`, `align-items` pasa a controlar el eje horizontal, así que heredar `flex-start` habría dejado el ícono pegado a la izquierda en vez de centrado arriba del nombre. La captura que genera el botón "📤" no se ve afectada por ninguno de estos casos — el `<canvas>` dibuja el texto de cada trofeo en una sola línea siempre (`fillText` no hace wrap) y no usa `mask-image`, así que nunca tuvo ninguno de los dos desalineamientos.
+  - **Premios individuales más chicos**: las siluetas de Bota de Oro/Balón de Oro/Once Ideal son visualmente más "llenas" que las copas de trofeos de equipo — al mismo tamaño de caja se leían más grandes al lado de esas. `TrofeoIcon.vue` detecta los 3 por nombre de archivo y les agrega la clase `trophy-card__icon-img--premio`, achicada un poco en los dos contextos de tamaño (pill normal e ícono solo, [assets/base.css:314-320](app/src/assets/base.css:314)).
 - **Color del badge de OVR** (`ovrTierColor`, [game/format.ts:8](app/src/game/format.ts:8)) — 6 niveles fijos, de metal a gema, proporcionales al rango real de carrera (45–99):
 
   | OVR | Color |
@@ -1067,8 +1081,8 @@ Todas viven en [`app/src/game/config.ts`](app/src/game/config.ts). Cambiar cualq
 | `OVR_INICIAL_MIN` / `MAX` | 50 / 65 | Rango de OVR con el que puede arrancar un novato |
 | `OVR_PESO_EQUIPO` / `OVR_PESO_LIGA` | 0.55 / 0.45 | Peso de club vs. liga al combinar sus "poder"/"valorScore" |
 | `OVR_SUERTE_VARIACION` | ±4 | Variación aleatoria del OVR inicial |
-| `VALOR_MERCADO_BASE` | 18000 | Valor de mercado en el piso absoluto de OVR |
-| `VALOR_MERCADO_CRECIMIENTO` | 1.185 | Multiplicador de valor por cada punto extra de OVR |
+| `VALOR_MERCADO_BASE` | 3,000,000 | Valor de mercado en el piso absoluto de OVR |
+| `VALOR_MERCADO_CRECIMIENTO` | 1.08 | Multiplicador de valor por cada punto extra de OVR |
 | `VALOR_MULTIPLICADOR_CLUB_MIN` / `MAX` | 0.5 / 1.4 | Rango del multiplicador de valor según economía/prestigio combinados del club/liga |
 | `OFERTA_VARIACION_VALOR` | ±8% | Variación cosmética del valor mostrado en cada oferta |
 | `OFERTA_UMBRAL_CAIDA_VALOR` | 0.4 | Mínimo % de tu valor actual que debe ofrecerte un club para tener sentido |
