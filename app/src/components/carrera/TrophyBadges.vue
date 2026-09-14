@@ -14,7 +14,7 @@ withDefaults(defineProps<{ trofeos: Trofeo[]; soloIcono?: boolean; nombreDebajo?
 </script>
 
 <template>
-  <div v-if="trofeos.length > 0" class="trophies">
+  <div v-if="trofeos.length > 0" class="trophies" :class="{ 'trophies--icon-only': soloIcono }">
     <span
       v-for="(t, i) in trofeos"
       :key="`${t.nombre}-${i}`"

@@ -381,8 +381,8 @@ export const GameConfig: GameConfigShape = {
   // que arma el texto — acá solo viven los datos).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada componente.
-  VERSION: "1.1.1",
-  FECHA_PUBLICACION: "14 de septiembre de 2026 · 11:52",
+  VERSION: "1.1.2",
+  FECHA_PUBLICACION: "14 de septiembre de 2026 · 14:43",
 
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
@@ -605,9 +605,18 @@ export const GameConfig: GameConfigShape = {
   // a propósito NO usa el eje fuerza: cuánto valés en el mercado
   // depende de la plata y la marca del club que te tiene, no de si ese
   // club está ganando títulos esta temporada.
-  // ============================================================
-  VALOR_MERCADO_BASE: 18000, // valor en el piso absoluto de OVR (OVR_CARRERA_MIN)
-  VALOR_MERCADO_CRECIMIENTO: 1.185, // multiplicador de valor por cada punto de OVR extra
+  //
+  // BASE/CRECIMIENTO arrancaron en 18000/1.185, pero esa curva es
+  // demasiado "back-loaded": de OVR 90 a 99 el valor se multiplicaba por
+  // 4.6x, así que un 90 real — ya un techo raro, la mayoría de las
+  // carreras buenas terminan entre 80 y 95 (ver sortearPotencialTecho) —
+  // quedaba infravalorado en plata (~€50M jugando en el Real Madrid, muy
+  // por debajo de lo que paga el mercado real por ese nivel). Con
+  // 3,000,000 / 1.08 la franja "estrella real" (85-92) sube mucho más en
+  // términos relativos, mientras el techo casi mítico (OVR 99) se
+  // mantiene en un rango creíble en vez de dispararse todavía más.
+  VALOR_MERCADO_BASE: 3000000, // valor en el piso absoluto de OVR (OVR_CARRERA_MIN)
+  VALOR_MERCADO_CRECIMIENTO: 1.08, // multiplicador de valor por cada punto de OVR extra
 
   VALOR_MULTIPLICADOR_CLUB_MIN: 0.5, // club/liga más floja posible
   VALOR_MULTIPLICADOR_CLUB_MAX: 1.4, // club/liga más prestigiosa posible
