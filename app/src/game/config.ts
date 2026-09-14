@@ -381,8 +381,8 @@ export const GameConfig: GameConfigShape = {
   // que arma el texto — acá solo viven los datos).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada componente.
-  VERSION: "1.1.0",
-  FECHA_PUBLICACION: "14 de septiembre de 2026 · 11:25",
+  VERSION: "1.1.1",
+  FECHA_PUBLICACION: "14 de septiembre de 2026 · 11:52",
 
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
@@ -1871,10 +1871,22 @@ export const GameConfig: GameConfigShape = {
   //    tramo, todavía sin partidos): un tramo flojo de verdad te baja los
   //    minutos del tramo siguiente, y uno bueno te los sube, más allá de
   //    lo que digan las decisiones de evento.
+  //
+  // Este peso (2) arrancó en 0.06, pero con un OVR de arranque/potencial
+  // apenas por encima del neutral (55) — la mayor parte del rango 50-65 —
+  // diferenciaOvr*pesoOvr ya cancelaba casi toda la penalización de edad
+  // de (1), sin importar qué tan mal jugaras de verdad: un novato de OVR
+  // 60 rindiendo pésimo (promedio ~4.0) seguía con ~25% de probabilidad
+  // de jugar cada partido, suficiente para acumular más de 20 partidos
+  // entre los 16 y los 19 con números pobres. Subido a 0.15 para que sea
+  // el rendimiento REAL en cancha, no el OVR potencial de arranque, el
+  // que de verdad decida tus minutos como novato — con eso, ese mismo
+  // caso (OVR 60, promedio ~4.0) cae al piso de participación, mientras
+  // que un novato que sí rinde bien se sigue ganando minutos rápido.
   PARTICIPACION_EDAD_NOVATO_PLATEAU_HASTA: 19,
   PARTICIPACION_EDAD_NOVATO_HASTA: 24,
   PARTICIPACION_PENALIZACION_NOVATO_MAX: 0.35,
-  PARTICIPACION_PESO_RENDIMIENTO_REAL: 0.06,
+  PARTICIPACION_PESO_RENDIMIENTO_REAL: 0.15,
 
   probabilidadJugar(ovr, rendimientoAcumulado, forma, esTitular, edad, promedioTemporada = null) {
     const bonusForma = GameConfig.FORMA_BONUS_PARTICIPACION[forma] ?? 0;

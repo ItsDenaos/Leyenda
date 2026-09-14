@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 1.1.0 — publicada el 14 de septiembre de 2026 · 11:25**
+**Versión 1.1.1 — publicada el 14 de septiembre de 2026 · 11:52**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 

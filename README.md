@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Aplicación web de una sola página (SPA), sin backend ni base de datos externa: todo el motor corre en el navegador, en **Vue 3 + TypeScript + Pinia + Vite**.
 
-**Versión:** 1.1.0 — publicada el 14 de septiembre de 2026 · 11:25.
+**Versión:** 1.1.1 — publicada el 14 de septiembre de 2026 · 11:52.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -322,7 +322,7 @@ prob = 0.65                                                            (PARTICIP
      + bonusForma                                                      (ver tabla abajo)
      + 0.2 si sos titular este tramo                                   (PARTICIPACION_BONUS_TITULAR)
      − penalización de novato                    (ver más abajo — 0 desde los 24 años)
-     + (promedioTemporada − 6.5) × 0.06           (PARTICIPACION_PESO_RENDIMIENTO_REAL, null en el primer tramo)
+     + (promedioTemporada − 6.5) × 0.15           (PARTICIPACION_PESO_RENDIMIENTO_REAL, null en el primer tramo)
 recortado entre 0.15 (PARTICIPACION_MIN) y 0.92 (PARTICIPACION_MAX)
 ```
 
@@ -353,9 +353,9 @@ si no:        progreso     = clamp((24 − edad) / (24 − 19), 0, 1)
               penalización = progreso × 0.35
 ```
 
-De 16 a 19 resta siempre el máximo (−0.35); recién de 19 a 24 baja lineal hasta desaparecer del todo. Un novato de 16-19 años que además está rindiendo mal en cancha puede terminar jugando **~10-12 partidos de 34** en vez de 24-31 — el mismo novato, si la está rompiendo, sigue pudiendo ganarse minutos de verdad (no es un techo fijo, solo un punto de partida más bajo).
+De 16 a 19 resta siempre el máximo (−0.35); recién de 19 a 24 baja lineal hasta desaparecer del todo. Sola, esta penalización no alcanza: con un OVR de arranque/potencial apenas por encima del neutral (55) — la mayor parte del rango 50-65 — `(ovr − 55) × 0.02` ya cancelaba buena parte del −0.35, sin importar qué tan mal jugaras de verdad. Ahí es donde entra el peso del rendimiento real, justo abajo.
 
-**Peso del rendimiento REAL de la temporada** (`PARTICIPACION_PESO_RENDIMIENTO_REAL = 0.06`, sobre `promedioTemporada` — el mismo promedio de rating acumulado que ya usa `calcularFuerzaCampana`, null en el primer tramo porque todavía no hay partidos): antes `probabilidadJugar` no se enteraba de tus goles/asistencias/rating reales, solo de tu OVR, tu forma y las decisiones de evento — dos jugadores con el mismo OVR jugaban igual de seguido sin importar si uno estaba rindiendo genial y el otro pésimo en cancha. Un tramo flojo de verdad ahora te resta minutos del tramo siguiente, y uno bueno te los suma.
+**Peso del rendimiento REAL de la temporada** (`PARTICIPACION_PESO_RENDIMIENTO_REAL = 0.15`, sobre `promedioTemporada` — el mismo promedio de rating acumulado que ya usa `calcularFuerzaCampana`, null en el primer tramo porque todavía no hay partidos): antes `probabilidadJugar` no se enteraba de tus goles/asistencias/rating reales, solo de tu OVR, tu forma y las decisiones de evento — dos jugadores con el mismo OVR jugaban igual de seguido sin importar si uno estaba rindiendo genial y el otro pésimo en cancha. Un tramo flojo de verdad ahora te resta minutos del tramo siguiente, y uno bueno te los suma. Arrancó en 0.06, pero ese peso era demasiado débil frente al término de OVR de arriba: un novato de OVR 60 con rendimiento parejo (`promedioTemporada = 6.5`) ya tenía ~40% de probabilidad de jugar cada partido por el solo hecho de su OVR de arranque, y aunque jugara realmente mal (promedio ~4.0) apenas bajaba a ~25% — suficiente para acumular más de 20 partidos entre los 16 y los 19 con números pobres, porque el OVR potencial seguía comprándole minutos que el rendimiento real no alcanzaba a descontar. Con 0.15, ese mismo novato (OVR 60, promedio ~4.0) cae directo al piso de participación (**15%**, ~5 partidos de 34), mientras que uno que sí rinde bien (promedio ~8.0) sube a ~63% (~21 partidos de 34) — el rendimiento real, no el OVR potencial de arranque, es ahora lo que de verdad decide tus minutos como novato.
 
 `partidosJugador = redondeoEstocastico(partidosClub × prob)` (ver "redondeo estocástico" en [sección 11](#11-progresión-de-ovr)), recortado entre 0 y los partidos totales del club ese tramo. Si hay una lesión activa, `partidosJugador` es directamente 0, sin pasar por esta fórmula.
 
@@ -1154,7 +1154,7 @@ Todas viven en [`app/src/game/config.ts`](app/src/game/config.ts). Cambiar cualq
 | `PARTICIPACION_MIN` / `PARTICIPACION_MAX` | 0.15 / 0.92 | Piso y techo de probabilidad de jugar |
 | `PARTICIPACION_EDAD_NOVATO_PLATEAU_HASTA` / `_HASTA` | 19 / 24 | Rango de edad de la penalización de novato a la participación: se mantiene al máximo hasta `_PLATEAU_HASTA`, luego tapering lineal a 0 en `_HASTA` (ver [sección 9](#9-participación-cuántos-partidos-jugás-vos)) |
 | `PARTICIPACION_PENALIZACION_NOVATO_MAX` | 0.35 | Penalización máxima a la participación por ser un novato de 16-19 años, más allá de tu OVR |
-| `PARTICIPACION_PESO_RENDIMIENTO_REAL` | 0.06 | Cuánto pesa tu promedio de rating REAL de la temporada (no solo OVR/forma/decisiones) sobre tus minutos del próximo tramo |
+| `PARTICIPACION_PESO_RENDIMIENTO_REAL` | 0.15 | Cuánto pesa tu promedio de rating REAL de la temporada (no solo OVR/forma/decisiones) sobre tus minutos del próximo tramo |
 | `TITULAR_OVR_REFERENCIA` / `TITULAR_OVR_PESO` | 55 / 0.02 | OVR de referencia y sensibilidad de `calcularTitular` (ver [sección 9](#9-participación-cuántos-partidos-jugás-vos)) |
 | `TITULAR_EDAD_NOVATO_PLATEAU_HASTA` / `_HASTA` | 19 / 24 | Rango de edad de la penalización de novato a la titularidad: se mantiene al máximo hasta `_PLATEAU_HASTA`, luego tapering lineal a 0 en `_HASTA` — constantes propias, no compartidas con `PARTICIPACION_EDAD_NOVATO_*` (ver [sección 9](#9-participación-cuántos-partidos-jugás-vos)) |
 | `TITULAR_PENALIZACION_NOVATO_MAX` | 0.25 | Penalización máxima al peso de titularidad por ser un novato de 16-19 años |
