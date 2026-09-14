@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 1.0.0 — publicada el 11 de septiembre de 2026 · 16:41**
+**Versión 1.0.0 — publicada el 14 de septiembre de 2026 · 01:03**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -128,6 +128,8 @@ Tus partidos y goles con la selección se ven aparte de los de club, nunca sumad
 Tu **forma** (visible como una píldora de color en el panel de temporada) va desde "Inspirado" 🔥 en el mejor de los casos hasta "Tocado físicamente" 🤕 en el peor — pasando por "En plenitud", "Animado", "Regular", "Desanimado" y "Bajo de forma". Cada decisión te empuja hacia un estado objetivo, pero no te teletransporta ahí de golpe: te vas acercando de a poco, así que una racha de decisiones en la misma dirección construye un cambio real, y una sola decisión aislada no te hace pasar de "Inspirado" a "Tocado" de un tirón. Afecta directamente cuántos minutos vas a tener: en buena forma jugás más partidos y rendís mejor; en mala forma, te quedás afuera más seguido.
 
 Ser **titular** en un bloque de partidos también suma minutos reales — no es solo una etiqueta, un titular efectivamente juega más que un suplente. Y no es un sorteo nuevo cada vez: cuanto mejor rindas siendo titular, más te "ganás" el puesto de cara a los próximos bloques (e incluso de una temporada a la siguiente, mientras sigas en el mismo club) — una gran temporada no se olvida al arrancar la próxima. Al fichar por un club nuevo, ese progreso se resetea: ahí también hay que ganarse el puesto desde cero.
+
+**Si sos un novato de 16-17 años**, vas a jugar bastante menos que un jugador ya asentado con el mismo nivel — ningún club te da la titularidad de entrada solo por tu OVR a esa edad, te lo tenés que ganar con el tiempo (esa desventaja desaparece del todo hacia los 24 años). Y tus minutos ahora también responden a tu rendimiento REAL en cancha, no solo a tu forma y tus decisiones: si venís jugando bien de verdad, te ganás más minutos en el próximo bloque; si venís rindiendo flojo, te los recortan.
 
 ---
 

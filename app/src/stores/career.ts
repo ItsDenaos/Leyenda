@@ -619,7 +619,14 @@ export const useCareerStore = defineStore('career', () => {
     if (estabaLesionado) {
       partidosJugador = 0
     } else {
-      const probJugar = GameConfig.probabilidadJugar(t.ovr, t.bufferRendimiento, t.forma, esTitularEsteTramo)
+      const probJugar = GameConfig.probabilidadJugar(
+        t.ovr,
+        t.bufferRendimiento,
+        t.forma,
+        esTitularEsteTramo,
+        getEdadActual(),
+        t.partidos > 0 ? t.promedio : null,
+      )
       partidosJugador = GameConfig.clamp(GameConfig.redondeoEstocastico(partidosClub * probJugar), 0, partidosClub)
     }
 
@@ -815,7 +822,12 @@ export const useCareerStore = defineStore('career', () => {
     const fuerzaTitulo = GameConfig.calcularFuerzaTitulo(equipo, liga, t.forma, t.equipoAcumuladoTemporada, t.partidos > 0 ? t.promedio : null)
     const mensajesFinales: string[] = []
 
-    const ganasteLiga = Math.random() < GameConfig.probGanarLiga(fuerzaTitulo)
+    // Bonus de dominancia doméstica (Bayern, PSG — ver VENTAJA_DOMINANCIA_
+    // DOMESTICA): solo para el título de LIGA, nunca para la final de copa
+    // internacional de más abajo, que sigue usando fuerzaTitulo sin tocar.
+    const bonusDominancia = GameConfig.VENTAJA_DOMINANCIA_DOMESTICA[equipo.id] ?? 0
+    const fuerzaTituloLiga = GameConfig.clamp(fuerzaTitulo + bonusDominancia, 0, 1)
+    const ganasteLiga = Math.random() < GameConfig.probGanarLiga(fuerzaTituloLiga)
     if (ganasteLiga && t.competiciones.liga.competicion) {
       const comp = t.competiciones.liga.competicion
       t.trofeos.push({ nombre: comp.nombre, imagen: comp.trofeoImagen })
@@ -1058,7 +1070,15 @@ export const useCareerStore = defineStore('career', () => {
     if (!t || !player.value) return
     carreraFinalizada.value = true
     t.enCurso = false
-    temporadasFinalizadas.value.push(t)
+    // El retiro se decide siempre en la pausa de fichajes, que cae al
+    // arranque de la temporada (progreso 0, antes de simular cualquier
+    // tramo — ver crearCalendarioTemporada) — así que `t` recién se creó
+    // y todavía no tiene nada jugado. Guardarla igual en el historial
+    // dejaba una fila fantasma con 0 partidos/goles/asistencias al
+    // final de la carrera.
+    if (t.partidos > 0) {
+      temporadasFinalizadas.value.push(t)
+    }
     puedeSolicitarNumero.value = false
     mensajes.value.push(`${player.value.apellido} se retira del fútbol profesional.`)
     guardar()

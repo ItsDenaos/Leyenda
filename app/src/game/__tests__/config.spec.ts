@@ -140,32 +140,66 @@ describe('GameConfig — ajustarOvrTramo (crecimiento/declive)', () => {
 })
 
 describe('GameConfig — probabilidadJugar (participación según OVR)', () => {
+  // Edad "neutra" (sin penalización de novato — ver EDAD_NOVATO_HASTA)
+  // para aislar el efecto de OVR/forma/decisiones en estos tests, igual
+  // que antes de agregar la penalización por edad.
+  const EDAD_NEUTRA = GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA
+
   // Referencia (55 de OVR, rendimiento/forma neutros, no titular): sin
   // cambios respecto al valor base.
   it('en la referencia, devuelve exactamente PARTICIPACION_BASE', () => {
-    const prob = GameConfig.probabilidadJugar(55, 0, 'regular', false)
+    const prob = GameConfig.probabilidadJugar(55, 0, 'regular', false, EDAD_NEUTRA)
     expect(prob).toBeCloseTo(GameConfig.PARTICIPACION_BASE, 5)
   })
 
   it('un novato en el piso real de OVR inicial casi no juega', () => {
-    const prob = GameConfig.probabilidadJugar(GameConfig.OVR_INICIAL_MIN, 0, 'regular', false)
+    const prob = GameConfig.probabilidadJugar(GameConfig.OVR_INICIAL_MIN, 0, 'regular', false, EDAD_NEUTRA)
     expect(prob).toBeCloseTo(0.25, 5)
   })
 
   it('un novato en el techo de OVR inicial ya juega bastante', () => {
-    const prob = GameConfig.probabilidadJugar(GameConfig.OVR_INICIAL_MAX, 0, 'regular', false)
+    const prob = GameConfig.probabilidadJugar(GameConfig.OVR_INICIAL_MAX, 0, 'regular', false, EDAD_NEUTRA)
     expect(prob).toBeCloseTo(0.85, 5)
   })
 
   it('ni el mejor jugador del mundo llega al 100% — el techo es PARTICIPACION_MAX', () => {
-    const prob = GameConfig.probabilidadJugar(GameConfig.OVR_CARRERA_MAX, 10, 'inspirado', true)
+    const prob = GameConfig.probabilidadJugar(GameConfig.OVR_CARRERA_MAX, 10, 'inspirado', true, EDAD_NEUTRA)
     expect(prob).toBe(GameConfig.PARTICIPACION_MAX)
   })
 
   it('por debajo de la referencia castiga más fuerte que por encima (pendiente asimétrica)', () => {
-    const cincoAbajo = GameConfig.PARTICIPACION_BASE - GameConfig.probabilidadJugar(50, 0, 'regular', false)
-    const cincoArriba = GameConfig.probabilidadJugar(60, 0, 'regular', false) - GameConfig.PARTICIPACION_BASE
+    const cincoAbajo = GameConfig.PARTICIPACION_BASE - GameConfig.probabilidadJugar(50, 0, 'regular', false, EDAD_NEUTRA)
+    const cincoArriba = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA) - GameConfig.PARTICIPACION_BASE
     expect(cincoAbajo).toBeGreaterThan(cincoArriba)
+  })
+
+  it('un novato de 16-17 años juega bastante menos que uno igual de grande', () => {
+    // esTitular: false — con true, el bonus de titular ya empuja contra
+    // PARTICIPACION_MAX y el clamp del techo distorsiona la diferencia.
+    const joven = GameConfig.probabilidadJugar(60, 0, 'regular', false, 16)
+    const grande = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA)
+    expect(grande - joven).toBeCloseTo(GameConfig.PARTICIPACION_PENALIZACION_NOVATO_MAX, 5)
+  })
+
+  it('la penalización de novato baja lineal hasta desaparecer en PARTICIPACION_EDAD_NOVATO_HASTA', () => {
+    const mitad = (GameConfig.PARTICIPACION_EDAD_NOVATO_DESDE + GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA) / 2
+    const probMitad = GameConfig.probabilidadJugar(60, 0, 'regular', false, mitad)
+    const probGrande = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA)
+    expect(probGrande - probMitad).toBeCloseTo(GameConfig.PARTICIPACION_PENALIZACION_NOVATO_MAX / 2, 5)
+  })
+
+  it('sin promedio de temporada (todavía sin partidos), el rendimiento real no pesa', () => {
+    const prob = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA, null)
+    const sinPromedio = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA)
+    expect(prob).toBeCloseTo(sinPromedio, 5)
+  })
+
+  it('un promedio de temporada flojo te baja los minutos, uno bueno te los sube', () => {
+    const base = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA, GameConfig.RATING_BASE)
+    const flojo = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA, 5.0)
+    const bueno = GameConfig.probabilidadJugar(60, 0, 'regular', false, EDAD_NEUTRA, 8.5)
+    expect(flojo).toBeLessThan(base)
+    expect(bueno).toBeGreaterThan(base)
   })
 })
 
@@ -194,6 +228,43 @@ describe('GameConfig — calcularFuerzaTitulo (título de liga/copa internaciona
     const neutro = GameConfig.calcularFuerzaTitulo(bayern, bundesliga, 'regular', 0, null)
     const granTemporada = GameConfig.calcularFuerzaTitulo(bayern, bundesliga, 'inspirado', GameConfig.FUERZA_EQUIPO_ACUMULADO_REFERENCIA, 9)
     expect(granTemporada).toBeGreaterThan(neutro)
+  })
+})
+
+describe('GameConfig — VENTAJA_DOMINANCIA_DOMESTICA (Bayern/PSG vs su liga)', () => {
+  const bundesliga = GameDatabase.ligas.find((l) => l.id === 'bundesliga')!
+  const bayern = GameDatabase.equipos.find((e) => e.id === 'bayern-munich')!
+  const leverkusen = GameDatabase.equipos.find((e) => e.id === 'bayer-leverkusen')!
+
+  it('solo incluye a Bayern y PSG, con un bonus positivo', () => {
+    expect(Object.keys(GameConfig.VENTAJA_DOMINANCIA_DOMESTICA).sort()).toEqual(['bayern-munich', 'psg'])
+    expect(GameConfig.VENTAJA_DOMINANCIA_DOMESTICA['bayern-munich']).toBeGreaterThan(0)
+    expect(GameConfig.VENTAJA_DOMINANCIA_DOMESTICA['psg']).toBeGreaterThan(0)
+  })
+
+  it('sin el bonus, Bayern y su rival más cercano (Leverkusen) están casi empatados en chances de título', () => {
+    const fuerzaBayern = GameConfig.calcularFuerzaTitulo(bayern, bundesliga, 'regular', 0, null)
+    const fuerzaLeverkusen = GameConfig.calcularFuerzaTitulo(leverkusen, bundesliga, 'regular', 0, null)
+    const probBayern = GameConfig.probGanarLiga(fuerzaBayern)
+    const probLeverkusen = GameConfig.probGanarLiga(fuerzaLeverkusen)
+    // La brecha real (antes del bonus) es chica — es exactamente el problema
+    // que este bonus corrige, no algo a exagerar en este test.
+    expect(probBayern - probLeverkusen).toBeLessThan(0.1)
+  })
+
+  it('con el bonus aplicado (como hace finalizarTemporada, solo para el título de liga), Bayern se despega claramente', () => {
+    const fuerzaBayern = GameConfig.calcularFuerzaTitulo(bayern, bundesliga, 'regular', 0, null)
+    const fuerzaLeverkusen = GameConfig.calcularFuerzaTitulo(leverkusen, bundesliga, 'regular', 0, null)
+    const fuerzaBayernConBonus = GameConfig.clamp(fuerzaBayern + GameConfig.VENTAJA_DOMINANCIA_DOMESTICA['bayern-munich']!, 0, 1)
+    const probBayernConBonus = GameConfig.probGanarLiga(fuerzaBayernConBonus)
+    const probLeverkusen = GameConfig.probGanarLiga(fuerzaLeverkusen)
+
+    expect(probBayernConBonus).toBeGreaterThan(0.6)
+    expect(probBayernConBonus - probLeverkusen).toBeGreaterThan(0.15)
+  })
+
+  it('un club sin entrada en el mapa no recibe ningún bonus', () => {
+    expect(GameConfig.VENTAJA_DOMINANCIA_DOMESTICA[leverkusen.id]).toBeUndefined()
   })
 })
 

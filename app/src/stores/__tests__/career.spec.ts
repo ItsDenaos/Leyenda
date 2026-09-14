@@ -148,6 +148,52 @@ describe('useCareerStore', () => {
     expect(temporadaDeCorte).toBe(5) // gracia de 4 temporadas + la 5ta ya sin gracia
   })
 
+  it('retirarse no deja una temporada fantasma con 0 partidos en el historial', () => {
+    // El retiro siempre se decide en la pausa de fichajes, que cae al
+    // arranque de la temporada (antes de simular cualquier tramo) — la
+    // temporada "actual" en ese momento nunca tiene partidos jugados.
+    const store = useCareerStore()
+    store.iniciarCarrera(jugadorDePrueba({ ovrInicial: 50 }))
+    if (store.temporadaActual) store.temporadaActual.ovr = 45
+
+    let cartaRetiro: OfertaItem | null = null
+    let iters = 0
+    vi.useFakeTimers()
+    try {
+      while (!store.carreraFinalizada && iters < 200) {
+        iters++
+        const t = store.temporadaActual
+        if (!t) break
+        const primero = t.loteActual[0]
+        if (primero && 'tipoOferta' in primero && primero.tipoOferta === 'retiro' && !primero.forzoso) {
+          cartaRetiro = primero
+          break
+        }
+        if (!primero) break
+        if ('esInformeLesion' in primero && primero.esInformeLesion) {
+          store.simularTramoYAvanzar()
+          vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+        } else if ('tipoOferta' in primero) {
+          store.resolveOferta(primero)
+        } else {
+          store.resolveDecisionEvento((primero as DecisionCard).id, 0)
+          vi.advanceTimersByTime(GameConfig.ANIMACION_TRAMO_MS + 200)
+        }
+        if (t.ovr > 45) t.ovr = 45
+      }
+
+      expect(cartaRetiro).not.toBeNull()
+      const numeroAlRetirarse = store.temporadaActual!.numero
+      store.resolveOferta(cartaRetiro!)
+
+      expect(store.carreraFinalizada).toBe(true)
+      expect(store.temporadasFinalizadas.some((s) => s.numero === numeroAlRetirarse)).toBe(false)
+      expect(store.temporadasFinalizadas.every((s) => s.partidos > 0)).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('guardar/cargar hace un round-trip fiel del estado', () => {
     const store = useCareerStore()
     store.iniciarCarrera(jugadorDePrueba())

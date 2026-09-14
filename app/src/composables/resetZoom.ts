@@ -30,3 +30,22 @@ export function resetZoom() {
     viewport.setAttribute('content', original!)
   })
 }
+
+// resetZoom() ya corre al cambiar de vista (router.afterEach) y al cerrar
+// los modales que tienen su propio input (NumeroModal/ResumenModal) — pero
+// varios inputs (apellido, búsqueda de país en la creación de personaje,
+// el número del NumeroModal) tienen font-size menor a 16px, así que
+// enfocarlos en iOS dispara un zoom automático del navegador para que el
+// texto se lea bien mientras se escribe. Si el teclado se cierra sin
+// navegar ni cerrar un modal (tocar afuera del input, o "listo" del
+// teclado), ese zoom se queda pegado — hace falta resetearlo también ahí,
+// para cualquier input/textarea de la app, sin tener que cablear un
+// @blur en cada uno. Instalado una sola vez, en App.vue.
+export function instalarResetZoomAlCerrarTeclado(): () => void {
+  function onFocusOut(e: FocusEvent) {
+    const tag = (e.target as HTMLElement | null)?.tagName
+    if (tag === 'INPUT' || tag === 'TEXTAREA') resetZoom()
+  }
+  document.addEventListener('focusout', onFocusOut)
+  return () => document.removeEventListener('focusout', onFocusOut)
+}

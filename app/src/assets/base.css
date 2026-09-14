@@ -290,15 +290,26 @@ body {
   text-align: center;
 }
 .trophy-card__name-under {
-  font-size: 0.5rem;
+  font-size: 0.35rem; /* -30% de los 0.5rem originales */
   font-weight: 700;
   line-height: 1.15;
   color: var(--trophy-gold);
   max-width: 4.4rem;
-  display: none;
+  /* Antes era un toggle instantáneo (display: none/block) — la tarjeta
+     "saltaba" de golpe a su alto nuevo al tocarla. max-height + opacity sí
+     se pueden animar (display no), así que la revelación queda suave. El
+     tope de 2.5em alcanza de sobra para los 2-3 renglones que ocupa un
+     nombre largo a este tamaño de fuente. */
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.3s ease,
+    opacity 0.25s ease;
 }
 .timeline-item--expandida .trophy-card__name-under {
-  display: block;
+  max-height: 2.5em;
+  opacity: 1;
 }
 
 /* ESTADÍSTICA EN GRILLA — spotlight y resumen de carrera. */

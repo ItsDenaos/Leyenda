@@ -280,6 +280,8 @@ interface GameConfigShape {
   probGanarCopa(fuerza: number): number;
   probAvanzarRonda(fuerza: number): number;
 
+  VENTAJA_DOMINANCIA_DOMESTICA: Record<string, number>;
+
   UMBRAL_CLASIFICA_PRIMER_NIVEL: number;
   UMBRAL_CLASIFICA_SEGUNDO_NIVEL: number;
 
@@ -329,7 +331,18 @@ interface GameConfigShape {
   PARTICIPACION_MAX: number;
   PARTICIPACION_BASE: number;
   PARTICIPACION_BONUS_TITULAR: number;
-  probabilidadJugar(ovr: number, rendimientoAcumulado: number, forma: Forma, esTitular: boolean): number;
+  PARTICIPACION_EDAD_NOVATO_DESDE: number;
+  PARTICIPACION_EDAD_NOVATO_HASTA: number;
+  PARTICIPACION_PENALIZACION_NOVATO_MAX: number;
+  PARTICIPACION_PESO_RENDIMIENTO_REAL: number;
+  probabilidadJugar(
+    ovr: number,
+    rendimientoAcumulado: number,
+    forma: Forma,
+    esTitular: boolean,
+    edad: number,
+    promedioTemporada?: number | null,
+  ): number;
 
   PETICION_NUMERO_BASE: number;
   PETICION_NUMERO_OVR_PESO: number;
@@ -366,7 +379,7 @@ export const GameConfig: GameConfigShape = {
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada componente.
   VERSION: "1.0.0",
-  FECHA_PUBLICACION: "11 de septiembre de 2026 · 16:41",
+  FECHA_PUBLICACION: "14 de septiembre de 2026 · 01:03",
 
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
@@ -1590,6 +1603,25 @@ export const GameConfig: GameConfigShape = {
     return GameConfig.clamp(0.25 + 0.5 * fuerza, 0.1, 0.85);
   },
 
+  // Clubes con una ventaja doméstica real, mayor a la que ya reflejan
+  // fuerza/prestigio/economia por sí solos — dominan su liga de local por
+  // una brecha (financiera, de nivel de plantel) que el resto de la liga
+  // no puede cerrar en una temporada normal. Ej.: con la fuerza actual de
+  // la base de datos, Bayern München (93) vs Bayer Leverkusen (88) da
+  // ~49% vs ~44% de ganar la Bundesliga en un escenario neutro — casi una
+  // moneda al aire, muy lejos de su dominio real. Ni poniéndole 100 de
+  // fuerza a Bayern alcanza un techo realista (el 15% de peso de
+  // calcularFuerzaTitulo que no es `calidadClub` lo capa en ~55%), así
+  // que hace falta este empujón dedicado en vez de solo tocar la BD.
+  //
+  // Se aplica SOLO al título de LIGA (ver finalizarTemporada) — no a la
+  // copa nacional ni a una final de copa internacional, donde compiten
+  // contra rivales de su propio nivel, no contra su propia liga.
+  VENTAJA_DOMINANCIA_DOMESTICA: {
+    'bayern-munich': 0.08,
+    'psg': 0.08,
+  },
+
   // Clasificación a competición internacional para la temporada
   // siguiente. Una campaña floja te puede dejar afuera del todo, sin
   // pisos mínimos por nivel de liga.
@@ -1794,13 +1826,45 @@ export const GameConfig: GameConfigShape = {
   PARTICIPACION_BASE: 0.65,
   PARTICIPACION_BONUS_TITULAR: 0.2,
 
-  probabilidadJugar(ovr, rendimientoAcumulado, forma, esTitular) {
+  // Antes probabilidadJugar no sabía nada de tu edad ni de tus
+  // estadísticas reales de la temporada — un novato de 16 con el OVR
+  // inicial típico (50-65, muy cerca del "neutral" de 55) ya arrancaba
+  // con 65-90% de probabilidad de jugar cada partido, sin importar si
+  // metía 1 gol o 20. Dos correcciones, pensadas para ir juntas:
+  //
+  // 1) Penalización por edad: nadie te da la titularidad de entrada solo
+  //    porque tu OVR no es terrible a los 16-17 — te lo tenés que ganar
+  //    con el tiempo. Mismo criterio de curva (tapering lineal) que ya
+  //    usa EDAD_POTENCIAL_BONUS, pero restando y con su propio rango de
+  //    edad — no comparte constantes con esa curva a propósito.
+  // 2) Peso del rendimiento REAL de la temporada (promedio de rating —
+  //    mismo dato que ya usa calcularFuerzaCampana, null en el primer
+  //    tramo, todavía sin partidos): un tramo flojo de verdad te baja los
+  //    minutos del tramo siguiente, y uno bueno te los sube, más allá de
+  //    lo que digan las decisiones de evento.
+  PARTICIPACION_EDAD_NOVATO_DESDE: 17,
+  PARTICIPACION_EDAD_NOVATO_HASTA: 24,
+  PARTICIPACION_PENALIZACION_NOVATO_MAX: 0.35,
+  PARTICIPACION_PESO_RENDIMIENTO_REAL: 0.06,
+
+  probabilidadJugar(ovr, rendimientoAcumulado, forma, esTitular, edad, promedioTemporada = null) {
     const bonusForma = GameConfig.FORMA_BONUS_PARTICIPACION[forma] ?? 0;
     const bonusTitular = esTitular ? GameConfig.PARTICIPACION_BONUS_TITULAR : 0;
     const diferenciaOvr = ovr - GameConfig.PARTICIPACION_OVR_REFERENCIA;
     const pesoOvr = diferenciaOvr < 0 ? GameConfig.PARTICIPACION_OVR_PESO_BAJO : GameConfig.PARTICIPACION_OVR_PESO_ALTO;
+
+    const progresoNovato = GameConfig.clamp(
+      (GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA - edad)
+        / (GameConfig.PARTICIPACION_EDAD_NOVATO_HASTA - GameConfig.PARTICIPACION_EDAD_NOVATO_DESDE),
+      0, 1
+    );
+    const penalizacionNovato = -progresoNovato * GameConfig.PARTICIPACION_PENALIZACION_NOVATO_MAX;
+    const bonusRendimientoReal = promedioTemporada != null
+      ? (promedioTemporada - GameConfig.RATING_BASE) * GameConfig.PARTICIPACION_PESO_RENDIMIENTO_REAL
+      : 0;
+
     const prob = GameConfig.PARTICIPACION_BASE + diferenciaOvr * pesoOvr
-      + rendimientoAcumulado * 0.03 + bonusForma + bonusTitular;
+      + rendimientoAcumulado * 0.03 + bonusForma + bonusTitular + penalizacionNovato + bonusRendimientoReal;
     return GameConfig.clamp(prob, GameConfig.PARTICIPACION_MIN, GameConfig.PARTICIPACION_MAX);
   },
 
