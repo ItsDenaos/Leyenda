@@ -218,35 +218,19 @@ body {
 }
 
 /* TROFEOS — spotlight (temporada en foco) e historial de carrera.
-   align-items: flex-start (no center) en las dos reglas de abajo: si el
-   nombre de un trofeo pasa a 2 líneas (pill angosta en mobile, o el modo
-   apilado del historial) mientras los demás quedan en 1 línea, centrar
-   verticalmente desalinea el ícono de esos trofeos más cortos respecto a
-   los más altos que sí ocupan 2 líneas — con flex-start todos arrancan
-   parejo arriba, sea cual sea su alto real. */
+   align-items: flex-start (no center): si el nombre de un trofeo pasa a 2
+   líneas (pill angosta en mobile, o el modo apilado del historial)
+   mientras los demás quedan en 1 línea, centrar verticalmente desalinea
+   el ícono de esos trofeos más cortos respecto a los más altos que sí
+   ocupan 2 líneas — con flex-start todos arrancan parejo arriba, sea cual
+   sea su alto real. Esto alinea las CAJAS de cada ícono entre sí; que la
+   silueta DENTRO de cada caja quede a la misma altura real es cosa de
+   mask-position/mask-size más abajo, no de este align-items. */
 .trophies {
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
   flex-wrap: wrap;
-}
-/* Historial de carrera, sin nombre visible (desktop siempre, mobile
-   mientras la tarjeta está colapsada — TrophyBadges.vue agrega esta clase
-   cuando soloIcono): sin texto de por medio, flex-start solo servía para
-   dejar todas las CAJAS de ícono arrancando en el mismo punto arriba —
-   pero los premios individuales (Bota/Balón de Oro, Once Ideal) usan una
-   caja más chica que los trofeos de equipo (ver
-   .trophy-card__icon-img--premio más abajo), así que con flex-start sus
-   cajas quedaban con el borde de abajo más arriba que el de los trofeos
-   de equipo, y encima mask-position: bottom (ver .trophy-card__icon-img)
-   ya apoya cada silueta contra el borde INFERIOR de su propia caja — la
-   combinación correcta para que las siluetas queden a la misma altura
-   real es alinear las cajas por abajo. Se anula de vuelta a flex-start en
-   el historial de mobile cuando la tarjeta se expande y el nombre se
-   revela debajo del ícono (ver TimelineList.vue) — ahí si vuelve a
-   importar que un nombre de 2 líneas no desalinee los íconos. */
-.trophies.trophies--icon-only {
-  align-items: flex-end;
 }
 .trophy-card {
   display: flex;
@@ -295,29 +279,52 @@ body {
    individuales, en cambio, casi no tienen margen y ocupan casi todo el
    archivo. Con mask-position: center cada una queda centrada en su caja
    según SU PROPIO margen interno — como esos márgenes son bien distintos
-   entre trofeo de equipo y premio individual, en el historial (donde la
-   caja de cada ícono es bien grande, 2.1rem/1.7rem) las copas terminaban
-   flotando bastante más abajo que los premios. Apoyando todas contra el
-   borde inferior de su caja, ese margen interno dispar deja de importar.
-   Acotado a icon-only nada más: en el modo píldora (nombre al lado, ver
-   .trophy-card__name) el ícono es chico (1rem/0.8rem) y el mismo cambio
-   hacía que la silueta colgara visiblemente más abajo que el texto — ahí
-   center sigue funcionando bien porque la caja ya es chica de por sí. */
+   entre trofeo de equipo y premio individual, las copas terminaban
+   flotando bastante más abajo que los premios aun con las cajas ya
+   parejas. Apoyando todas contra el borde inferior de su caja, ese margen
+   interno dispar deja de importar. Acotado a icon-only nada más: en el
+   modo píldora (nombre al lado, ver .trophy-card__name) el ícono es chico
+   (1rem/0.8rem) y el mismo cambio hacía que la silueta colgara
+   visiblemente más abajo que el texto — ahí center sigue funcionando bien
+   porque la caja ya es chica de por sí. */
 .trophy-card--icon-only .trophy-card__icon-img {
   -webkit-mask-position: bottom;
   mask-position: bottom;
 }
 /* Los premios individuales (Bota de Oro, Balón de Oro, Once Ideal) son
    siluetas más "llenas" que las de trofeos de equipo — al mismo tamaño de
-   caja se leen más grandes al lado de esos. Se achican un poco en los dos
-   contextos de tamaño (pill normal e icon-only). */
+   caja se leen más grandes al lado de esos, así que se achican un poco.
+   En modo píldora se achica directo la CAJA del ícono (0.8rem contra
+   1rem) — ahí no hay otro ícono cerca con el que tenga que compartir
+   alineación vertical más que el texto, que ya se resuelve con
+   mask-position: center de la regla de arriba. */
 .trophy-card__icon-img.trophy-card__icon-img--premio {
   width: 0.8rem;
   height: 0.8rem;
 }
+/* En modo icon-only (historial) la caja NO se achica — se deja en el
+   mismo 2.1rem que un trofeo de equipo, y en cambio se achica el
+   mask-size (la silueta renderizada) a 1.7rem dentro de esa caja. Si acá
+   también achicáramos la caja como en la píldora, la caja de cada premio
+   terminaría más baja (2.1rem contra 1.7rem) — con align-items: flex-
+   start (ver `.trophies` arriba) sus bordes de ABAJO quedarían más
+   arriba que los de un trofeo de equipo, y mask-position: bottom (ver
+   arriba) apoya cada silueta contra el borde inferior de SU PROPIA caja,
+   así que esa diferencia de caja se traduciría directo en una silueta
+   visiblemente más arriba — exactamente lo que pasaba antes al tocar una
+   tarjeta del historial en mobile. Con la caja pareja (2.1rem para
+   los dos tipos) y solo el mask-size distinto, todas las cajas —y por lo
+   tanto todas las siluetas, ya apoyadas contra el borde inferior— quedan
+   a la misma altura real, sin importar si la tarjeta está colapsada o
+   expandida (ver TimelineList.vue). */
 .trophy-card--icon-only .trophy-card__icon-img.trophy-card__icon-img--premio {
-  width: 1.7rem;
-  height: 1.7rem;
+  /* Redeclara el 2.1rem de `.trophy-card--icon-only .trophy-card__icon-img`
+     (arriba) — sin esto, la regla de píldora (0.8rem, misma especificidad
+     de 2 clases) gana por venir después en el archivo. */
+  width: 2.1rem;
+  height: 2.1rem;
+  -webkit-mask-size: 1.7rem 1.7rem;
+  mask-size: 1.7rem 1.7rem;
 }
 .trophy-card__name {
   font-size: 0.72rem;

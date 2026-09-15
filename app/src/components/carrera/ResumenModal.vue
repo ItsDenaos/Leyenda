@@ -172,7 +172,8 @@ async function copiarResumenComoImagen() {
             <span class="resumen__seleccion-stats"
               >{{ resumen.seleccionPartidos }} partido{{ resumen.seleccionPartidos === 1 ? '' : 's' }} · {{ resumen.seleccionGoles }} gol{{
                 resumen.seleccionGoles === 1 ? '' : 'es'
-              }}</span
+              }}
+              · {{ resumen.seleccionAsistencias }} asistencia{{ resumen.seleccionAsistencias === 1 ? '' : 's' }}</span
             >
           </div>
         </div>

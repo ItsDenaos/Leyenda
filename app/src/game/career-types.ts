@@ -145,6 +145,7 @@ export interface Temporada {
   convocatoriaPausa: number | null
   seleccionPartidos: number
   seleccionGoles: number
+  seleccionAsistencias: number
   lesionActiva: LesionActiva | null
   loteActual: LoteItem[]
   bufferRendimiento: number
@@ -162,6 +163,7 @@ export interface ResumenCarrera {
   promedio: number
   seleccionPartidos: number
   seleccionGoles: number
+  seleccionAsistencias: number
   mayorOvr: number
   mayorValor: number
   ovrDebut: number
