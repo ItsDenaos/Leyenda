@@ -78,6 +78,19 @@ describe('SpotlightCard', () => {
     expect(wrapper.text()).toContain('Selección: 3 PJ · 1 G')
   })
 
+  it('muestra el badge de Capitán solo cuando la temporada lo marca', () => {
+    const career = useCareerStore()
+    career.iniciarCarrera(jugadorDePrueba())
+
+    let wrapper = mount(SpotlightCard)
+    expect(wrapper.find('.lineup-tag--capitan').exists()).toBe(false)
+
+    career.temporadaActual!.capitan = true
+    wrapper = mount(SpotlightCard)
+    expect(wrapper.find('.lineup-tag--capitan').exists()).toBe(true)
+    expect(wrapper.text()).toContain('Capitán')
+  })
+
   it('marca la tarjeta como lesionado cuando hay una lesión activa', () => {
     const career = useCareerStore()
     career.iniciarCarrera(jugadorDePrueba())

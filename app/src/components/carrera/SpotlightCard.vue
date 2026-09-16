@@ -88,6 +88,7 @@ const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () 
         <span class="current-tag">EN CURSO</span>
         <span class="forma-pill" :style="formaPillStyle">{{ forma.icon }} {{ forma.label }}</span>
         <span class="lineup-tag" :class="s.titular ? 'lineup-tag--titular' : 'lineup-tag--suplente'">{{ s.titular ? 'Titular' : 'Suplente' }}</span>
+        <span v-if="s.capitan" class="lineup-tag lineup-tag--capitan">Capitán</span>
         <span v-if="estaAPrestamo" class="lineup-tag lineup-tag--prestamo">A préstamo</span>
       </div>
     </div>
@@ -128,6 +129,7 @@ const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () 
       />
       <span class="spotlight-mobile__clubname">{{ equipo.nombre }}<template v-if="estaAPrestamo"> (préstamo)</template></span>
       <span class="lineup-tag" :class="s.titular ? 'lineup-tag--titular' : 'lineup-tag--suplente'">{{ s.titular ? 'Titular' : 'Suplente' }}</span>
+      <span v-if="s.capitan" class="lineup-tag lineup-tag--capitan">Capitán</span>
     </div>
     <div v-if="s.seleccionPartidos > 0" class="spotlight-mobile__seleccion">
       <FlagImg :code="s.seleccion!.paisCode" :emoji="s.seleccion!.paisFlag" class-css="flag-img" />
@@ -256,6 +258,11 @@ const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () 
   color: #38bdf8;
   border-color: #38bdf8;
   background: #38bdf81a;
+}
+.lineup-tag--capitan {
+  color: #facc15;
+  border-color: #facc15;
+  background: #facc151a;
 }
 
 .spotlight-card__body {

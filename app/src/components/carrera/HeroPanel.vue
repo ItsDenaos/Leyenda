@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import { useCareerStore } from '@/stores/career'
 import { equipoDe } from '@/data/database-helpers'
 import { GameConfig } from '@/game/config'
-import { ovrTierColor, formatMarketValue, POSITION_NAMES } from '@/game/format'
+import { ovrTierColor, formatMarketValue, POSITION_NAMES, famaTierColor, famaTierLabel } from '@/game/format'
 import CrestImg from '@/components/CrestImg.vue'
 import FlagImg from '@/components/FlagImg.vue'
 
@@ -25,6 +25,8 @@ const heroStyle = computed(() => ({
   '--team-b': equipo.value.b,
 }))
 const ovrStyle = computed(() => ({ '--ovr-color': ovrTierColor(temporada.value.ovr) }))
+const famaLabel = computed(() => famaTierLabel(career.fama))
+const famaColor = computed(() => famaTierColor(career.fama))
 </script>
 
 <template>
@@ -74,6 +76,10 @@ const ovrStyle = computed(() => ({ '--ovr-color': ovrTierColor(temporada.value.o
       <div class="chip">
         <FlagImg :code="player.paisCode" :emoji="player.flag" class-css="flag-img" />
         <span>{{ player.pais }}</span>
+      </div>
+      <div class="chip" :style="{ color: famaColor }">
+        <span>🌟</span>
+        <span>{{ famaLabel }}</span>
       </div>
       <div class="value-badge">
         <span>💰</span>

@@ -91,4 +91,18 @@ describe('TimelineList', () => {
     const wrapper = mount(TimelineList)
     expect(wrapper.find('.timeline-item__mmeta').text()).toContain('8 A')
   })
+
+  it('muestra "(C)" junto al club solo en las temporadas donde fue capitán', () => {
+    const career = useCareerStore()
+    career.iniciarCarrera(jugadorDePrueba())
+    career.temporadasFinalizadas = [
+      { ...career.temporadaActual!, numero: 1, capitan: false } as Temporada,
+      { ...career.temporadaActual!, numero: 2, capitan: true } as Temporada,
+    ]
+
+    const wrapper = mount(TimelineList)
+    const teams = wrapper.findAll('.timeline-item__team')
+    expect(teams[0]!.text()).toContain('(C)') // temporada 2, más reciente primero
+    expect(teams[1]!.text()).not.toContain('(C)')
+  })
 })

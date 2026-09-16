@@ -3,9 +3,10 @@
 // renderResumenCarrera()/ovrArcoSvg()/trofeosResumenHtml() en carrera.js.
 import { computed, ref } from 'vue'
 import { useCareerStore } from '@/stores/career'
+import { equipoDe } from '@/data/database-helpers'
 import { resetZoom } from '@/composables/resetZoom'
 import { GameConfig } from '@/game/config'
-import { ovrTierColor, formatMarketValue, POSITION_NAMES } from '@/game/format'
+import { ovrTierColor, formatMarketValue, POSITION_NAMES, famaTierColor, famaTierLabel } from '@/game/format'
 import { calcularArcoOvr } from '@/game/ovr-chart'
 import { generarTarjetaResumenCanvas } from '@/game/resumen-canvas'
 import CrestImg from '@/components/CrestImg.vue'
@@ -32,9 +33,16 @@ const totalTrofeos = computed(() => resumen.value.trofeos.reduce((suma, t) => su
 const colorPico = computed(() => ovrTierColor(resumen.value.mayorOvr))
 const arco = computed(() => calcularArcoOvr(resumen.value.serieOvr))
 const posicionNombre = computed(() => POSITION_NAMES[career.player!.posicion] ?? career.player!.posicion)
+const rivalEquipo = computed(() => (career.rival ? equipoDe(career.rival.equipoId) : null))
+const rivalPosicionNombre = computed(() => {
+  if (!career.rival) return ''
+  return (POSITION_NAMES[career.rival.posicion] ?? career.rival.posicion).toLowerCase()
+})
 
 const bannerStyle = computed(() => ({ '--rb-a': ultimoClub.value.a, '--rb-b': ultimoClub.value.b }))
 const ovrStyle = computed(() => ({ '--ovr-color': colorPico.value }))
+const famaLabel = computed(() => famaTierLabel(career.fama))
+const famaColor = computed(() => famaTierColor(career.fama))
 
 // Tarjeta propia dibujada en canvas (no una captura del modal — ver
 // resumen-canvas.ts), pensada para compartirse. Tres niveles de respaldo,
@@ -104,6 +112,9 @@ async function copiarResumenComoImagen() {
               <p class="resumen__subtitle">
                 {{ posicionNombre }} · {{ resumen.temporadasJugadas }} temporada{{ resumen.temporadasJugadas === 1 ? '' : 's' }} · Retirado a los
                 {{ resumen.edadRetiro }} años
+                <template v-if="career.epilogoElegido">
+                  · {{ career.epilogoElegido === 'retirado' ? 'Se alejó del fútbol profesional.' : 'Sigue ligado al fútbol como entrenador.' }}
+                </template>
               </p>
             </div>
           </div>
@@ -143,6 +154,7 @@ async function copiarResumenComoImagen() {
           <div class="stat"><span class="stat__value">{{ resumen.mvp }}</span><span class="stat__label">MVP</span></div>
           <div class="stat"><span class="stat__value">{{ resumen.promedio.toFixed(1) }}</span><span class="stat__label">Promedio</span></div>
           <div class="stat"><span class="stat__value">{{ formatMarketValue(resumen.mayorValor) }}</span><span class="stat__label">Mayor valor</span></div>
+          <div class="stat"><span class="stat__value" :style="{ color: famaColor }">{{ famaLabel }}</span><span class="stat__label">Reputación</span></div>
         </div>
 
         <div class="resumen__section">
@@ -187,6 +199,19 @@ async function copiarResumenComoImagen() {
               <span class="trophy-card__name">{{ t.nombre }}</span>
               <span v-if="t.cantidad > 1" class="trophy-card__count">×{{ t.cantidad }}</span>
             </span>
+          </div>
+        </div>
+
+        <div v-if="career.rival && rivalEquipo" class="resumen__section">
+          <h5 class="resumen__section-title">Tu rival</h5>
+          <p class="resumen__empty">Un {{ rivalPosicionNombre }} de {{ rivalEquipo.nombre }} — empezó su carrera el mismo día que vos.</p>
+          <div class="resumen__stats">
+            <div class="stat"><span class="stat__value">{{ resumen.goles }}</span><span class="stat__label">Tus goles</span></div>
+            <div class="stat"><span class="stat__value">{{ career.rival.golesCarrera }}</span><span class="stat__label">Sus goles</span></div>
+            <div class="stat"><span class="stat__value">{{ resumen.asistencias }}</span><span class="stat__label">Tus asist.</span></div>
+            <div class="stat"><span class="stat__value">{{ career.rival.asistenciasCarrera }}</span><span class="stat__label">Sus asist.</span></div>
+            <div class="stat"><span class="stat__value">{{ resumen.mayorOvr }}</span><span class="stat__label">Tu pico OVR</span></div>
+            <div class="stat"><span class="stat__value">{{ career.rival.ovrPico }}</span><span class="stat__label">Su pico OVR</span></div>
           </div>
         </div>
       </div>

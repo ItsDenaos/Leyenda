@@ -65,6 +65,10 @@ export interface EfectosOpcion {
   rendimiento: number;
   forma: Forma;
   equipo: number;
+  // Opcional — queda en 0 si no se especifica. Solo tiene valores reales
+  // curados a mano en las opciones de eventos con personajes: ["prensa"]
+  // (ver FAMA_* en config.ts y career.ts:resolveDecisionEvento).
+  fama?: number;
 }
 
 export interface OpcionEvento {
@@ -133,8 +137,8 @@ export const GameEvents: GameEventsShape = {
       id: "gen-02", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un periodista te pregunta en conferencia sobre los rumores de fichaje de un compañero.",
       opciones: [
-        { texto: "Responder con humor y evitar el tema", efectos: { rendimiento: -1, forma: "animado", equipo: 0 }, resultado: "La prensa se ríe y pasa al siguiente tema sin problemas." },
-        { texto: "Dar una respuesta seria y directa", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Tu respuesta genera más preguntas incómodas en el vestuario." },
+        { texto: "Responder con humor y evitar el tema", efectos: { rendimiento: -1, forma: "animado", equipo: 0, fama: 1 }, resultado: "La prensa se ríe y pasa al siguiente tema sin problemas." },
+        { texto: "Dar una respuesta seria y directa", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 2 }, resultado: "Tu respuesta genera más preguntas incómodas en el vestuario." },
       ],
     },
     {
@@ -214,8 +218,8 @@ export const GameEvents: GameEventsShape = {
       id: "gen-12", tipo: "personal", personajes: ["prensa"],
       pregunta: "Te ofrecen participar en un documental sobre jugadores jóvenes del club.",
       opciones: [
-        { texto: "Participar en el documental", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Ganas exposición mediática y algunos elogios por tu perfil." },
-        { texto: "Declinar la propuesta", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Prefieres mantener bajo perfil fuera de la cancha." },
+        { texto: "Participar en el documental", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 3 }, resultado: "Ganas exposición mediática y algunos elogios por tu perfil." },
+        { texto: "Declinar la propuesta", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 0 }, resultado: "Prefieres mantener bajo perfil fuera de la cancha." },
       ],
     },
     {
@@ -294,8 +298,8 @@ export const GameEvents: GameEventsShape = {
       id: "gen-22", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un medio deportivo te pide una nota íntima sobre tus comienzos en el fútbol.",
       opciones: [
-        { texto: "Aceptar contar tu historia", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "La nota emociona a muchos hinchas y mejora tu imagen pública." },
-        { texto: "Preferir mantener tu vida privada reservada", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Evitas la exposición mediática, manteniendo tu perfil bajo." },
+        { texto: "Aceptar contar tu historia", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 3 }, resultado: "La nota emociona a muchos hinchas y mejora tu imagen pública." },
+        { texto: "Preferir mantener tu vida privada reservada", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 0 }, resultado: "Evitas la exposición mediática, manteniendo tu perfil bajo." },
       ],
     },
     {
@@ -376,8 +380,8 @@ export const GameEvents: GameEventsShape = {
       id: "gen-32", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un rumor falso sobre tu vida personal circula en redes sociales.",
       opciones: [
-        { texto: "Aclarar la situación públicamente", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "El desmentido calma la situación, aunque genera algo de desgaste." },
-        { texto: "Ignorar el rumor por completo", efectos: { rendimiento: 0, forma: "desanimado", equipo: 1 }, resultado: "El rumor sigue circulando, aunque decides no darle más importancia." },
+        { texto: "Aclarar la situación públicamente", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: -1 }, resultado: "El desmentido calma la situación, aunque genera algo de desgaste." },
+        { texto: "Ignorar el rumor por completo", efectos: { rendimiento: 0, forma: "desanimado", equipo: 1, fama: 0 }, resultado: "El rumor sigue circulando, aunque decides no darle más importancia." },
       ],
     },
     {
@@ -457,8 +461,8 @@ export const GameEvents: GameEventsShape = {
       id: "gen-42", tipo: "personal", personajes: ["prensa"],
       pregunta: "Te invitan a un programa de televisión deportivo para debatir sobre la actualidad del fútbol.",
       opciones: [
-        { texto: "Aceptar la invitación", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Ganas exposición mediática y algunos elogios por tu criterio." },
-        { texto: "Declinar por falta de tiempo", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Prefieres mantenerte enfocado en lo puramente deportivo." },
+        { texto: "Aceptar la invitación", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 3 }, resultado: "Ganas exposición mediática y algunos elogios por tu criterio." },
+        { texto: "Declinar por falta de tiempo", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 0 }, resultado: "Prefieres mantenerte enfocado en lo puramente deportivo." },
       ],
     },
     {
@@ -587,8 +591,8 @@ export const GameEvents: GameEventsShape = {
       id: "gen-58", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un canal internacional te pide una entrevista sobre tu vida fuera del fútbol.",
       opciones: [
-        { texto: "Aceptar y mostrar tu lado más personal", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "La entrevista humaniza tu imagen ante el público." },
-        { texto: "Mantener el hermetismo habitual", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Prefieres que hablen solo tus actuaciones en la cancha." },
+        { texto: "Aceptar y mostrar tu lado más personal", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 3 }, resultado: "La entrevista humaniza tu imagen ante el público." },
+        { texto: "Mantener el hermetismo habitual", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 0 }, resultado: "Prefieres que hablen solo tus actuaciones en la cancha." },
       ],
     },
     {
@@ -667,8 +671,8 @@ export const GameEvents: GameEventsShape = {
       id: "gen-68", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un periodista insinúa en una nota que estás perdiendo motivación.",
       opciones: [
-        { texto: "Desmentirlo con hechos en la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1 }, resultado: "Tu reacción en el campo calla cualquier especulación." },
-        { texto: "No responder y seguir como siempre", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Dejas que los rumores se disipen solos, con el tiempo." },
+        { texto: "Desmentirlo con hechos en la cancha", efectos: { rendimiento: 2, forma: "inspirado", equipo: -1, fama: 2 }, resultado: "Tu reacción en el campo calla cualquier especulación." },
+        { texto: "No responder y seguir como siempre", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 0 }, resultado: "Dejas que los rumores se disipen solos, con el tiempo." },
       ],
     },
     {
@@ -747,8 +751,8 @@ export const GameEvents: GameEventsShape = {
       id: "gen-78", tipo: "personal", personajes: ["prensa"],
       pregunta: "Se viraliza un video antiguo tuyo celebrando de forma exagerada un gol amistoso.",
       opciones: [
-        { texto: "Reírte del momento públicamente", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "El video se convierte en un momento simpático y viral." },
-        { texto: "Pedir que se elimine el contenido", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Evitas la exposición, aunque el video ya circuló bastante." },
+        { texto: "Reírte del momento públicamente", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 2 }, resultado: "El video se convierte en un momento simpático y viral." },
+        { texto: "Pedir que se elimine el contenido", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: -1 }, resultado: "Evitas la exposición, aunque el video ya circuló bastante." },
       ],
     },
     {
@@ -827,8 +831,8 @@ export const GameEvents: GameEventsShape = {
       id: "gen-88", tipo: "personal", personajes: ["prensa"],
       pregunta: "Te acusan sin fundamento de haber favorecido a un compañero en la repartición de minutos.",
       opciones: [
-        { texto: "Aclarar la situación con calma", efectos: { rendimiento: -1, forma: "regular", equipo: 1 }, resultado: "La aclaración disuelve rápidamente el malentendido." },
-        { texto: "Ignorar la acusación por completo", efectos: { rendimiento: 1, forma: "desanimado", equipo: -1 }, resultado: "El rumor sigue circulando dentro y fuera del vestuario." },
+        { texto: "Aclarar la situación con calma", efectos: { rendimiento: -1, forma: "regular", equipo: 1, fama: 0 }, resultado: "La aclaración disuelve rápidamente el malentendido." },
+        { texto: "Ignorar la acusación por completo", efectos: { rendimiento: 1, forma: "desanimado", equipo: -1, fama: -2 }, resultado: "El rumor sigue circulando dentro y fuera del vestuario." },
       ],
     },
     {
@@ -962,8 +966,8 @@ export const GameEvents: GameEventsShape = {
         id: "nov-04", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un medio te define como \"la próxima gran promesa\" del club.",
         opciones: [
-          { texto: "Disfrutar la exposición con humildad", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Manejas bien la presión mediática desde el primer momento." },
-          { texto: "Evitar leer o comentar la nota", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Prefieres mantenerte al margen del ruido mediático." },
+          { texto: "Disfrutar la exposición con humildad", efectos: { rendimiento: 1, forma: "animado", equipo: -1, fama: 3 }, resultado: "Manejas bien la presión mediática desde el primer momento." },
+          { texto: "Evitar leer o comentar la nota", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 1 }, resultado: "Prefieres mantenerte al margen del ruido mediático." },
         ],
       },
       {
@@ -1035,8 +1039,8 @@ export const GameEvents: GameEventsShape = {
         noDuranteLesion: true,
         pregunta: "Recibes tu primera crítica dura de un periodista tras un partido flojo.",
         opciones: [
-          { texto: "Tomarla como aprendizaje y seguir adelante", efectos: { rendimiento: 1, forma: "animado", equipo: -1 }, resultado: "Usas la crítica como combustible para mejorar cada día." },
-          { texto: "Sentirte muy afectado por la crítica", efectos: { rendimiento: -1, forma: "bajo", equipo: 1 }, resultado: "La crítica te pesa más de lo que esperabas en los días siguientes." },
+          { texto: "Tomarla como aprendizaje y seguir adelante", efectos: { rendimiento: 1, forma: "animado", equipo: -1, fama: 1 }, resultado: "Usas la crítica como combustible para mejorar cada día." },
+          { texto: "Sentirte muy afectado por la crítica", efectos: { rendimiento: -1, forma: "bajo", equipo: 1, fama: 0 }, resultado: "La crítica te pesa más de lo que esperabas en los días siguientes." },
         ],
       },
       {
@@ -1101,8 +1105,8 @@ export const GameEvents: GameEventsShape = {
         id: "nov-21", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un video tuyo entrenando se viraliza y de la noche a la mañana ganas miles de seguidores.",
         opciones: [
-          { texto: "Manejar tus redes con cabeza fría", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Aprovechas la ola de popularidad sin perder el foco." },
-          { texto: "Dejarte absorber por la nueva atención", efectos: { rendimiento: -1, forma: "regular", equipo: 1 }, resultado: "Te distraes más de lo que esperabas con las redes sociales." },
+          { texto: "Manejar tus redes con cabeza fría", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 3 }, resultado: "Aprovechas la ola de popularidad sin perder el foco." },
+          { texto: "Dejarte absorber por la nueva atención", efectos: { rendimiento: -1, forma: "regular", equipo: 1, fama: 3 }, resultado: "Te distraes más de lo que esperabas con las redes sociales." },
         ],
       },
       {
@@ -1165,8 +1169,8 @@ export const GameEvents: GameEventsShape = {
         id: "nov-29", tipo: "personal", personajes: ["prensa"],
         pregunta: "Te invitan a tu primera conferencia de prensa importante como profesional.",
         opciones: [
-          { texto: "Prepararte a fondo para las preguntas", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Manejas la conferencia con una soltura sorprendente." },
-          { texto: "Ir sin mayor preparación", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Respondes con nervios, aunque sin mayores inconvenientes." },
+          { texto: "Prepararte a fondo para las preguntas", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 2 }, resultado: "Manejas la conferencia con una soltura sorprendente." },
+          { texto: "Ir sin mayor preparación", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 0 }, resultado: "Respondes con nervios, aunque sin mayores inconvenientes." },
         ],
       },
       {
@@ -1265,8 +1269,8 @@ export const GameEvents: GameEventsShape = {
         id: "prom-06", tipo: "personal", personajes: ["prensa"],
         pregunta: "Te ofrecen un espacio fijo como comentarista en un programa deportivo.",
         opciones: [
-          { texto: "Aceptar el nuevo espacio mediático", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Disfrutas la nueva faceta, aunque te resta algo de tiempo libre." },
-          { texto: "Rechazar para enfocarte solo en lo deportivo", efectos: { rendimiento: 1, forma: "regular", equipo: -1 }, resultado: "Mantienes el máximo foco en tu rendimiento en cancha." },
+          { texto: "Aceptar el nuevo espacio mediático", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 3 }, resultado: "Disfrutas la nueva faceta, aunque te resta algo de tiempo libre." },
+          { texto: "Rechazar para enfocarte solo en lo deportivo", efectos: { rendimiento: 1, forma: "regular", equipo: -1, fama: 0 }, resultado: "Mantienes el máximo foco en tu rendimiento en cancha." },
         ],
       },
       {
@@ -1329,8 +1333,8 @@ export const GameEvents: GameEventsShape = {
         id: "prom-14", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un periodista te pregunta directamente si te ves como el próximo capitán del club.",
         opciones: [
-          { texto: "Responder con ambición y seguridad", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Tu declaración genera expectativas positivas en el entorno del club." },
-          { texto: "Responder con humildad, sin adelantar nada", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Evitas generar presión extra sobre ti mismo." },
+          { texto: "Responder con ambición y seguridad", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1, fama: 2 }, resultado: "Tu declaración genera expectativas positivas en el entorno del club." },
+          { texto: "Responder con humildad, sin adelantar nada", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 1 }, resultado: "Evitas generar presión extra sobre ti mismo." },
         ],
       },
       {
@@ -1402,8 +1406,8 @@ export const GameEvents: GameEventsShape = {
         id: "prom-23", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un exfutbolista reconocido te critica públicamente en un programa de televisión.",
         opciones: [
-          { texto: "Responder con respeto y argumentos", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Tu respuesta madura te gana el respeto del público." },
-          { texto: "Ignorar completamente la crítica", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "La crítica sigue circulando sin que la enfrentes." },
+          { texto: "Responder con respeto y argumentos", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 2 }, resultado: "Tu respuesta madura te gana el respeto del público." },
+          { texto: "Ignorar completamente la crítica", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 0 }, resultado: "La crítica sigue circulando sin que la enfrentes." },
         ],
       },
       {
@@ -1482,8 +1486,8 @@ export const GameEvents: GameEventsShape = {
         id: "prom-33", tipo: "personal", personajes: ["prensa"],
         pregunta: "Te consultan tu opinión sobre un tema social delicado que divide a la opinión pública.",
         opciones: [
-          { texto: "Dar tu opinión con responsabilidad", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Tu postura genera respeto, aunque también algo de polémica." },
-          { texto: "Evitar opinar sobre temas fuera del fútbol", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Prefieres mantener tu imagen alejada de la polémica." },
+          { texto: "Dar tu opinión con responsabilidad", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 1 }, resultado: "Tu postura genera respeto, aunque también algo de polémica." },
+          { texto: "Evitar opinar sobre temas fuera del fútbol", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 0 }, resultado: "Prefieres mantener tu imagen alejada de la polémica." },
         ],
       },
       {
@@ -1518,8 +1522,8 @@ export const GameEvents: GameEventsShape = {
         id: "vet-02", tipo: "personal", personajes: ["prensa"],
         pregunta: "La prensa empieza a preguntarte reiteradamente sobre tu fecha de retiro.",
         opciones: [
-          { texto: "Hablar abiertamente sobre tus planes", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "La transparencia calma la especulación mediática por un tiempo." },
-          { texto: "Evitar el tema por completo", efectos: { rendimiento: 0, forma: "desanimado", equipo: 1 }, resultado: "Las preguntas sobre tu retiro siguen apareciendo constantemente." },
+          { texto: "Hablar abiertamente sobre tus planes", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 1 }, resultado: "La transparencia calma la especulación mediática por un tiempo." },
+          { texto: "Evitar el tema por completo", efectos: { rendimiento: 0, forma: "desanimado", equipo: 1, fama: 0 }, resultado: "Las preguntas sobre tu retiro siguen apareciendo constantemente." },
         ],
       },
       {
@@ -1606,8 +1610,8 @@ export const GameEvents: GameEventsShape = {
         id: "vet-13", tipo: "personal", personajes: ["prensa"],
         pregunta: "Te consultan si te gustaría dedicarte al periodismo deportivo tras retirarte.",
         opciones: [
-          { texto: "Mostrar interés genuino en esa posibilidad", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "Empiezas a visualizar con entusiasmo tu futuro fuera de las canchas." },
-          { texto: "Descartar esa idea por completo", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "Prefieres pensar en otras alternativas para tu vida después del retiro." },
+          { texto: "Mostrar interés genuino en esa posibilidad", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 1 }, resultado: "Empiezas a visualizar con entusiasmo tu futuro fuera de las canchas." },
+          { texto: "Descartar esa idea por completo", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 0 }, resultado: "Prefieres pensar en otras alternativas para tu vida después del retiro." },
         ],
       },
       {
@@ -1710,8 +1714,8 @@ export const GameEvents: GameEventsShape = {
         id: "vet-26", tipo: "personal", personajes: ["prensa"],
         pregunta: "Un documental sobre tu carrera busca tu autorización para contar tu historia completa.",
         opciones: [
-          { texto: "Autorizar el documental sin filtros", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "El documental se convierte en un homenaje muy sentido a tu carrera." },
-          { texto: "Pedir controlar qué partes se cuentan", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0 }, resultado: "El documental avanza, aunque con algunas limitaciones acordadas." },
+          { texto: "Autorizar el documental sin filtros", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 3 }, resultado: "El documental se convierte en un homenaje muy sentido a tu carrera." },
+          { texto: "Pedir controlar qué partes se cuentan", efectos: { rendimiento: 1, forma: "desanimado", equipo: 0, fama: 2 }, resultado: "El documental avanza, aunque con algunas limitaciones acordadas." },
         ],
       },
       {
@@ -1788,16 +1792,16 @@ export const GameEvents: GameEventsShape = {
       id: "ai-01", tipo: "personal", personajes: ["pareja", "prensa"],
       pregunta: "Se filtra en los medios que tu pareja te fue infiel y la noticia explota justo antes de un partido decisivo.",
       opciones: [
-        { texto: "Pedir unos días para poner en orden tu cabeza", efectos: { rendimiento: -4, forma: "bajo", equipo: -2 }, resultado: "Te alejas unos días para procesar el golpe, pero el equipo siente tu ausencia." },
-        { texto: "Salir a jugar igual, tragándote el dolor", efectos: { rendimiento: -2, forma: "desanimado", equipo: -3 }, resultado: "Rindes por debajo de tu nivel, con la cabeza en otro lado." },
+        { texto: "Pedir unos días para poner en orden tu cabeza", efectos: { rendimiento: -4, forma: "bajo", equipo: -2, fama: -2 }, resultado: "Te alejas unos días para procesar el golpe, pero el equipo siente tu ausencia." },
+        { texto: "Salir a jugar igual, tragándote el dolor", efectos: { rendimiento: -2, forma: "desanimado", equipo: -3, fama: -1 }, resultado: "Rindes por debajo de tu nivel, con la cabeza en otro lado." },
       ],
     },
     {
       id: "ai-02", tipo: "deportivo", personajes: ["companeros", "prensa"],
       pregunta: "Una fiesta del plantel se descontrola y termina en fotos comprometedoras que llegan a la prensa la semana de un clásico.",
       opciones: [
-        { texto: "Asumir públicamente el error y pedir disculpas", efectos: { rendimiento: -2, forma: "desanimado", equipo: -1 }, resultado: "El club te sanciona económicamente, pero valora tu autocrítica." },
-        { texto: "Negar tu participación en la fiesta", efectos: { rendimiento: -1, forma: "bajo", equipo: -3 }, resultado: "La mentira se descubre después y el vestuario pierde la confianza en ti." },
+        { texto: "Asumir públicamente el error y pedir disculpas", efectos: { rendimiento: -2, forma: "desanimado", equipo: -1, fama: -2 }, resultado: "El club te sanciona económicamente, pero valora tu autocrítica." },
+        { texto: "Negar tu participación en la fiesta", efectos: { rendimiento: -1, forma: "bajo", equipo: -3, fama: -4 }, resultado: "La mentira se descubre después y el vestuario pierde la confianza en ti." },
       ],
     },
     {
@@ -1884,8 +1888,8 @@ export const GameEvents: GameEventsShape = {
       id: "ai-13", tipo: "personal", personajes: ["prensa", "agente"],
       pregunta: "Una foto tuya, sacada de contexto, se viraliza y genera un escándalo mediático nacional.",
       opciones: [
-        { texto: "Dar una conferencia de prensa para aclarar todo", efectos: { rendimiento: 0, forma: "regular", equipo: -2 }, resultado: "La aclaración calma bastante la situación mediática." },
-        { texto: "Guardar silencio absoluto", efectos: { rendimiento: -2, forma: "bajo", equipo: -1 }, resultado: "El silencio alimenta más rumores y la presión mediática crece." },
+        { texto: "Dar una conferencia de prensa para aclarar todo", efectos: { rendimiento: 0, forma: "regular", equipo: -2, fama: -1 }, resultado: "La aclaración calma bastante la situación mediática." },
+        { texto: "Guardar silencio absoluto", efectos: { rendimiento: -2, forma: "bajo", equipo: -1, fama: -3 }, resultado: "El silencio alimenta más rumores y la presión mediática crece." },
       ],
     },
     {
@@ -1900,8 +1904,8 @@ export const GameEvents: GameEventsShape = {
       id: "ai-15", tipo: "personal", personajes: ["prensa"],
       pregunta: "Un periodista publica una nota falsa y difamatoria sobre tu vida privada.",
       opciones: [
-        { texto: "Iniciar acciones legales contra el medio", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "La justicia te da la razón y tu imagen se limpia con el tiempo." },
-        { texto: "Dejarlo pasar para no alimentar la polémica", efectos: { rendimiento: -1, forma: "desanimado", equipo: 1 }, resultado: "La mentira queda instalada en una parte de la opinión pública." },
+        { texto: "Iniciar acciones legales contra el medio", efectos: { rendimiento: 0, forma: "animado", equipo: -1, fama: 1 }, resultado: "La justicia te da la razón y tu imagen se limpia con el tiempo." },
+        { texto: "Dejarlo pasar para no alimentar la polémica", efectos: { rendimiento: -1, forma: "desanimado", equipo: 1, fama: -2 }, resultado: "La mentira queda instalada en una parte de la opinión pública." },
       ],
     },
     {
@@ -1941,16 +1945,16 @@ export const GameEvents: GameEventsShape = {
       id: "ai-20", tipo: "deportivo", personajes: ["rival", "prensa"],
       pregunta: "Te cruzas por casualidad con un rival directo fuera de la cancha y la discusión casi termina a golpes.",
       opciones: [
-        { texto: "Retirarte de la situación antes de que escale", efectos: { rendimiento: 0, forma: "regular", equipo: -3 }, resultado: "Evitas un escándalo mayor con una salida a tiempo." },
-        { texto: "Responder a la provocación físicamente", efectos: { rendimiento: -3, forma: "bajo", equipo: -2 }, resultado: "El escándalo mediático te cuesta una sanción disciplinaria seria." },
+        { texto: "Retirarte de la situación antes de que escale", efectos: { rendimiento: 0, forma: "regular", equipo: -3, fama: 0 }, resultado: "Evitas un escándalo mayor con una salida a tiempo." },
+        { texto: "Responder a la provocación físicamente", efectos: { rendimiento: -3, forma: "bajo", equipo: -2, fama: -3 }, resultado: "El escándalo mediático te cuesta una sanción disciplinaria seria." },
       ],
     },
     {
       id: "ai-21", tipo: "personal", personajes: ["prensa", "agente"],
       pregunta: "Te detienen conduciendo bajo los efectos del alcohol después de una celebración con amigos.",
       opciones: [
-        { texto: "Asumir públicamente el error y pedir disculpas", efectos: { rendimiento: -2, forma: "desanimado", equipo: -4 }, resultado: "El club te sanciona, pero valora que hayas dado la cara." },
-        { texto: "Intentar minimizar el episodio ante la prensa", efectos: { rendimiento: -3, forma: "bajo", equipo: -3 }, resultado: "La estrategia de minimizar el hecho te sale muy cara en imagen." },
+        { texto: "Asumir públicamente el error y pedir disculpas", efectos: { rendimiento: -2, forma: "desanimado", equipo: -4, fama: -2 }, resultado: "El club te sanciona, pero valora que hayas dado la cara." },
+        { texto: "Intentar minimizar el episodio ante la prensa", efectos: { rendimiento: -3, forma: "bajo", equipo: -3, fama: -4 }, resultado: "La estrategia de minimizar el hecho te sale muy cara en imagen." },
       ],
     },
     {
