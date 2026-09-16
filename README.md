@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Aplicación web de una sola página (SPA), sin backend ni base de datos externa: todo el motor corre en el navegador, en **Vue 3 + TypeScript + Pinia + Vite**.
 
-**Versión:** 1.1.3 — publicada el 15 de septiembre de 2026 · 17:31.
+**Versión:** 1.2.0 — publicada el 16 de septiembre de 2026 · 11:33.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscás "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -164,12 +164,12 @@ Formulario de 3 pasos (acordeón en móvil, los 3 siempre abiertos en escritorio
 | Paso | Campo | Detalle |
 |---|---|---|
 | 1. ¿Quién eres? | Apellido | Texto libre, máx. 16 caracteres, se muestra en mayúsculas en la camiseta. |
-| | Edad | Botones de **16 a 19 años** (`GameConfig.EDAD_MIN`/`EDAD_MAX`, [config.ts:385-386](app/src/game/config.ts:385)). |
+| | Edad | Botones de **16 a 19 años** (`GameConfig.EDAD_MIN`/`EDAD_MAX`, [config.ts:393-394](app/src/game/config.ts:393)). |
 | | Pierna hábil | Izquierda / derecha — **no afecta ninguna fórmula del juego**, es solo cosmético (se guarda pero no se lee en ningún cálculo). |
 | 2. ¿De dónde eres? | País | 46 países (`COUNTRIES`, [data/countries.ts:12](app/src/data/countries.ts:12)), con buscador. Define bandera y, en el paso siguiente, el pool de clubes iniciales. |
 | 3. ¿Dónde juegas? | Posición | 12 posiciones sobre una cancha (`FILAS_CANCHA`, [PersonajeView.vue:31](app/src/views/PersonajeView.vue:31)): POR, DFC, LI, LD, MCD, MC, MI, MD, MCO, EI, ED, DC. |
 
-El **dorsal** se asigna solo al azar, no se elige — pero no parejo entre 1 y 99 (así, un debutante tenía la misma chance de arrancar con el 7 que con el 87, nada realista). `sortearDorsalInicial()` ([config.ts:398](app/src/game/config.ts:398), llamado desde [PersonajeView.vue:59](app/src/views/PersonajeView.vue:59)) sortea por bandas: **70%** de las carreras arranca con un número común (**1-30**), **20%** con uno menos común (**31-50**), y solo el **10%** restante con uno alto (**51-99**) — el caso ocasional, no la norma. Recién se puede pedir cambiarlo al cerrar la primera temporada (ver [sección 18](#18-solicitud-de-cambio-de-dorsal)).
+El **dorsal** se asigna solo al azar, no se elige — pero no parejo entre 1 y 99 (así, un debutante tenía la misma chance de arrancar con el 7 que con el 87, nada realista). `sortearDorsalInicial()` ([config.ts:406](app/src/game/config.ts:406), llamado desde [PersonajeView.vue:59](app/src/views/PersonajeView.vue:59)) sortea por bandas: **70%** de las carreras arranca con un número común (**1-30**), **20%** con uno menos común (**31-50**), y solo el **10%** restante con uno alto (**51-99**) — el caso ocasional, no la norma. Recién se puede pedir cambiarlo al cerrar la primera temporada (ver [sección 18](#18-solicitud-de-cambio-de-dorsal)).
 
 Al completar los 3 pasos y tocar "Comenzar carrera", se guarda un borrador en `localStorage["leyendaPlayerDraft"]` (`savePlayerDraft`, [game/player-draft.ts:11](app/src/game/player-draft.ts:11), llamado desde [PersonajeView.vue:165](app/src/views/PersonajeView.vue:165)):
 
@@ -186,19 +186,19 @@ y se navega a `/equipo`. Es un borrador intermedio, no la carrera en sí — se 
 
 Se presentan **4 ofertas de club**, elegidas así (`generarOfertasInicialesParaJugador`, [game/initial-offers.ts:23](app/src/game/initial-offers.ts:23)):
 
-- **Si el país elegido tiene una liga propia** en la base de datos (**23 de los 46** países de la creación de personaje, desde Alemania/Argentina/España hasta Bolivia/Costa Rica/Paraguay — todas las que tienen `pais` cargado en `GameDatabase.ligas`, ver [sección 21](#21-base-de-datos-de-ligas-y-equipos-datadatabasets)), las 4 ofertas salen de esa liga, en esta banda fija (`OFERTAS_INICIALES`, [config.ts:497-502](app/src/game/config.ts:497), aplicada por `generarOfertasIniciales`, [config.ts:587](app/src/game/config.ts:587)):
+- **Si el país elegido tiene una liga propia** en la base de datos (**23 de los 46** países de la creación de personaje, desde Alemania/Argentina/España hasta Bolivia/Costa Rica/Paraguay — todas las que tienen `pais` cargado en `GameDatabase.ligas`, ver [sección 21](#21-base-de-datos-de-ligas-y-equipos-datadatabasets)), las 4 ofertas salen de esa liga, en esta banda fija (`OFERTAS_INICIALES`, [config.ts:505-510](app/src/game/config.ts:505), aplicada por `generarOfertasIniciales`, [config.ts:595](app/src/game/config.ts:595)):
   - 2 clubes **humildes** (mitad de abajo por poder, dentro de esa liga)
   - 1 club **consolidado** (entre el 50% y el 85% por poder)
   - 1 club **al azar**, de cualquier categoría (la única chance de arrancar en un club grande)
-- **Si el país NO tiene liga propia** (los otros 23 — mayormente africanos, asiáticos y del resto de Europa que todavía no tienen liga doméstica cargada), arranca "de extranjero" en una de las **5 grandes ligas europeas** elegida al azar (Premier League, La Liga, Serie A, Bundesliga, Ligue 1 — `LIGAS_GRANDES_EUROPEAS`, [config.ts](app/src/game/config.ts)), con una banda más floja y sin favores (`OFERTAS_INICIALES_EXTRANJERO`, [config.ts:504-509](app/src/game/config.ts:504), aplicada por `generarOfertasInicialesExtranjero`, [config.ts:593](app/src/game/config.ts:593)): 3 clubes humildes + 1 consolidado, nunca uno grande.
+- **Si el país NO tiene liga propia** (los otros 23 — mayormente africanos, asiáticos y del resto de Europa que todavía no tienen liga doméstica cargada), arranca "de extranjero" en una de las **5 grandes ligas europeas** elegida al azar (Premier League, La Liga, Serie A, Bundesliga, Ligue 1 — `LIGAS_GRANDES_EUROPEAS`, [config.ts](app/src/game/config.ts)), con una banda más floja y sin favores (`OFERTAS_INICIALES_EXTRANJERO`, [config.ts:512-517](app/src/game/config.ts:512), aplicada por `generarOfertasInicialesExtranjero`, [config.ts:601](app/src/game/config.ts:601)): 3 clubes humildes + 1 consolidado, nunca uno grande.
 
-"Humilde" / "consolidado" / "grande" son percentiles por poder **dentro de la liga elegida** (`categoriaEquipoEnLiga`, [config.ts:554](app/src/game/config.ts:554) — ver [sección 16.6](#16-sistema-de-fichajes-y-ofertas) para qué es el poder de un club), no una categoría fija guardada en cada club: humilde es la mitad de abajo, consolidado el 50-85%, grande el 15% de arriba (`CATEGORIA_EQUIPO_PERCENTIL`, [config.ts:495](app/src/game/config.ts:495)).
+"Humilde" / "consolidado" / "grande" son percentiles por poder **dentro de la liga elegida** (`categoriaEquipoEnLiga`, [config.ts:562](app/src/game/config.ts:562) — ver [sección 16.6](#16-sistema-de-fichajes-y-ofertas) para qué es el poder de un club), no una categoría fija guardada en cada club: humilde es la mitad de abajo, consolidado el 50-85%, grande el 15% de arriba (`CATEGORIA_EQUIPO_PERCENTIL`, [config.ts:503](app/src/game/config.ts:503)).
 
-El **OVR inicial** con el que arrancarías en cada club se calcula recién al elegirlo, con `calcularOvrInicial(equipo, liga)` ([config.ts:532](app/src/game/config.ts:532)):
+El **OVR inicial** con el que arrancarías en cada club se calcula recién al elegirlo, con `calcularOvrInicial(equipo, liga)` ([config.ts:540](app/src/game/config.ts:540)):
 
-1. Se combina el poder del equipo y el de la liga con pesos fijos: **55% equipo + 45% liga** (`OVR_PESO_EQUIPO`/`OVR_PESO_LIGA`, `calidadPoderCombinada`, [config.ts:464-477](app/src/game/config.ts:464)), normalizado a una escala 0..1.
-2. Ese 0..1 se mapea al rango **50–65** (`OVR_INICIAL_MIN`/`MAX`, [config.ts:459-460](app/src/game/config.ts:459)) — un novato, por definición, nunca arranca más alto que eso, sin importar cuán grande sea el club.
-3. Se le suma una "suerte" aleatoria de hasta ±4 puntos (`OVR_SUERTE_VARIACION`, [config.ts:468](app/src/game/config.ts:468)) y se redondea, recortado siempre entre 50 y 65.
+1. Se combina el poder del equipo y el de la liga con pesos fijos: **55% equipo + 45% liga** (`OVR_PESO_EQUIPO`/`OVR_PESO_LIGA`, `calidadPoderCombinada`, [config.ts:472-485](app/src/game/config.ts:472)), normalizado a una escala 0..1.
+2. Ese 0..1 se mapea al rango **50–65** (`OVR_INICIAL_MIN`/`MAX`, [config.ts:467-468](app/src/game/config.ts:467)) — un novato, por definición, nunca arranca más alto que eso, sin importar cuán grande sea el club.
+3. Se le suma una "suerte" aleatoria de hasta ±4 puntos (`OVR_SUERTE_VARIACION`, [config.ts:476](app/src/game/config.ts:476)) y se redondea, recortado siempre entre 50 y 65.
 
 El jugador nunca ve estos números crudos: en la tarjeta de oferta solo se muestra el nombre del club/liga, su escudo y su bandera — sin ninguna etiqueta de "qué tan grande es", a diferencia de versiones anteriores.
 
@@ -208,7 +208,7 @@ Al elegir un club se completa el borrador de `localStorage["leyendaPlayerDraft"]
 
 ## 6. El motor de carrera — visión general (`stores/career.ts`)
 
-Es un store de Pinia (`useCareerStore`, [career.ts:109](app/src/stores/career.ts:109), 1200+ líneas): concentra el **estado del juego** y **toda la simulación**, pero a propósito **no** el render — eso vive en los componentes de `components/carrera/`/`views/CarreraView.vue` (ver [sección 22](#22-interfaz-componentes-animaciones-y-responsive)), que reaccionan solos a los cambios de este estado en vez de que el motor tenga que "pintar" nada él mismo. Es la separación de capas que la versión original no tenía.
+Es un store de Pinia (`useCareerStore`, [career.ts:113](app/src/stores/career.ts:113), 1200+ líneas): concentra el **estado del juego** y **toda la simulación**, pero a propósito **no** el render — eso vive en los componentes de `components/carrera/`/`views/CarreraView.vue` (ver [sección 22](#22-interfaz-componentes-animaciones-y-responsive)), que reaccionan solos a los cambios de este estado en vez de que el motor tenga que "pintar" nada él mismo. Es la separación de capas que la versión original no tenía.
 
 ### Estado central
 
@@ -221,11 +221,11 @@ const carreraFinalizada = ref(false)
 const edadRetiroForzoso = ref(0)                              // se sortea (41-45) al arrancar la carrera, en iniciarCarrera()
 ```
 
-`temporadaActual` (creada por `crearTemporada()`, [career.ts:135](app/src/stores/career.ts:135), con su forma completa tipada en `Temporada`, [career-types.ts:106](app/src/game/career-types.ts:106)) contiene, entre otras cosas: `numero`, `anio`, `equipoId`, `clubDuenoId` (no-null solo si estás a préstamo — ver [sección 16.9](#169-préstamos)), `ovr`, `partidos/goles/asistencias/mvp/sumaRating/promedio`, `valorMercado`, `trofeos[]`, `forma`, `titular`, `progreso` (0–100%), `calendario[]`, `checkpointIndex`, `tramoIndex`, `lesionActiva`, `bufferRendimiento`/`bufferEquipo` (efecto acumulado de las decisiones del tramo en curso, sin aplicar todavía), `competiciones` (liga + copa nacional + copa internacional de esa temporada) y todo lo de la selección nacional de esa temporada — `seleccion`, `tipoAnoSeleccion`, `convocatoriaPausa`, `seleccionPartidos`/`seleccionGoles` (ver [sección 19](#19-selección-nacional)).
+`temporadaActual` (creada por `crearTemporada()`, [career.ts:147](app/src/stores/career.ts:147), con su forma completa tipada en `Temporada`, [career-types.ts:117](app/src/game/career-types.ts:117)) contiene, entre otras cosas: `numero`, `anio`, `equipoId`, `clubDuenoId` (no-null solo si estás a préstamo — ver [sección 16.9](#169-préstamos)), `ovr`, `partidos/goles/asistencias/mvp/sumaRating/promedio`, `valorMercado`, `trofeos[]`, `forma`, `titular`, `progreso` (0–100%), `calendario[]`, `checkpointIndex`, `tramoIndex`, `lesionActiva`, `bufferRendimiento`/`bufferEquipo` (efecto acumulado de las decisiones del tramo en curso, sin aplicar todavía), `competiciones` (liga + copa nacional + copa internacional de esa temporada) y todo lo de la selección nacional de esa temporada — `seleccion`, `tipoAnoSeleccion`, `convocatoriaPausa`, `seleccionPartidos`/`seleccionGoles` (ver [sección 19](#19-selección-nacional)).
 
 `/carrera` está protegida por el router: si no hay una carrera activa en memoria ni guardada en `localStorage` (ver [sección 23](#23-persistencia-y-estado)), redirige a `/` en vez de arrancar nada — ya no existe el fallback de "carrera demo" que tenía la versión original para poder abrir esa pantalla directo sin pasar por la creación de personaje.
 
-**La edad sube 1 año por cada temporada, nunca dentro de una misma temporada** — `getEdadActual()` ([career.ts:129](app/src/stores/career.ts:129)):
+**La edad sube 1 año por cada temporada, nunca dentro de una misma temporada** — `getEdadActual()` ([career.ts:141](app/src/stores/career.ts:141)):
 
 ```
 edadActual = edad de creación + (número de temporada actual − 1)
@@ -237,9 +237,9 @@ Todas las fórmulas que dependen de la edad (crecimiento/declive de OVR, riesgo 
 
 ## 7. Calendario de temporada
 
-Cada temporada tiene **3 "tramos"** (`TOTAL_TRAMOS_TEMPORADA`, [config.ts:1043](app/src/game/config.ts:1043)) — bloques de partidos que se simulan de una vez — separados por pausas donde el jugador interactúa: 3 de decisiones y, a partir de la Temporada 2, **1 sola ventana de fichajes**.
+Cada temporada tiene **3 "tramos"** (`TOTAL_TRAMOS_TEMPORADA`, [config.ts:1060](app/src/game/config.ts:1060)) — bloques de partidos que se simulan de una vez — separados por pausas donde el jugador interactúa: 3 de decisiones y, a partir de la Temporada 2, **1 sola ventana de fichajes**.
 
-`crearCalendarioTemporada(numeroTemporada)` ([config.ts:1048](app/src/game/config.ts:1048)) arma:
+`crearCalendarioTemporada(numeroTemporada)` ([config.ts:1065](app/src/game/config.ts:1065)) arma:
 
 | Pausa | Momento (`progreso` %) | Nota |
 |---|---|---|
@@ -250,17 +250,17 @@ Cada temporada tiene **3 "tramos"** (`TOTAL_TRAMOS_TEMPORADA`, [config.ts:1043](
 
 Las 4 (o 3, en la Temporada 1) se ordenan por este `progreso` para que el calendario quede cronológico **al narrar la temporada** — pero ese número es solo para ordenar pausas, no es lo que se muestra en pantalla (ver más abajo). Cada pausa de decisión resuelta dispara la simulación del tramo siguiente (`simularTramoYAvanzar`) y avanza al próximo checkpoint (`avanzarCheckpoint`); al agotarse el calendario, se cierra la temporada (`finalizarTemporada`).
 
-**El progreso que ves en pantalla (anillo/barra) es otro número**: `temporadaActual.progreso` se recalcula en cada tramo como `partidosJugados / partidosMinimos` de la liga (`simularTramoYAvanzar`, [career.ts:595](app/src/stores/career.ts:595)), no a partir de la tabla de arriba — antes reusaba esos valores aleatorios de la tabla, así que la barra podía verse casi llena con 15 partidos jugados y saltar a más de 50% recién en el último tramo. Ahora sigue de cerca el avance real de partidos de liga (no puede ser 100% exacto porque la cantidad de partidos por tramo no es fija, pero da la ilusión correcta de avance).
+**El progreso que ves en pantalla (anillo/barra) es otro número**: `temporadaActual.progreso` se recalcula en cada tramo como `partidosJugados / partidosMinimos` de la liga (`simularTramoYAvanzar`, [career.ts:612](app/src/stores/career.ts:612)), no a partir de la tabla de arriba — antes reusaba esos valores aleatorios de la tabla, así que la barra podía verse casi llena con 15 partidos jugados y saltar a más de 50% recién en el último tramo. Ahora sigue de cerca el avance real de partidos de liga (no puede ser 100% exacto porque la cantidad de partidos por tramo no es fija, pero da la ilusión correcta de avance).
 
-**Por qué una sola ventana, y siempre en pretemporada**: antes había una segunda pausa de fichajes a mitad de año, lo que permitía que un traspaso partiera una temporada en dos (dos clubes distintos, dos filas de historial, el mismo año). Se sacó a propósito — ahora un fichaje (o un préstamo, ver [sección 16.9](#169-préstamos)) sale siempre con la temporada en cero (0 partidos jugados con el club nuevo) y la corres entera de punta a punta con ese club, tal como pasaría en la realidad con una ventana de pases real. `resolveOferta` ([career.ts:1008](app/src/stores/career.ts:1008)) no tiene ninguna rama de "traspaso a mitad de camino": cambiar de club siempre resetea `competiciones` (liga + copa nacional; la clasificación internacional NO se hereda, es del club, no del jugador) desde cero.
+**Por qué una sola ventana, y siempre en pretemporada**: antes había una segunda pausa de fichajes a mitad de año, lo que permitía que un traspaso partiera una temporada en dos (dos clubes distintos, dos filas de historial, el mismo año). Se sacó a propósito — ahora un fichaje (o un préstamo, ver [sección 16.9](#169-préstamos)) sale siempre con la temporada en cero (0 partidos jugados con el club nuevo) y la corres entera de punta a punta con ese club, tal como pasaría en la realidad con una ventana de pases real. `resolveOferta` ([career.ts:1119](app/src/stores/career.ts:1119)) no tiene ninguna rama de "traspaso a mitad de camino": cambiar de club siempre resetea `competiciones` (liga + copa nacional; la clasificación internacional NO se hereda, es del club, no del jugador) desde cero.
 
-**Alto Impacto**: al crear la temporada se sortea si va a haber un evento de alto impacto (30% de probabilidad) y, si sale, en cuál de los 3 tramos va a aparecer (`altoImpactoPausa`, [career.ts:135](app/src/stores/career.ts:135), dentro de `crearTemporada`). Ver [sección 20](#20-banco-de-eventos-de-temporada-dataeventsts).
+**Alto Impacto**: al crear la temporada se sortea si va a haber un evento de alto impacto (30% de probabilidad) y, si sale, en cuál de los 3 tramos va a aparecer (`altoImpactoPausa`, [career.ts:147](app/src/stores/career.ts:147), dentro de `crearTemporada`). Ver [sección 20](#20-banco-de-eventos-de-temporada-dataeventsts).
 
 ---
 
 ## 8. El ciclo de un tramo, paso a paso
 
-Todo pasa en `simularTramoYAvanzar()` ([career.ts:595](app/src/stores/career.ts:595)), disparado al resolver la última decisión pendiente de una pausa:
+Todo pasa en `simularTramoYAvanzar()` ([career.ts:612](app/src/stores/career.ts:612)), disparado al resolver la última decisión pendiente de una pausa:
 
 1. **Partidos del club esta franja**, sumando las 3 competiciones activas:
    - Liga: `partidosLigaParaTramo` reparte el total de la temporada entre los 3 tramos a partes iguales, y el último tramo absorbe el resto del redondeo.
@@ -273,9 +273,9 @@ Todo pasa en `simularTramoYAvanzar()` ([career.ts:595](app/src/stores/career.ts:
 7. **Se ajusta `pesoTitular`** con el rating de este tramo (`ajustarPesoTitular`, ver [sección 9](#9-participación-cuántos-partidos-jugás-vos)) — de cara al próximo tramo, no a este que ya se jugó.
 8. Se descuenta un tramo a la lesión activa, si había una; al llegar a 0, se da de alta.
 9. Se avanza `tramoIndex` y se recalcula el `progreso` mostrado en pantalla a partir de `partidosJugados / partidosMinimos` de la liga (ver [sección 7](#7-calendario-de-temporada)).
-10. Se anima el spotlight (anillo de progreso + contadores) y, 1050ms después (`ANIMACION_TRAMO_MS` + margen, [config.ts:1044](app/src/game/config.ts:1044)), se pasa a la próxima pausa (o se cierra la temporada si no queda ninguna) — la demora es a propósito: si el siguiente checkpoint avanzara al toque, la animación quedaría cortada a mitad de camino.
+10. Se anima el spotlight (anillo de progreso + contadores) y, 1050ms después (`ANIMACION_TRAMO_MS` + margen, [config.ts:1061](app/src/game/config.ts:1061)), se pasa a la próxima pausa (o se cierra la temporada si no queda ninguna) — la demora es a propósito: si el siguiente checkpoint avanzara al toque, la animación quedaría cortada a mitad de camino.
 
-Al **cerrar la temporada** (`finalizarTemporada`, [career.ts:816](app/src/stores/career.ts:816)):
+Al **cerrar la temporada** (`finalizarTemporada`, [career.ts:869](app/src/stores/career.ts:869)):
 
 - Se tira si ganás la **liga** y, si tu copa nacional llegó a la final, si la ganás también (fórmulas en [sección 14](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)).
 - Se decide la **clasificación internacional de la próxima temporada** según qué tan bien te fue.
@@ -289,9 +289,9 @@ Los partidos de arriba son los del **equipo**; cuántos de esos jugás vos depen
 
 **Titularidad** — ya no es un sorteo nuevo e independiente cada tramo: hay un valor persistente `pesoTitular` (0-1, "cuánto te ganaste el puesto DE VERDAD") que se arrastra tramo a tramo e incluso de una temporada a la siguiente mientras sigas en el mismo club. Una gran temporada ya no se "olvida" al arrancar la próxima, y un jugador titular indiscutido no vuelve a ser una moneda al aire de un día para el otro.
 
-Arranca en `PESO_TITULAR_INICIAL = 0.4` ([config.ts:1437](app/src/game/config.ts:1437), novato o recién fichado — hay que ganarse el puesto) y se resetea a ese mismo valor en cada transferencia (`resolveOferta`, [career.ts:1008](app/src/stores/career.ts:1008)); si te quedás en el club, se hereda de una temporada a la siguiente sin tocar.
+Arranca en `PESO_TITULAR_INICIAL = 0.4` ([config.ts:1451](app/src/game/config.ts:1451), novato o recién fichado — hay que ganarse el puesto) y se resetea a ese mismo valor en cada transferencia (`resolveOferta`, [career.ts:1119](app/src/stores/career.ts:1119)); si te quedás en el club, se hereda de una temporada a la siguiente sin tocar.
 
-Después de cada tramo, `ajustarPesoTitular(pesoActual, ratingTramo, estabaLesionado)` ([config.ts:1449](app/src/game/config.ts:1449)) lo mueve según cómo te fue:
+Después de cada tramo, `ajustarPesoTitular(pesoActual, ratingTramo, estabaLesionado)` ([config.ts:1463](app/src/game/config.ts:1463)) lo mueve según cómo te fue:
 
 ```
 si estabas lesionado:        delta = PESO_TITULAR_CASTIGO_LESION       (−0.03)
@@ -300,7 +300,7 @@ si no:                        delta = clamp((ratingTramo − 6.5) × 0.05, −0.
 pesoTitular = clamp(pesoActual + delta, 0.05, 0.95)
 ```
 
-Y `calcularTitular(pesoTitular, ovr, rendimientoAcumulado, edad)` ([config.ts:1496](app/src/game/config.ts:1496)) decide el tramo actual:
+Y `calcularTitular(pesoTitular, ovr, rendimientoAcumulado, edad)` ([config.ts:1510](app/src/game/config.ts:1510)) decide el tramo actual:
 
 ```
 prob = clamp(pesoTitular + (ovr − 55) × TITULAR_OVR_PESO + rendimientoAcumulado × 0.03 − penalizaciónEdad, 0.08, 0.95)
@@ -309,11 +309,22 @@ prob = clamp(pesoTitular + (ovr − 55) × TITULAR_OVR_PESO + rendimientoAcumula
 
 `pesoTitular` sigue siendo el factor dominante — ya no decide todo un sorteo desde cero — pero el empuje del OVR se duplicó (antes 0.01): con el coeficiente viejo, un club podía seguir plantando de arranque a un novato de nivel bajo con bastante frecuencia con solo un `pesoTitular` mediano, porque el OVR casi no pesaba nada en la decisión — quedaba desalineado de cuánto sí pesa el nivel a la hora de cuántos partidos jugás en total (ver la fórmula de participación más abajo, que ya pesaba el OVR mucho más fuerte). Con 0.02 el efecto es real sin pasar a ser el factor dominante: `pesoTitular` sigue siendo lo que más importa.
 
-**`penalizaciónEdad`** (`TITULAR_PENALIZACION_NOVATO_MAX = 0.25`, [config.ts:1492-1494](app/src/game/config.ts:1492), mismo plateau 19→24 que la penalización de participación más abajo, con sus propias constantes — no comparte `TITULAR_EDAD_NOVATO_*` con `PARTICIPACION_EDAD_NOVATO_*` a propósito): sin esto, `calcularTitular` no sabía nada de tu edad — un novato de 17 con buen OVR de potencial (63, techo típico de novato) y el `pesoTitular` inicial (0.4) ya tenía **~56%** de chance de ser titular cada tramo, y si salía titular se llevaba además el `+0.2` de `PARTICIPACION_BONUS_TITULAR` en la fórmula de participación de abajo — ese bonus terminaba neutralizando buena parte de la penalización de edad que ya tiene la participación. Con la penalización, esa misma situación queda en **~31%**.
+**`penalizaciónEdad`** (`TITULAR_PENALIZACION_NOVATO_MAX = 0.25`, [config.ts:1506-1508](app/src/game/config.ts:1506), mismo plateau 19→24 que la penalización de participación más abajo, con sus propias constantes — no comparte `TITULAR_EDAD_NOVATO_*` con `PARTICIPACION_EDAD_NOVATO_*` a propósito): sin esto, `calcularTitular` no sabía nada de tu edad — un novato de 17 con buen OVR de potencial (63, techo típico de novato) y el `pesoTitular` inicial (0.4) ya tenía **~56%** de chance de ser titular cada tramo, y si salía titular se llevaba además el `+0.2` de `PARTICIPACION_BONUS_TITULAR` en la fórmula de participación de abajo — ese bonus terminaba neutralizando buena parte de la penalización de edad que ya tiene la participación. Con la penalización, esa misma situación queda en **~31%**.
 
-**La etiqueta que ves antes de jugar el primer tramo de una temporada nueva** (`crearTemporada`, [career.ts:135](app/src/stores/career.ts:135)) ya no arranca fija en "Suplente" — se proyecta directo desde el `pesoTitular` heredado (`pesoTitular ≥ 0.5` → Titular). Antes quedaba en `false` a secas hasta que se simulaba el primer tramo, así que toda temporada nueva mostraba "Suplente" un instante, sin importar cuánto te hubieras ganado el puesto la temporada anterior — se leía como "una gran temporada no sirvió de nada".
+**La etiqueta que ves antes de jugar el primer tramo de una temporada nueva** (`crearTemporada`, [career.ts:147](app/src/stores/career.ts:147)) ya no arranca fija en "Suplente" — se proyecta directo desde el `pesoTitular` heredado (`pesoTitular ≥ 0.5` → Titular). Antes quedaba en `false` a secas hasta que se simulaba el primer tramo, así que toda temporada nueva mostraba "Suplente" un instante, sin importar cuánto te hubieras ganado el puesto la temporada anterior — se leía como "una gran temporada no sirvió de nada".
 
-**Probabilidad de jugar cada partido** — `probabilidadJugar(ovr, rendimientoAcumulado, forma, esTitular, edad, promedioTemporada)` ([config.ts:1879](app/src/game/config.ts:1879)):
+**Capitanía**: ganarte el puesto no es solo cuestión de minutos — quedarte varias temporadas seguidas en el mismo club con `pesoTitular` alto de verdad te hace capitán. Se evalúa al cerrar cada temporada, antes de armar la siguiente (`finalizarTemporada`, [career.ts:993-1008](app/src/stores/career.ts:993)):
+
+```
+esCapitan = temporadasEnClubActual ≥ CAPITAN_UMBRAL_TEMPORADAS (3)
+            && pesoTitularProxima ≥ CAPITAN_UMBRAL_PESO_TITULAR (0.75)
+```
+
+(`config.ts:2029-2030`). `pesoTitularProxima` es el peso con el que arranca la PRÓXIMA temporada — el heredado si seguís en el mismo club, o `PESO_TITULAR_INICIAL` si volvés de un préstamo (ver [sección 16.9](#169-préstamos)) — no el que acaba de cerrar, para que el chequeo use el valor real con el que arrancás. La primera vez que se cumple (transición de `false` a `true`) dispara un aviso puntual ("¡Te nombraron capitán de X!"); mientras se mantenga, no se repite.
+
+Es un estado de la `Temporada` (`capitan: boolean`, [career-types.ts:137](app/src/game/career-types.ts:137)), no de la carrera entera — se resetea a `false` en `resolveOferta` tanto en un traspaso real como en un préstamo ([career.ts:1135](app/src/stores/career.ts:1135) / [:1150](app/src/stores/career.ts:1150)), igual que `pesoTitular`: la capitanía es de cancha, se re-gana en el club nuevo. Como `temporadasEnClubActual` ya resetea sola en un traspaso real (no en un préstamo, donde el reloj del club dueño sigue corriendo — ver [sección 16.9](#169-préstamos)), no hace falta ninguna lógica extra para que la capitanía se re-evalúe correctamente club por club. Se muestra como badge "Capitán" junto a Titular/Suplente en el spotlight, y como sufijo "(C)" junto al nombre del club en cada fila del historial donde aplicó (ver [sección 22](#22-interfaz-componentes-composables-y-responsive)).
+
+**Probabilidad de jugar cada partido** — `probabilidadJugar(ovr, rendimientoAcumulado, forma, esTitular, edad, promedioTemporada)` ([config.ts:1905](app/src/game/config.ts:1905)):
 
 ```
 prob = 0.65                                                            (PARTICIPACION_BASE)
@@ -363,9 +374,9 @@ De 16 a 19 resta siempre el máximo (−0.35); recién de 19 a 24 baja lineal ha
 
 ## 10. Estadísticas del tramo: goles, asistencias, MVP, rating
 
-`GameConfig.simularTramo({ partidos, posicion, ovr, rendimientoAcumulado, fuerzaLiga, factorTalento })` ([config.ts:1201](app/src/game/config.ts:1201)) recorre partido por partido (de los que jugás vos, no los del equipo).
+`GameConfig.simularTramo({ partidos, posicion, ovr, rendimientoAcumulado, fuerzaLiga, factorTalento })` ([config.ts:1218](app/src/game/config.ts:1218)) recorre partido por partido (de los que jugás vos, no los del equipo).
 
-**Propensión por posición individual** (`PROPENSION_GOL_POSICION`/`PROPENSION_ASISTENCIA_POSICION`, [config.ts:1091](app/src/game/config.ts:1091) y [:1097](app/src/game/config.ts:1097)): cada una de las 12 posiciones tiene su propio perfil — ya no comparten uno de 5 grupos compartidos como antes (ahí "ataque" mezclaba EI/ED/DC con el mismo número, así que un delantero centro rendía idéntico a un extremo; "medio" mezclaba los 5 mediocampistas por igual). Ahora:
+**Propensión por posición individual** (`PROPENSION_GOL_POSICION`/`PROPENSION_ASISTENCIA_POSICION`, [config.ts:1108](app/src/game/config.ts:1108) y [:1114](app/src/game/config.ts:1114)): cada una de las 12 posiciones tiene su propio perfil — ya no comparten uno de 5 grupos compartidos como antes (ahí "ataque" mezclaba EI/ED/DC con el mismo número, así que un delantero centro rendía idéntico a un extremo; "medio" mezclaba los 5 mediocampistas por igual). Ahora:
 
 | Posición | Prob. de gol por partido (base) | Prob. de asistencia por partido (base) |
 |---|---|---|
@@ -397,7 +408,7 @@ factor         = max(0.3, factorOvr × factorForma × factorLiga × factorTalent
 
 Curva (exponente > 1), no una recta: en el OVR mínimo (45) el factor es 0.22, en el máximo (99) es 3.0 (el piso se subió de 0.15 a 0.22 y el exponente se suavizó de 2.2 a 1.9, sin tocar el techo — ver el porqué arriba). Con talento neutral (factorTalento = 1) y `factorLiga = 1`: un delantero de 60 OVR promedia ~3.3 goles en 34 partidos, uno de 65 ~4.6, uno de 75 (cerca del nuevo neutral) ~8.4, uno de 90 (estrella) ~17.6, y en el techo absoluto (99) ~26. El talento oculto agrega variación real sobre esos números a igual OVR: ese mismo delantero de 60 OVR saca ~2.7 goles con talento bajo (0.85x) o ~4.0 con talento alto (1.2x) — casi el doble de diferencia, para que no toda carrera se sienta "arranca mal, mejora con el tiempo": algunas ya se notan con algo especial desde el debut.
 
-**Competitividad de la liga (o selección)** — sin esto, un jugador de 65 OVR rendía exactamente igual jugando en la liga de Colombia (fuerza ~55) que en la Premier League (fuerza ~96): el mismo OVR absoluto, sin importar contra qué nivel de rivales compite. `factorPorFuerzaLiga(ovr, fuerzaLiga)` ([config.ts:1174](app/src/game/config.ts:1174)) lo corrige:
+**Competitividad de la liga (o selección)** — sin esto, un jugador de 65 OVR rendía exactamente igual jugando en la liga de Colombia (fuerza ~55) que en la Premier League (fuerza ~96): el mismo OVR absoluto, sin importar contra qué nivel de rivales compite. `factorPorFuerzaLiga(ovr, fuerzaLiga)` ([config.ts:1191](app/src/game/config.ts:1191)) lo corrige:
 
 ```
 referenciaLiga = OVR_CARRERA_MIN + (fuerzaLiga / 100) × (OVR_CARRERA_MAX − OVR_CARRERA_MIN)
@@ -408,7 +419,7 @@ factorLiga     = clamp(1 + ventaja × FACTOR_LIGA_COEFICIENTE, FACTOR_LIGA_MIN, 
 
 `referenciaLiga` mapea la fuerza de la liga (0-100) al mismo rango de OVR de carrera: una liga de fuerza 96 "espera" un nivel cercano al techo (~97), una de fuerza 55 espera algo bastante más modesto (~75). La diferencia entre tu OVR y esa referencia empuja el factor para arriba o para abajo. Con estos valores, un delantero de **70 OVR en Chile** (fuerza 60) promedia ~4 goles en una temporada de 34 partidos; ese mismo 70 OVR en la **Premier League** (fuerza 96) promedia ~2.1 — casi la mitad, con idéntico nivel absoluto. Se aplica también a los partidos con la selección nacional (con la fuerza de la selección rival, no la de tu liga de club — ver [sección 19](#19-selección-nacional)).
 
-**Goles por partido, sin techo real** — `golesEnPartido(probGol)` ([config.ts:1191](app/src/game/config.ts:1191)), con `probGol = clamp(propensiónGol × factor, 0, 0.9)`:
+**Goles por partido, sin techo real** — `golesEnPartido(probGol)` ([config.ts:1208](app/src/game/config.ts:1208)), con `probGol = clamp(propensiónGol × factor, 0, 0.9)`:
 
 ```
 si no sale (prob. 1 − probGol):           0 goles
@@ -435,7 +446,7 @@ El resultado del tramo (goles, asistencias, MVPs, suma de ratings) se acumula a 
 
 ## 11. Progresión de OVR
 
-`ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad, factorTalento, potencialTecho)` ([config.ts:1397](app/src/game/config.ts:1397)) — se llama una vez por tramo, después de simular las estadísticas de ese tramo:
+`ajustarOvrTramo(ovrActual, rendimientoAcumulado, edad, factorTalento, potencialTecho)` ([config.ts:1414](app/src/game/config.ts:1414)) — se llama una vez por tramo, después de simular las estadísticas de ese tramo:
 
 ```
 deltaBase = (0.7 + rendimientoAcumulado / 6) × factorCrecimientoPorEdad(edad) × factorTalento
@@ -449,13 +460,13 @@ delta = redondeoEstocastico(deltaCrudo), recortado entre:
 ovrNuevo = clamp(ovrActual + delta, 45, 99)     (OVR_CARRERA_MIN / MAX — piso y techo absolutos)
 ```
 
-**Redondeo estocástico** ([config.ts:1321](app/src/game/config.ts:1321)): en vez de redondear siempre igual, un valor de 0.4 da +1 el 40% de las veces y 0 el 60% restante — así los cambios chicos de vez en cuando pasan, en vez de quedar completamente anulados por el redondeo.
+**Redondeo estocástico** ([config.ts:1338](app/src/game/config.ts:1338)): en vez de redondear siempre igual, un valor de 0.4 da +1 el 40% de las veces y 0 el 60% restante — así los cambios chicos de vez en cuando pasan, en vez de quedar completamente anulados por el redondeo.
 
 ### 11.1 Curva de edad en 3 etapas
 
 Antes el freno de crecimiento se estabilizaba en 35% del ritmo pleno **para siempre** desde los 32 años, y el desgaste natural era demasiado débil para competirle — un jugador con buen rendimiento seguía subiendo bastante incluso pasados los 35-40. Ahora:
 
-**Freno de crecimiento por edad** — `factorCrecimientoPorEdad(edad)` ([config.ts:1264](app/src/game/config.ts:1264)):
+**Freno de crecimiento por edad** — `factorCrecimientoPorEdad(edad)` ([config.ts:1281](app/src/game/config.ts:1281)):
 
 | Etapa | Edad | Factor |
 |---|---|---|
@@ -463,7 +474,7 @@ Antes el freno de crecimiento se estabilizaba en 35% del ritmo pleno **para siem
 | Meseta | 29 a 34 | interpola linealmente de 1.0 a 0.15 |
 | Ocaso | 35+ | fijo en 0.15 (un resto mínimo — nunca llega a cero del todo) |
 
-**Desgaste natural por edad** — `factorDeclivePorEdad(edad)` ([config.ts:1310](app/src/game/config.ts:1310)), superpuesto a la meseta de arriba en vez de arrancar recién cuando termina:
+**Desgaste natural por edad** — `factorDeclivePorEdad(edad)` ([config.ts:1327](app/src/game/config.ts:1327)), superpuesto a la meseta de arriba en vez de arrancar recién cuando termina:
 
 - Antes de los 30 años: 0 (sin desgaste).
 - De 30 a 37: resta **0.06 de OVR por tramo, por cada año** por encima de 30.
@@ -473,11 +484,11 @@ Con estos números, el neto (crecimiento − desgaste) pasa de "todavía sumás 
 
 ### 11.2 Talento oculto y techo de potencial
 
-**Talento oculto**: al arrancar la carrera se sortea, una única vez, un multiplicador entre **0.85x y 1.2x** (`TALENTO_MIN`/`MAX`, [config.ts:1350-1351](app/src/game/config.ts:1350); `GameConfig.sortearFactorTalento()`, sorteado en [career.ts:193](app/src/stores/career.ts:193)) que acelera el crecimiento (`deltaBase`) y, invertido, atenúa el desgaste (`× (2 − factorTalento)`: 1.2 lo deja en 80%, 0.85 lo agrava a 115%) — con las mismas decisiones de punta a punta, dos carreras no crecen (ni declinan) exactamente igual.
+**Talento oculto**: al arrancar la carrera se sortea, una única vez, un multiplicador entre **0.85x y 1.2x** (`TALENTO_MIN`/`MAX`, [config.ts:1367-1368](app/src/game/config.ts:1367); `GameConfig.sortearFactorTalento()`, sorteado en [career.ts:208](app/src/stores/career.ts:208)) que acelera el crecimiento (`deltaBase`) y, invertido, atenúa el desgaste (`× (2 − factorTalento)`: 1.2 lo deja en 80%, 0.85 lo agrava a 115%) — con las mismas decisiones de punta a punta, dos carreras no crecen (ni declinan) exactamente igual.
 
 El mismo `factorTalento` también pesa en `simularTramo` (ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)) — antes solo tocaba el crecimiento de OVR, así que a igual OVR, TODA carrera rendía exactamente igual en cancha, y la única narrativa posible era "malo que se hizo bueno". Ahora un talento alto ya rinde mejor con el mismo OVR bajo (se nota que tiene algo especial antes de que el número lo confirme), mientras uno bajo sigue leyéndose como el grinder clásico. Para que la comparación de los premios mundiales ([sección 14.2](#142-premios-mundiales-bota-de-oro-once-ideal-y-balón-de-oro)) siga siendo pareja, cada candidato del pool sortea su propio `factorTalento` independiente — si no, el tuyo sería una ventaja permanente contra un pool que nunca lo tiene.
 
-**Techo de potencial** (`potencialTecho`, sorteado una única vez en [career.ts:194](app/src/stores/career.ts:194), nunca expuesto en ningún número visible): sin esto, el crecimiento del prime empujaba casi cualquier carrera por encima de 90 — no era una excepción, era casi aritmética garantizada. `sortearPotencialTecho()` ([config.ts:1386](app/src/game/config.ts:1386)) reparte:
+**Techo de potencial** (`potencialTecho`, sorteado una única vez en [career.ts:209](app/src/stores/career.ts:209), nunca expuesto en ningún número visible): sin esto, el crecimiento del prime empujaba casi cualquier carrera por encima de 90 — no era una excepción, era casi aritmética garantizada. `sortearPotencialTecho()` ([config.ts:1403](app/src/game/config.ts:1403)) reparte:
 
 | Probabilidad | Techo sorteado | Lectura |
 |---|---|---|
@@ -491,7 +502,7 @@ Al fichar por un club nuevo se garantiza un mínimo margen de crecimiento sobre 
 
 ### 11.3 Salto de calidad del arranque de carrera
 
-Sin esto, un debutante de club humilde (OVR ~50-55) tardaba **8-12 temporadas** —de una carrera de ~26-27— en cruzar el umbral de OVR 70, más de un tercio del juego entero rindiendo con números flojos por partida doble (poco OVR y, encima, poco `factorPorFuerzaLiga` de la sección anterior). `factorAprendizajeJoven(ovr, edad)` ([config.ts:1290](app/src/game/config.ts:1290)) acelera específicamente esa salida, sin tocar ninguna de las 3 etapas de `factorCrecimientoPorEdad` ni el declive por edad:
+Sin esto, un debutante de club humilde (OVR ~50-55) tardaba **8-12 temporadas** —de una carrera de ~26-27— en cruzar el umbral de OVR 70, más de un tercio del juego entero rindiendo con números flojos por partida doble (poco OVR y, encima, poco `factorPorFuerzaLiga` de la sección anterior). `factorAprendizajeJoven(ovr, edad)` ([config.ts:1307](app/src/game/config.ts:1307)) acelera específicamente esa salida, sin tocar ninguna de las 3 etapas de `factorCrecimientoPorEdad` ni el declive por edad:
 
 ```
 progreso            = clamp((UMBRAL_CRECIMIENTO_ACELERADO − ovr) / (UMBRAL_CRECIMIENTO_ACELERADO − OVR_CARRERA_MIN), 0, 1)
@@ -499,7 +510,7 @@ factorAprendizaje   = 1 + progreso × (CRECIMIENTO_ACELERADO_FACTOR_MAX − 1)
                       (UMBRAL = 72, FACTOR_MAX = 1.8 — solo si edad ≤ OVR_EDAD_PRIME_MAX)
 ```
 
-Dos guardas para no romper el resto del sistema de crecimiento (dentro de `factorAprendizajeJoven`, [config.ts:1290](app/src/game/config.ts:1290)):
+Dos guardas para no romper el resto del sistema de crecimiento (dentro de `factorAprendizajeJoven`, [config.ts:1307](app/src/game/config.ts:1307)):
 - **Solo aplica en Prime** (edad ≤ 28, donde el crecimiento ya es pleno) — un veterano que bajó de nivel en la meseta o el ocaso nunca lo activa, aunque su OVR haya caído por debajo del umbral. El "salto de calidad" es cosa de un jugador que recién arranca, no de alguien en decadencia.
 - **Solo multiplica el crecimiento cuando ya es positivo** — nunca agrava una racha floja de decisiones; una mala temporada declina exactamente igual que antes.
 
@@ -509,22 +520,22 @@ Con esto, las mismas 8-12 temporadas para cruzar OVR 70 bajan a **~5-9**, según
 
 ## 12. Estado de forma
 
-7 estados (`FORM_STATES`, [config.ts:667](app/src/game/config.ts:667)), de mejor a peor: **Inspirado 🔥 → En plenitud 💪 → Animado 🙂 → Regular 😐 → Desanimado 😕 → Bajo de forma 📉 → Tocado físicamente 🤕**.
+7 estados (`FORM_STATES`, [config.ts:684](app/src/game/config.ts:684)), de mejor a peor: **Inspirado 🔥 → En plenitud 💪 → Animado 🙂 → Regular 😐 → Desanimado 😕 → Bajo de forma 📉 → Tocado físicamente 🤕**.
 
-Cada opción de cada decisión de evento define un **objetivo** de forma fijo (`efectos.forma`, no es aleatorio — está definido evento por evento en [`data/events.ts`](app/src/data/events.ts)), pero ya no la teletransporta ahí directamente: `acumularForma(formaActual, formaObjetivo)` ([config.ts:690](app/src/game/config.ts:690)) te acerca a ese objetivo recorriendo una fracción del camino (`FORMA_PESO_ACUMULACION = 0.5` del tramo que falta, con un paso mínimo de 1 escalón para no estancarse justo antes de llegar). Así, dos decisiones seguidas que tiran para el mismo lado siguen sumando en vez de que la segunda pise a la primera, y si tiran para lados opuestos se combinan en vez de que gane la última resuelta. La forma afecta:
+Cada opción de cada decisión de evento define un **objetivo** de forma fijo (`efectos.forma`, no es aleatorio — está definido evento por evento en [`data/events.ts`](app/src/data/events.ts)), pero ya no la teletransporta ahí directamente: `acumularForma(formaActual, formaObjetivo)` ([config.ts:707](app/src/game/config.ts:707)) te acerca a ese objetivo recorriendo una fracción del camino (`FORMA_PESO_ACUMULACION = 0.5` del tramo que falta, con un paso mínimo de 1 escalón para no estancarse justo antes de llegar). Así, dos decisiones seguidas que tiran para el mismo lado siguen sumando en vez de que la segunda pise a la primera, y si tiran para lados opuestos se combinan en vez de que gane la última resuelta. La forma afecta:
 
 - **Participación** (tabla en [sección 9](#9-participación-cuántos-partidos-jugás-vos)).
 - **La "calidad" de la temporada del equipo** (`FORMA_CALIDAD`, ver [sección 14](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)) — de 1.0 (inspirado) a 0.05 (lesionado).
 
-Mientras hay una lesión de nivel 1 o 2 activa, la forma queda **fija en "Tocado físicamente"** sin importar qué decisiones tomes (las decisiones siguen sumando a `rendimiento`/`equipo`, solo no "curan" el ánimo de golpe) — [career.ts:989](app/src/stores/career.ts:989).
+Mientras hay una lesión de nivel 1 o 2 activa, la forma queda **fija en "Tocado físicamente"** sin importar qué decisiones tomes (las decisiones siguen sumando a `rendimiento`/`equipo`, solo no "curan" el ánimo de golpe) — [career.ts:1097](app/src/stores/career.ts:1097).
 
 ---
 
 ## 13. Lesiones
 
-Se evalúan en **cada pausa de decisión** (nunca en una de fichajes), solo si no hay ya una lesión activa — `intentarGenerarLesion(edad)` ([career.ts:327](app/src/stores/career.ts:327)).
+Se evalúan en **cada pausa de decisión** (nunca en una de fichajes), solo si no hay ya una lesión activa — `intentarGenerarLesion(edad)` ([career.ts:344](app/src/stores/career.ts:344)).
 
-**Probabilidad de lesión** — `probabilidadLesion(edad)` ([config.ts:1939](app/src/game/config.ts:1939)):
+**Probabilidad de lesión** — `probabilidadLesion(edad)` ([config.ts:1965](app/src/game/config.ts:1965)):
 
 ```
 prob = clamp(0.065 + max(0, edad − 30) × 0.0027, 0, 0.18)
@@ -532,7 +543,7 @@ prob = clamp(0.065 + max(0, edad − 30) × 0.0027, 0, 0.18)
 
 Sube con la edad a partir de los 30 años, con un techo del 18%.
 
-**Nivel de la lesión** (sorteo ponderado, `elegirNivelLesion`, [config.ts:1949](app/src/game/config.ts:1949)):
+**Nivel de la lesión** (sorteo ponderado, `elegirNivelLesion`, [config.ts:1975](app/src/game/config.ts:1975)):
 
 | Nivel | Probabilidad de que salga | Efecto |
 |---|---|---|
@@ -540,11 +551,11 @@ Sube con la edad a partir de los 30 años, con un techo del 18%.
 | Nivel 2 (moderada) | 35% | Sin partidos 1–2 pausas + forma fija en "Tocado" + OVR **−1 a −3**, aplicado de una vez. |
 | Nivel 1 (grave) | 10% | Sin partidos, entre 2 pausas y el resto de la temporada + forma fija en "Tocado" + OVR **−4 a −10**, aplicado de una vez. |
 
-La duración exacta (`duracionLesion`, [config.ts:1972](app/src/game/config.ts:1972)) y la pérdida de OVR (`ovrPerdidoPorLesion`, [config.ts:1985](app/src/game/config.ts:1985)) se sortean dentro de esos rangos, siempre topeados por los tramos que en verdad quedan en la temporada. Cada nivel tiene su propio banco de nombres/descripciones de lesión real (rotura de LCA, esguince, desgarro, etc. — ver [sección 20](#20-banco-de-eventos-de-temporada-dataeventsts)).
+La duración exacta (`duracionLesion`, [config.ts:1998](app/src/game/config.ts:1998)) y la pérdida de OVR (`ovrPerdidoPorLesion`, [config.ts:2011](app/src/game/config.ts:2011)) se sortean dentro de esos rangos, siempre topeados por los tramos que en verdad quedan en la temporada. Cada nivel tiene su propio banco de nombres/descripciones de lesión real (rotura de LCA, esguince, desgarro, etc. — ver [sección 20](#20-banco-de-eventos-de-temporada-dataeventsts)).
 
 Cuando sale una lesión nueva, esa pausa entera se reemplaza por un **parte médico** (sin decisiones que tomar, `LesionCardItem.vue`, con el tipo `InformeLesion` marcado `esInformeLesion: true` en [career-types.ts:72-73](app/src/game/career-types.ts:72)): muestra nombre, descripción, OVR perdido (si corresponde) y pausas de baja, y el jugador confirma con un botón **"Continuar"** para avanzar el tramo — no hay temporizador ni avance automático. En mobile esa tarjeta ocupa el ancho completo del carrusel de decisiones en vez de compartir espacio como una tarjeta más.
 
-**Recuperación al darte de alta**: al cumplirse los tramos de baja, se te devuelve el **50%** del OVR que perdiste por esa lesión (`LESION_RECUPERACION_OVR`, [config.ts:1994](app/src/game/config.ts:1994), aplicado en [career.ts:670](app/src/stores/career.ts:670)) — fue un golpe físico puntual, no una pérdida de nivel definitiva. El toast de "te recuperaste" muestra cuánto OVR recuperaste, si fue mayor a 0.
+**Recuperación al darte de alta**: al cumplirse los tramos de baja, se te devuelve el **50%** del OVR que perdiste por esa lesión (`LESION_RECUPERACION_OVR`, [config.ts:2020](app/src/game/config.ts:2020), aplicado en [career.ts:687](app/src/stores/career.ts:687)) — fue un golpe físico puntual, no una pérdida de nivel definitiva. El toast de "te recuperaste" muestra cuánto OVR recuperaste, si fue mayor a 0.
 
 ---
 
@@ -560,13 +571,13 @@ Cada club y cada liga en `GameDatabase` tiene **3 ejes ocultos de 0 a 100** (ree
 | `prestigio` | Historia, títulos, marca, hinchada | Valor de mercado ([sección 15](#15-valor-de-mercado)) y qué tan aspiracional es un destino ([sección 16](#16-sistema-de-fichajes-y-ofertas)) |
 | `economia` | Poder financiero (presupuesto, sueldos, TV) | Valor de mercado y ofertas |
 
-Se combinan de dos formas distintas, a propósito, según qué le corresponde a cada mecánica ([config.ts:375-633](app/src/game/config.ts:375)):
+Se combinan de dos formas distintas, a propósito, según qué le corresponde a cada mecánica ([config.ts:440-677](app/src/game/config.ts:440)):
 
-- **`poderEquipo`/`poderLiga`** (`PODER_PESO_FUERZA=0.4` / `PODER_PESO_PRESTIGIO=0.35` / `PODER_PESO_ECONOMIA=0.25`, [config.ts:432](app/src/game/config.ts:432)/[:446-453](app/src/game/config.ts:446)): mezcla los 3 ejes para todo lo que en la vida real depende de una combinación de las tres cosas a la vez — el OVR inicial, la ventana de ofertas, el objetivo de prestigio del jugador.
-- **`calidadFuerzaClub`** ([config.ts:1549](app/src/game/config.ts:1549), sección 14.1 acá abajo): usa **solo** `fuerza` — ganar títulos depende de qué tan fuerte es el plantel hoy, no de cuánta plata tiene el club ni de su prestigio histórico.
-- **`valorScoreEquipo`/`valorScoreLiga`** ([config.ts:615-622](app/src/game/config.ts:615), sección 15): usan **solo** `economia` + `prestigio` — cuánto valés en el mercado depende de la plata y la marca del club que te tiene, no de si ese club está ganando esta temporada.
+- **`poderEquipo`/`poderLiga`** (`PODER_PESO_FUERZA=0.4` / `PODER_PESO_PRESTIGIO=0.35` / `PODER_PESO_ECONOMIA=0.25`, [config.ts:440](app/src/game/config.ts:440)/[:454-464](app/src/game/config.ts:454)): mezcla los 3 ejes para todo lo que en la vida real depende de una combinación de las tres cosas a la vez — el OVR inicial, la ventana de ofertas, el objetivo de prestigio del jugador.
+- **`calidadFuerzaClub`** ([config.ts:1563](app/src/game/config.ts:1563), sección 14.1 acá abajo): usa **solo** `fuerza` — ganar títulos depende de qué tan fuerte es el plantel hoy, no de cuánta plata tiene el club ni de su prestigio histórico.
+- **`valorScoreEquipo`/`valorScoreLiga`** ([config.ts:632-639](app/src/game/config.ts:632), sección 15): usan **solo** `economia` + `prestigio` — cuánto valés en el mercado depende de la plata y la marca del club que te tiene, no de si ese club está ganando esta temporada.
 
-La economía de un club nunca cae debajo del 60% de la de su propia liga (`ECONOMIA_PISO_LIGA`, `economiaEfectiva`, [config.ts:440-443](app/src/game/config.ts:440)) — un club chico de una liga rica igual tiene más plata que casi cualquier gigante de una liga menor, por el reparto de TV.
+La economía de un club nunca cae debajo del 60% de la de su propia liga (`ECONOMIA_PISO_LIGA`, `economiaEfectiva`, [config.ts:448-452](app/src/game/config.ts:448)) — un club chico de una liga rica igual tiene más plata que casi cualquier gigante de una liga menor, por el reparto de TV.
 
 Los ~25 clubes más reconocibles del mundo (Real Madrid, Boca Juniors, PSG, Newcastle, etc.) tienen estos 3 valores puestos a mano; el resto se generó una sola vez a partir de su antiguo nivel 1-3 y la liga a la que pertenece, con una variación estable por club (mismo id → siempre el mismo resultado) para que no todos los equipos de un mismo nivel queden con el número idéntico — ver el comentario de formato en [data/database.ts:9-38](app/src/data/database.ts:9).
 
@@ -574,7 +585,7 @@ Los ~25 clubes más reconocibles del mundo (Real Madrid, Boca Juniors, PSG, Newc
 
 Ya no es un único número por temporada — hay **dos**, calculados con los mismos 4 ingredientes pero pesados distinto según para qué se usan.
 
-**Fuerza de campaña** — `calcularFuerzaCampana(equipo, liga, forma, equipoAcumuladoTemporada, promedioJugador)` ([config.ts:1531](app/src/game/config.ts:1531)):
+**Fuerza de campaña** — `calcularFuerzaCampana(equipo, liga, forma, equipoAcumuladoTemporada, promedioJugador)` ([config.ts:1573](app/src/game/config.ts:1573)):
 
 ```
 calidadClub               = calidadFuerzaClub(equipo, liga)   (SOLO el eje fuerza, 55% equipo + 45% liga)
@@ -589,25 +600,25 @@ fuerza = 0.4 × calidadClub + 0.15 × calidadForma + 0.2 × calidadEquipoAcum + 
 
 Esta fórmula le da a tu temporada personal (forma + decisiones + rendimiento) el 60% del peso — a propósito, porque **avanzar de ronda en una copa**, **ganar la copa nacional** y **clasificar a competición internacional** están pensados para que tu aporte individual pese mucho.
 
-**Fuerza de título** — `calcularFuerzaTitulo(equipo, liga, forma, equipoAcumuladoTemporada, promedioJugador)` ([config.ts:1595](app/src/game/config.ts:1595)): misma fórmula, pero con `FUERZA_TITULO_PESO_CLUB=0.85` / `_FORMA=0.04` / `_EQUIPO_ACUMULADO=0.05` / `_RENDIMIENTO_JUGADOR=0.06` ([config.ts:1590-1593](app/src/game/config.ts:1590)) — el club pasa a pesar el 85%. Se usa **solo** para **ganar la liga** y para la **final de una copa internacional** ([career.ts:820-860](app/src/stores/career.ts:820)): con el 60/40 de la fuerza de campaña, un club como Bayern München (`calidadClub` ~0.90) con un jugador de rendimiento neutro terminaba con una fuerza de ~0.66, casi igual a la de un club mediano de la misma liga — el equipo más ganador de Europa no se sentía distinto de uno de mitad de tabla. Con el 85% de peso al club, los grandes de verdad son candidatos de entrada al título, y una gran temporada tuya los empuja más arriba todavía (a igualdad de club, una temporada floja da ~12% de ganar la liga contra ~40% de una legendaria — más de 3x de diferencia solo por el rendimiento individual).
+**Fuerza de título** — `calcularFuerzaTitulo(equipo, liga, forma, equipoAcumuladoTemporada, promedioJugador)` ([config.ts:1609](app/src/game/config.ts:1609)): misma fórmula, pero con `FUERZA_TITULO_PESO_CLUB=0.85` / `_FORMA=0.04` / `_EQUIPO_ACUMULADO=0.05` / `_RENDIMIENTO_JUGADOR=0.06` ([config.ts:1604-1607](app/src/game/config.ts:1604)) — el club pasa a pesar el 85%. Se usa **solo** para **ganar la liga** y para la **final de una copa internacional** ([career.ts:878-913](app/src/stores/career.ts:878)): con el 60/40 de la fuerza de campaña, un club como Bayern München (`calidadClub` ~0.90) con un jugador de rendimiento neutro terminaba con una fuerza de ~0.66, casi igual a la de un club mediano de la misma liga — el equipo más ganador de Europa no se sentía distinto de uno de mitad de tabla. Con el 85% de peso al club, los grandes de verdad son candidatos de entrada al título, y una gran temporada tuya los empuja más arriba todavía (a igualdad de club, una temporada floja da ~12% de ganar la liga contra ~40% de una legendaria — más de 3x de diferencia solo por el rendimiento individual).
 
-**Ventaja de dominancia doméstica** (`VENTAJA_DOMINANCIA_DOMESTICA`, [config.ts:1648](app/src/game/config.ts:1648)): incluso con la fuerza de título de arriba, la brecha real de `fuerza` entre algunos clubes y su rival doméstico más cercano es demasiado chica para reflejar su dominio real — Bayern München (93) vs Bayer Leverkusen (88) da ~49% contra ~44% de ganar la Bundesliga en un escenario neutro, casi una moneda al aire. Ni poniéndole 100 de fuerza a Bayern alcanza un techo realista (el 15% de peso de `calcularFuerzaTitulo` que no depende de `calidadClub` lo capa en ~55%), así que **Bayern München** y **PSG** tienen un bonus fijo de `+0.08` sumado a `fuerzaTitulo`, aplicado **solo** al tirar el título de **liga** ([career.ts:831-833](app/src/stores/career.ts:831), nunca a la copa nacional ni a la final de copa internacional de arriba). Con el bonus, Bayern pasa a ~66% y PSG a ~58% (levemente menos — su monopolio real tuvo más sobresaltos, como Mónaco 2017 o Lille 2021) sin tocar las chances de sus rivales domésticos.
+**Ventaja de dominancia doméstica** (`VENTAJA_DOMINANCIA_DOMESTICA`, [config.ts:1662](app/src/game/config.ts:1662)): incluso con la fuerza de título de arriba, la brecha real de `fuerza` entre algunos clubes y su rival doméstico más cercano es demasiado chica para reflejar su dominio real — Bayern München (93) vs Bayer Leverkusen (88) da ~49% contra ~44% de ganar la Bundesliga en un escenario neutro, casi una moneda al aire. Ni poniéndole 100 de fuerza a Bayern alcanza un techo realista (el 15% de peso de `calcularFuerzaTitulo` que no depende de `calidadClub` lo capa en ~55%), así que **Bayern München** y **PSG** tienen un bonus fijo de `+0.08` sumado a `fuerzaTitulo`, aplicado **solo** al tirar el título de **liga** ([career.ts:884-886](app/src/stores/career.ts:884), nunca a la copa nacional ni a la final de copa internacional de arriba). Con el bonus, Bayern pasa a ~66% y PSG a ~58% (levemente menos — su monopolio real tuvo más sobresaltos, como Mónaco 2017 o Lille 2021) sin tocar las chances de sus rivales domésticos.
 
 De ahí salen 4 cosas:
 
-**Ganar la liga** (al cierre de temporada, sobre la fuerza de **título**) — curva empinada, casi exclusiva de los grandes — `probGanarLiga` ([config.ts:1617](app/src/game/config.ts:1617)):
+**Ganar la liga** (al cierre de temporada, sobre la fuerza de **título**) — curva empinada, casi exclusiva de los grandes — `probGanarLiga` ([config.ts:1631](app/src/game/config.ts:1631)):
 ```
 prob = clamp(0.02 + 0.85 × fuerzaTitulo^3.5, 0, 0.85)
 ```
 
-**Ganar la copa nacional** (si llegaste a la final, sobre la fuerza de **campaña**) — mucho más pareja a propósito — `probGanarCopa` ([config.ts:1623](app/src/game/config.ts:1623)):
+**Ganar la copa nacional** (si llegaste a la final, sobre la fuerza de **campaña**) — mucho más pareja a propósito — `probGanarCopa` ([config.ts:1637](app/src/game/config.ts:1637)):
 ```
 prob = clamp(0.05 + 0.70 × fuerza^1.3, 0, 0.70)
 ```
 
 **Ganar la final de una copa internacional** (sobre la fuerza de **título**) — misma curva que la liga, `probGanarLiga(fuerzaTitulo)`.
 
-**Avanzar de ronda** en una eliminatoria (copa nacional o internacional, sobre la fuerza de **campaña**), una tirada por ronda — `probAvanzarRonda` ([config.ts:1630](app/src/game/config.ts:1630)):
+**Avanzar de ronda** en una eliminatoria (copa nacional o internacional, sobre la fuerza de **campaña**), una tirada por ronda — `probAvanzarRonda` ([config.ts:1644](app/src/game/config.ts:1644)):
 ```
 prob = clamp(0.25 + 0.5 × fuerza, 0.1, 0.85)
 ```
@@ -623,21 +634,21 @@ Los partidos de cada competición (mínimos garantizados + extra por ronda) sale
 
 ### 14.2 Premios mundiales: Bota de Oro, Once Ideal y Balón de Oro
 
-Este juego no simula miles de jugadores rivales por el mundo — solo existe tu propio personaje. Para que "sos el mejor del mundo" signifique algo real, al cierre de cada temporada (`generarCandidatosPremiosMundiales`, [career.ts:700](app/src/stores/career.ts:700), llamado desde `finalizarTemporada` después de resolver liga/copa/copa internacional) se genera un pool de **24 candidatos fantasma** de nivel élite, simulados con **la misma fórmula que usa tu propio jugador** (`GameConfig.simularTramo`) — así la comparación es justa: si tus números se sienten inflados o flojos, los del pool se sienten exactamente igual.
+Este juego no simula miles de jugadores rivales por el mundo — solo existe tu propio personaje. Para que "sos el mejor del mundo" signifique algo real, al cierre de cada temporada (`generarCandidatosPremiosMundiales`, [career.ts:778](app/src/stores/career.ts:778), llamado desde `finalizarTemporada` después de resolver liga/copa/copa internacional) se genera un pool de **24 candidatos fantasma** de nivel élite, simulados con **la misma fórmula que usa tu propio jugador** (`GameConfig.simularTramo`) — así la comparación es justa: si tus números se sienten inflados o flojos, los del pool se sienten exactamente igual.
 
-**Generación de cada candidato** (`PREMIOS_CANDIDATOS_N = 24`, [config.ts:1669](app/src/game/config.ts:1669)):
-- **OVR**: `sortearOvrCandidatoPremio()` ([config.ts:1690](app/src/game/config.ts:1690)) — entre 82 y 99 (`PREMIOS_OVR_MIN/MAX`), promediando 3 tiradas uniformes para sesgar hacia el centro del rango (85-95) en vez de una muestra pareja — son candidatos genuinos al premio, no cualquier nivel élite. Se sortea **antes** que el club, porque el club depende de él (ver el punto siguiente).
+**Generación de cada candidato** (`PREMIOS_CANDIDATOS_N = 24`, [config.ts:1683](app/src/game/config.ts:1683)):
+- **OVR**: `sortearOvrCandidatoPremio()` ([config.ts:1704](app/src/game/config.ts:1704)) — entre 82 y 99 (`PREMIOS_OVR_MIN/MAX`), promediando 3 tiradas uniformes para sesgar hacia el centro del rango (85-95) en vez de una muestra pareja — son candidatos genuinos al premio, no cualquier nivel élite. Se sortea **antes** que el club, porque el club depende de él (ver el punto siguiente).
 - **Club (liga + equipo)**: elegido con la misma "ventana de OVR"/cercanía de nivel que ya usa el sistema de fichajes real (`equipoElegibleParaOvr`/`pesoPorCercaniaNivel`/`elegirMejorEncaje`, [sección 16.5](#16-sistema-de-fichajes-y-ofertas)/[16.6](#16-sistema-de-fichajes-y-ofertas)), sobre todos los equipos de las ligas con competición doméstica cargada — así un candidato de 96 OVR aparece casi siempre en uno de los pocos clubes de ese nivel, y sirve además para narrar el mensaje con sentido ("un delantero de Bayern Múnich..."). Antes el club se elegía primero (liga ponderada por `liga.fuerza`, equipo dentro de ella por `equipo.fuerza`) totalmente al margen del OVR sorteado después — podía salir, por ejemplo, un candidato de 96 OVR y 38 goles en un club chico sin poder real para eso.
-- **Grupo de posición**: `sortearGrupoCandidatoPremio()` ([config.ts:1695](app/src/game/config.ts:1695)) — 55% ataque / 25% medio / 12% lateral / 8% central (`PREMIOS_PESO_GRUPO`); nunca arquero, nadie gana la Bota de Oro de arquero.
+- **Grupo de posición**: `sortearGrupoCandidatoPremio()` ([config.ts:1709](app/src/game/config.ts:1709)) — 55% ataque / 25% medio / 12% lateral / 8% central (`PREMIOS_PESO_GRUPO`); nunca arquero, nadie gana la Bota de Oro de arquero.
 - **Talento oculto**: `sortearFactorTalento()` — cada candidato sortea el suyo propio, igual rango que el tuyo (0.85x-1.2x), para que la comparación siga siendo pareja (ver [sección 11.2](#112-talento-oculto-y-techo-de-potencial)).
-- **Estadísticas**: una sola llamada a `simularTramo({ partidos: partidosMinimos de su liga, posicion: POSICION_REPRESENTATIVA_GRUPO[grupo], ovr, rendimientoAcumulado: 0, fuerzaLiga, factorTalento })` ([career.ts:737-744](app/src/stores/career.ts:737), rendimiento neutro — no tiene decisiones propias que tomar). `simularTramo` ya no toma un grupo de 5 perfiles sino una posición individual (ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)), así que cada candidato usa la posición más "típica" de su grupo sorteado — `POSICION_REPRESENTATIVA_GRUPO` ([config.ts:1685](app/src/game/config.ts:1685)): DC para ataque, MCO para medio, LI para lateral, DFC para central, POR para arquero.
-- **Trofeos**: `Math.random() < probGanarLiga(calidadFuerzaClub(equipo, liga))` ([career.ts:745](app/src/stores/career.ts:745)) — reutiliza la misma curva que decide si TU club gana la liga, en vez de inventar una probabilidad aparte.
+- **Estadísticas**: una sola llamada a `simularTramo({ partidos: partidosMinimos de su liga, posicion: POSICION_REPRESENTATIVA_GRUPO[grupo], ovr, rendimientoAcumulado: 0, fuerzaLiga, factorTalento })` ([career.ts:790-797](app/src/stores/career.ts:790), rendimiento neutro — no tiene decisiones propias que tomar). `simularTramo` ya no toma un grupo de 5 perfiles sino una posición individual (ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)), así que cada candidato usa la posición más "típica" de su grupo sorteado — `POSICION_REPRESENTATIVA_GRUPO` ([config.ts:1699](app/src/game/config.ts:1699)): DC para ataque, MCO para medio, LI para lateral, DFC para central, POR para arquero.
+- **Trofeos**: `Math.random() < probGanarLiga(calidadFuerzaClub(equipo, liga))` ([career.ts:798](app/src/stores/career.ts:798)) — reutiliza la misma curva que decide si TU club gana la liga, en vez de inventar una probabilidad aparte.
 
 **🥾 Bota de Oro**: tu `goles` de la temporada contra el máximo del pool, sin filtrar por posición (un jugador de otro grupo con pocos goles nunca compite en la práctica, sin necesidad de un caso especial). Si no ganás pero quedás entre los 3 mejores, un mensaje aparte ("Terminaste 2° en la Bota de Oro, detrás de un delantero de PSG con 34 goles").
 
 **⭐ Once Ideal**: ganar la Bota de Oro o el Balón de Oro (ver abajo) ya te garantiza un lugar acá — no tendría sentido ser el goleador o el mejor jugador del mundo y quedar afuera del mejor 11 de tu propia posición. Si no ganaste ninguno de los dos, se evalúa como siempre: tu `promedio` de rating contra los candidatos de **tu mismo grupo de posición** — no simula quién ocupa los otros 10 puestos, igual que el juego no simula las otras 31 selecciones en un Mundial. Con un margen de tolerancia (`ONCE_IDEAL_MARGEN_PROMEDIO = 0.4`): desde OVR ~95 el rating de cada partido queda clampeado al tope (10.0) sin variación posible (ver [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)), así que comparar el promedio exacto dejaba el premio reservado casi solo a quien pisa ese umbral literal — con el margen, un promedio de élite real un poco por debajo (9.5-9.9) también tiene una chance genuina, no solo cero o cien por ciento.
 
-**🏆 Balón de Oro**: un puntaje combinado contra TODO el pool, sin importar posición — `calcularCalidadBalonDeOro(promedio, goles + asistencias, ganoTrofeo)` ([config.ts:1721](app/src/game/config.ts:1721)):
+**🏆 Balón de Oro**: un puntaje combinado contra TODO el pool, sin importar posición — `calcularCalidadBalonDeOro(promedio, goles + asistencias, ganoTrofeo)` ([config.ts:1735](app/src/game/config.ts:1735)):
 ```
 calidadRating    = clamp((promedio − 7.0) / 2.5, 0, 1)
 calidadGoleador  = clamp((goles + asistencias) / 40, 0, 1)     (BALON_ORO_REFERENCIA_GOLES)
@@ -646,22 +657,34 @@ calidad = 0.4 × calidadRating + 0.35 × calidadGoleador + 0.25 × calidadTrofeo
 ```
 Ninguna pata sola alcanza — hace falta rendimiento de élite **y** producción goleadora **y** haber ganado algo, las tres a la vez. Es el más difícil de los tres.
 
-`ganoTrofeo` (para el jugador) es `ganasteTrofeoDeEquipoOSeleccion`, capturado en `finalizarTemporada` **antes** de otorgar la Bota de Oro o el Once Ideal ([career.ts:862](app/src/stores/career.ts:862), pasado como parámetro a `evaluarPremiosMundiales`) — no se lee en vivo desde `temporadaActual.trofeos.length > 0` dentro de la misma función que evalúa los tres premios. La razón: Bota de Oro y Once Ideal NO requieren haber ganado nada de equipo, y esta misma función los agrega a ese array un poco más abajo — si el Balón de Oro mirara el array en ese momento, ganar cualquiera de esos dos premios individuales "contaría como trofeo" para el propio Balón de Oro, volviendo casi automático un barrido de los tres sin haber ganado una sola liga, copa o título con la selección (medido: 70% de las veces con estadísticas de élite y cero trofeos reales, contra 0.15% ya corregido).
+`ganoTrofeo` (para el jugador) es `ganasteTrofeoDeEquipoOSeleccion`, capturado en `finalizarTemporada` **antes** de otorgar la Bota de Oro o el Once Ideal ([career.ts:915](app/src/stores/career.ts:915), pasado como parámetro a `evaluarPremiosMundiales`) — no se lee en vivo desde `temporadaActual.trofeos.length > 0` dentro de la misma función que evalúa los tres premios. La razón: Bota de Oro y Once Ideal NO requieren haber ganado nada de equipo, y esta misma función los agrega a ese array un poco más abajo — si el Balón de Oro mirara el array en ese momento, ganar cualquiera de esos dos premios individuales "contaría como trofeo" para el propio Balón de Oro, volviendo casi automático un barrido de los tres sin haber ganado una sola liga, copa o título con la selección (medido: 70% de las veces con estadísticas de élite y cero trofeos reales, contra 0.15% ya corregido).
 
 Los tres empates (`>=` en vez de `>` en las tres comparaciones) los gana el jugador — dado el clampeo de rating de arriba, un empate exacto contra el pool es común en el tramo alto, y no tendría sentido que ese empate SIEMPRE lo pierda el jugador. Los trofeos ganados se guardan en el mismo array `temporadaActual.trofeos` que los de liga/copa/selección — reutilizan toda la UI existente sin cambios (badge, historial, resumen, tarjeta para compartir). Los tres premios ya tienen ícono propio en [assets/escudos/trofeos/](assets/escudos/trofeos/): `bota-de-oro.png`, `balon-de-oro.png` y `once-ideal.png`.
+
+### 14.3 Rival de carrera
+
+Los 24 candidatos a premios mundiales de arriba se generan y se descartan cada temporada — nunca quedan registrados en ningún lado. El rival reusa exactamente esa misma lógica de generación, pero **una sola vez**, al arrancar la carrera, y persiste: es un candidato de nivel élite que "empezó su carrera el mismo día que vos" y crece en paralelo, temporada a temporada, sin decisiones propias que tomar.
+
+**Generación** (`generarRival(edadJugador)`, [career.ts:756-776](app/src/stores/career.ts:756), llamado una sola vez desde `iniciarCarrera`, [career.ts:223](app/src/stores/career.ts:223)): mismo pool y mismo criterio de nivel que un candidato a premio (`sortearOvrCandidatoPremio`, `equipoElegibleParaOvr`+`pesoPorCercaniaNivel`+`elegirMejorEncaje`, `sortearGrupoCandidatoPremio`) — de hecho, la parte de "elegir club + grupo de posición para un candidato élite" está factorizada en un helper compartido, `elegirClubYGrupoElite(pool, ovr)` ([career.ts:739-751](app/src/stores/career.ts:739)), usado tanto acá como en `generarCandidatosPremiosMundiales` (arriba), sobre el mismo pool de equipos (`poolEquiposElite()`, [career.ts:721-732](app/src/stores/career.ts:721)). Sin nombre propio inventado — se lo referencia siempre como "un/a [posición] de [Club]" (mismo tono que ya usa el mensaje de subcampeón de Bota de Oro). A diferencia de un candidato a premio, el rival sí sortea su propio `factorTalento` y `potencialTecho` (`sortearFactorTalento`/`sortearPotencialTecho`, las mismas funciones que usa el propio jugador), porque los va a necesitar para crecer temporada a temporada.
+
+**Avance, en `finalizarTemporada`** ([career.ts:929-949](app/src/stores/career.ts:929), justo después de resolver los premios mundiales de la temporada): una sola llamada a `simularTramo` (mismo patrón que un candidato a premio, `rendimientoAcumulado: 0` porque no tiene decisiones propias) le suma goles/asistencias de esa temporada a sus totales de carrera, y `ajustarOvrTramo(ovr, 0, edadRival, factorTalento, potencialTecho)` — la misma fórmula de crecimiento de OVR que usa el propio jugador, reusada tal cual — le sube el OVR. **No** se simulan trofeos, lesiones ni convocatorias a selección del rival — a propósito, para mantener el feature chico: solo importan OVR, goles y asistencias de carrera.
+
+Al cerrar cada temporada se agrega un mensaje comparativo ([career.ts:966-971](app/src/stores/career.ts:966)): "Tu rival, un/a [posición] de [Club], lleva N goles en su carrera — vos llevás M." El resumen final de carrera (`ResumenModal.vue`) tiene además una sección "Tu rival" ([ResumenModal.vue:206](app/src/components/carrera/ResumenModal.vue:206)) con tus goles/asistencias/pico de OVR al lado de los suyos — ver [sección 22](#22-interfaz-componentes-composables-y-responsive). La tarjeta para compartir (`resumen-canvas.ts`) no incluye al rival todavía — queda afuera a propósito, documentado como tal en el propio archivo.
+
+Estado: `Rival` ([career-types.ts:189-200](app/src/game/career-types.ts:189)) es un nuevo objeto en el store (`rival`, `null` si no hay ligas con competición doméstica cargada), persistido en `guardar()`/`cargar()` igual que el resto del estado — ver [sección 23](#23-persistencia-y-estado).
 
 ---
 
 ## 15. Valor de mercado
 
-`calcularValorMercado(ovr, equipo, liga)` ([config.ts:644](app/src/game/config.ts:644)) — curva exponencial sobre el OVR (cada punto extra cerca del techo vale desproporcionadamente más, como en la vida real), multiplicada por la economía y el prestigio del club/liga actual (a propósito, **no** por su fuerza — ver [sección 14.0](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)):
+`calcularValorMercado(ovr, equipo, liga)` ([config.ts:649](app/src/game/config.ts:649)) — curva exponencial sobre el OVR (cada punto extra cerca del techo vale desproporcionadamente más, como en la vida real), multiplicada por la economía y el prestigio del club/liga actual (a propósito, **no** por su fuerza — ver [sección 14.0](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)):
 
 ```
-valorPorOvr = 3,000,000 × 1.08^(ovr − 45)       (VALOR_MERCADO_BASE, VALOR_MERCADO_CRECIMIENTO, config.ts:618-619)
+valorPorOvr = 3,000,000 × 1.08^(ovr − 45)       (VALOR_MERCADO_BASE, VALOR_MERCADO_CRECIMIENTO, config.ts:623-624)
 valorScore  = 0.6 × economía-efectiva + 0.4 × prestigio     (VALOR_PESO_ECONOMIA / _PRESTIGIO,
-              valorScoreEquipo/valorScoreLiga, config.ts:624-634)
+              valorScoreEquipo/valorScoreLiga, config.ts:632-639)
 multiplicadorClub = interpola entre 0.5 (valorScore más flojo) y 1.4 (más alto)
-                     combinando equipo y liga (55% / 45%, calcularMultiplicadorClub, config.ts:636-642)
+                     combinando equipo y liga (55% / 45%, calcularMultiplicadorClub, config.ts:641-647)
 valor = round(valorPorOvr × multiplicadorClub / 1000) × 1000    (redondeado al millar)
 ```
 
@@ -676,15 +699,28 @@ valor = round(valorPorOvr × multiplicadorClub / 1000) × 1000    (redondeado al
 | 95 | ~€191M |
 | 99 (techo casi mítico) | ~€260M |
 
-Se recalcula cada vez que cambia el OVR (cada tramo) y cada vez que cambiás de club (con la economía/prestigio del club nuevo). Se muestra formateado con `formatMarketValue` ([game/format.ts:17](app/src/game/format.ts:17)): `€4.1M`, `€130M`, etc.
+Se recalcula cada vez que cambia el OVR (cada tramo) y cada vez que cambiás de club (con la economía/prestigio del club nuevo). Se muestra formateado con `formatMarketValue` ([game/format.ts:38](app/src/game/format.ts:38)): `€4.1M`, `€130M`, etc.
 
-Para las **ofertas de fichaje** se usa una variante cosmética, `valorOfrecidoPorClub` ([config.ts:656](app/src/game/config.ts:656)), que le suma un ±8% de variación aleatoria (`OFERTA_VARIACION_VALOR`) — para que dos clubes de poder parecido no muestren el mismísimo número al centavo en sus tarjetas. No afecta tu valor de mercado real, solo el texto "Te valoran en €X" de esa tarjeta puntual.
+Para las **ofertas de fichaje** se usa una variante cosmética, `valorOfrecidoPorClub` ([config.ts:661](app/src/game/config.ts:661)), que le suma un ±8% de variación aleatoria (`OFERTA_VARIACION_VALOR`) — para que dos clubes de poder parecido no muestren el mismísimo número al centavo en sus tarjetas. No afecta tu valor de mercado real, solo el texto "Te valoran en €X" de esa tarjeta puntual.
+
+**Reputación (fama)** — un eje DISTINTO del OVR, a propósito: podés ser muy bueno y poco conocido, o al revés. Escala acotada 0-100 igual que el resto de los medidores del juego, monotónica (solo sube, nunca decae — no hay "mala prensa" que reste en esta versión). Dos fuentes:
+
+- **Decisiones de prensa**: `EfectosOpcion` ganó un cuarto campo opcional, `fama?: number` ([events.ts:71](app/src/data/events.ts:71)) — queda en 0 sin tocar para las 200 entradas que no lo usan, y está curado a mano (valores chicos, de -2 a +3, algún -4 en los eventos de alto impacto) en las ~26 entradas con `personajes: ["prensa"]`. Se aplica en `resolveDecisionEvento` ([career.ts:1102-1104](app/src/stores/career.ts:1102)), clampeado a `[0, FAMA_MAX]`.
+- **Trofeos de la temporada**: al cerrar cada temporada, cada trofeo en `t.trofeos` (que en ese punto ya incluye los de club/selección **y** los premios individuales que acaba de agregar `evaluarPremiosMundiales`, [sección 14.2](#142-premios-mundiales-bota-de-oro-once-ideal-y-balón-de-oro)) suma `FAMA_POR_TROFEO` o `FAMA_POR_PREMIO_INDIVIDUAL` si es Bota de Oro/Balón de Oro/Once Ideal ([career.ts:919-927](app/src/stores/career.ts:919)):
+
+```
+FAMA_POR_TROFEO: 2              (config.ts:2042)
+FAMA_POR_PREMIO_INDIVIDUAL: 6   (config.ts:2043, pesa más que un trofeo de equipo)
+FAMA_MAX: 100                   (config.ts:2041)
+```
+
+Se muestra como una **etiqueta de nivel**, no como número crudo — a propósito, para que se lea como un eje distinto del OVR y no compita con él como "el número importante". `famaTierLabel`/`famaTierColor` ([game/format.ts:20-37](app/src/game/format.ts:20)) mapean 6 niveles (Anónimo, Promesa, Conocido, Estrella, Ídolo, Leyenda mundial) con una paleta de color propia — deliberadamente distinta de `ovrTierColor` (bronce/plata/oro/zafiro/rubí/amatista), para no leerse como el mismo medidor. Aparece como chip en el hero (`HeroPanel.vue:80-82`) y como tile en el resumen final de carrera (`ResumenModal.vue:157`) — ver [sección 22](#22-interfaz-componentes-composables-y-responsive).
 
 ---
 
 ## 16. Sistema de fichajes y ofertas
 
-Toda la lógica vive en `generarLoteOfertas()` ([career.ts:362](app/src/stores/career.ts:362)), que corre en la única pausa de "oferta" de cada temporada (ver [sección 7](#7-calendario-de-temporada)).
+Toda la lógica vive en `generarLoteOfertas()` ([career.ts:379](app/src/stores/career.ts:379)), que corre en la única pausa de "oferta" de cada temporada (ver [sección 7](#7-calendario-de-temporada)).
 
 ### 16.1 Retiro forzoso (el corte final)
 
@@ -694,7 +730,7 @@ if (edad >= edadRetiroForzoso) return [ solo la carta de retiro forzoso ];
 
 `edadRetiroForzoso` se sortea **una sola vez por carrera**, entre 41 y 45 años (`EDAD_RETIRO_FORZOSO_MIN`/`MAX`). A partir de esa edad, no importa el club ni el OVR: la única carta es retirarte.
 
-**Transición previa (no es un corte seco)**: en las **2 temporadas** justo antes de esa edad (`EDAD_RETIRO_TRANSICION`, [config.ts:927](app/src/game/config.ts:927)), el cupo de ofertas de club se reduce a **1** en vez de 2 — cada vez menos clubes se animan a día ofertarte, hasta que en la última temporada esa única oferta también desaparece. Se implementa como una tercera categoría de cupo en [career.ts:440-441](app/src/stores/career.ts:440): `enTransicionRetiro` reduce `cantidadOfertasClub` a 1 (solo si el contrato actual sigue en pie), antes de llegar al corte total de la edad forzosa.
+**Transición previa (no es un corte seco)**: en las **2 temporadas** justo antes de esa edad (`EDAD_RETIRO_TRANSICION`, [config.ts:944](app/src/game/config.ts:944)), el cupo de ofertas de club se reduce a **1** en vez de 2 — cada vez menos clubes se animan a día ofertarte, hasta que en la última temporada esa única oferta también desaparece. Se implementa como una tercera categoría de cupo en [career.ts:457-458](app/src/stores/career.ts:457): `enTransicionRetiro` reduce `cantidadOfertasClub` a 1 (solo si el contrato actual sigue en pie), antes de llegar al corte total de la edad forzosa.
 
 ### 16.2 Período de gracia de contrato
 
@@ -705,11 +741,11 @@ enGraciaDeContrato = temporadasEnClubActual < graciaContrato
 
 Mientras estés en gracia, tu club **nunca** puede "no renovarte" — sin este colchón, cualquier club de nivel medio/alto para arriba te dejaría ir en tu primerísima ventana de fichajes, porque ningún novato arranca con el OVR de un jugador hecho (ver [sección 5](#5-elección-de-club-inicial-viewsequipoviewvue): tope de 65 vs. ventanas de OVR que fácilmente piden 70+). El contador (`temporadasEnClubActual`) se resetea a 0 cada vez que fichás por otro club y sube +1 en cada cierre de temporada en el mismo club.
 
-El período de gracia es distinto para el **primer club de la carrera** (el de la creación de personaje): **4 temporadas** en vez de las 2 normales de cualquier club fichado después — es tu debut real, no alguien fichado ya con currículum, así que el club que apostó por vos te da el doble de margen. Se trackea con `esPrimerClub` ([career.ts:115](app/src/stores/career.ts:115), arranca en `true` y pasa a `false` para siempre en el primer traspaso, en `resolveOferta`).
+El período de gracia es distinto para el **primer club de la carrera** (el de la creación de personaje): **4 temporadas** en vez de las 2 normales de cualquier club fichado después — es tu debut real, no alguien fichado ya con currículum, así que el club que apostó por vos te da el doble de margen. Se trackea con `esPrimerClub` ([career.ts:119](app/src/stores/career.ts:119), arranca en `true` y pasa a `false` para siempre en el primer traspaso, en `resolveOferta`).
 
 ### 16.3 ¿Tu club actual te renueva?
 
-Pasado el período de gracia, `contratoDebeTerminar(equipo, liga, ovr, promedioTemporadaAnterior)` ([config.ts:957](app/src/game/config.ts:957)) compara primero tu OVR contra la "ventana de OVR" de tu propio club (ver 16.5 más abajo): si llegás al mínimo, seguís sin más vueltas. Si no llegás, todavía hay una salida: si el **promedio de rating con el que cerraste la temporada anterior** fue realmente bueno (`≥ 7.5`, `CONTRATO_RENDIMIENTO_SALVAVIDAS`, muy por encima del neutral de 6.5) el club te renueva igual — así se puede cerrar una temporada brillante en goles/asistencias/rating sin que el club te corte solo porque el OVR (que crece con su propia curva de edad/techo, no 1 a 1 con las estadísticas del año) no llegó a tiempo. Si ninguna de las dos te salva, no te renuevan — la carta de "Quedarme" se reemplaza por una de retiro (no forzoso, con el texto "decide no renovarte para la próxima temporada").
+Pasado el período de gracia, `contratoDebeTerminar(equipo, liga, ovr, promedioTemporadaAnterior)` ([config.ts:974](app/src/game/config.ts:974)) compara primero tu OVR contra la "ventana de OVR" de tu propio club (ver 16.5 más abajo): si llegás al mínimo, seguís sin más vueltas. Si no llegás, todavía hay una salida: si el **promedio de rating con el que cerraste la temporada anterior** fue realmente bueno (`≥ 7.5`, `CONTRATO_RENDIMIENTO_SALVAVIDAS`, muy por encima del neutral de 6.5) el club te renueva igual — así se puede cerrar una temporada brillante en goles/asistencias/rating sin que el club te corte solo porque el OVR (que crece con su propia curva de edad/techo, no 1 a 1 con las estadísticas del año) no llegó a tiempo. Si ninguna de las dos te salva, no te renuevan — la carta de "Quedarme" se reemplaza por una de retiro (no forzoso, con el texto "decide no renovarte para la próxima temporada").
 
 ### 16.4 Retiro voluntario
 
@@ -721,7 +757,7 @@ Desde los 36 años podés elegir colgar los botines aunque tu club te siga queri
 
 ### 16.5 Elegibilidad real: la "ventana de OVR" de cada club
 
-Cada combinación equipo+liga solo puede ofertarte si tu OVR cae dentro de su ventana — `equipoElegibleParaOvr` / `ventanaOvrOferta` ([config.ts:886-895](app/src/game/config.ts:886)):
+Cada combinación equipo+liga solo puede ofertarte si tu OVR cae dentro de su ventana — `equipoElegibleParaOvr` / `ventanaOvrOferta` ([config.ts:903-914](app/src/game/config.ts:903)):
 
 ```
 centro = 45 + calidadPoderCombinada(equipo, liga) × 54    (mapeado a todo el rango 45-99 de carrera)
@@ -730,7 +766,7 @@ ventana = [ clamp(centro − 13, 45, 99) , clamp(centro + 13, 45, 99) ]     (OFE
 
 Es un **corte duro**, no solo "menos probable": un club chico deja de poder ofertarte en cuanto sos demasiado bueno para él, y uno grande no entra en juego hasta que estás a su altura (con la tolerancia de 13 puntos, los clubes top del mundo ya son alcanzables desde ~86 de OVR). Esta ventana de elegibilidad **no cambió** con el ajuste de pesos de 16.6 — lo que cambió es solo cómo se prioriza/ordena a los ya elegibles, no quién entra al pool.
 
-Además, la oferta tiene que tener sentido en plata: `ofertaTieneValorRazonable(valorActual, valorEnClub)` ([config.ts:657-659](app/src/game/config.ts:657)) descarta clubes donde fichar implicaría un desplome de más del 60% de tu valor de mercado actual (`OFERTA_UMBRAL_CAIDA_VALOR = 0.4`, es decir el club tiene que ofrecerte como mínimo el 40% de lo que valés hoy), aunque el margen de OVR lo deje pasar.
+Además, la oferta tiene que tener sentido en plata: `ofertaTieneValorRazonable(valorActual, valorEnClub)` ([config.ts:673-677](app/src/game/config.ts:673)) descarta clubes donde fichar implicaría un desplome de más del 60% de tu valor de mercado actual (`OFERTA_UMBRAL_CAIDA_VALOR = 0.4`, es decir el club tiene que ofrecerte como mínimo el 40% de lo que valés hoy), aunque el margen de OVR lo deje pasar.
 
 Si el cruce de ambos filtros deja el pool vacío (dataset chico o caso límite), se relaja primero el filtro de valor, y si todavía no alcanza, se usan todos los candidatos — nunca se deja al jugador sin ofertas.
 
@@ -738,7 +774,7 @@ Si el cruce de ambos filtros deja el pool vacío (dataset chico o caso límite),
 
 Dentro del pool ya elegible, no se sortea parejo entre todos:
 
-1. **Potencial ajustado por edad** (no el OVR real) decide a qué poder de club/liga "apunta" el jugador — `potencialAjustadoPorEdad(ovr, edad)` ([config.ts:998](app/src/game/config.ts:998)):
+1. **Potencial ajustado por edad** (no el OVR real) decide a qué poder de club/liga "apunta" el jugador — `potencialAjustadoPorEdad(ovr, edad)` ([config.ts:1015](app/src/game/config.ts:1015)):
 
    ```
    17 a 24 años: bono que baja linealmente de +8 (a los 17) a 0 (a los 24) — EDAD_POTENCIAL_BONUS_MAX/HASTA
@@ -748,7 +784,7 @@ Dentro del pool ya elegible, no se sortea parejo entre todos:
 
    Esto **no** toca la elegibilidad real del punto 16.5 (esa sigue siendo puro OVR) — solo decide, entre los clubes ya alcanzables, cuáles se priorizan. A igual OVR, un jugador de 27 años apunta más arriba que uno de 38.
 
-2. Con ese potencial se calcula un **único** `poderObjetivo` ([config.ts:831](app/src/game/config.ts:831): más OVR, más poder objetivo), y el peso de cada candidato según qué tan cerca está de ese objetivo (`pesoPorCercaniaNivel`, [config.ts:854](app/src/game/config.ts:854)):
+2. Con ese potencial se calcula un **único** `poderObjetivo` ([config.ts:848](app/src/game/config.ts:848): más OVR, más poder objetivo), y el peso de cada candidato según qué tan cerca está de ese objetivo (`pesoPorCercaniaNivel`, [config.ts:871](app/src/game/config.ts:871)):
 
    ```
    deltaEquipo = (poderEquipo − poderObjetivo) / 10     (PESO_ESCALA_DISTANCIA — lleva el delta,
@@ -760,7 +796,7 @@ Dentro del pool ya elegible, no se sortea parejo entre todos:
 
    **Asimétrico a propósito**: "quedarte corto" de poder (delta negativo — un club/liga peor de lo que tu potencial pide) pesa la distancia completa, pero "sobrar" (delta positivo, un club/liga mejor) casi no penaliza (factor 0.05 en vez de 1). Con una fórmula simétrica, un club top "se pasaba" del objetivo tanto como un club chico se quedaba corto, y ambos pesaban lo mismo — en la práctica, nunca aparecían los grandes de Europa hasta OVRs absurdamente altos. Con el peso asimétrico, un club mejor que tu objetivo deja de competir en desventaja contra uno que directamente te queda grande.
 
-3. **`elegirMejorEncaje`** ([config.ts:812](app/src/game/config.ts:812)): apoyada en `gruposTierAlto` ([config.ts:806](app/src/game/config.ts:806), ver también 16.7), ordena los candidatos por peso descendente y sortea (ponderado, para que siga habiendo variedad) **solo dentro del 40% superior** (`OFERTA_TOP_ENCAJE_FRACCION`) — así, si tu nivel da para los grandes, van a ser los grandes los que en verdad aparezcan, en vez de perderse en un sorteo parejo contra todo el pool elegible.
+3. **`elegirMejorEncaje`** ([config.ts:829](app/src/game/config.ts:829)): apoyada en `gruposTierAlto` ([config.ts:823](app/src/game/config.ts:823), ver también 16.7), ordena los candidatos por peso descendente y sortea (ponderado, para que siga habiendo variedad) **solo dentro del 40% superior** (`OFERTA_TOP_ENCAJE_FRACCION`) — así, si tu nivel da para los grandes, van a ser los grandes los que en verdad aparezcan, en vez de perderse en un sorteo parejo contra todo el pool elegible.
 
 ### 16.7 Cuántas ofertas de club, y la garantía de "tu entorno" (condicional)
 
@@ -769,16 +805,16 @@ Dentro del pool ya elegible, no se sortea parejo entre todos:
 
 Con 3 cupos, la garantía de "tu entorno" ya **no es incondicional** — solo se activa si ese entorno sigue siendo un destino de tu nivel:
 
-- `gruposTierAlto(elegibles, pesoFn)` ([config.ts:806](app/src/game/config.ts:806)) calcula el mismo 40% superior por peso que usa `elegirMejorEncaje` (16.6) sobre **todos** los elegibles, sin filtrar por entorno.
+- `gruposTierAlto(elegibles, pesoFn)` ([config.ts:823](app/src/game/config.ts:823)) calcula el mismo 40% superior por peso que usa `elegirMejorEncaje` (16.6) sobre **todos** los elegibles, sin filtrar por entorno.
 - Si algún club de tu entorno cae dentro de ese tier alto, se garantizan **hasta 2 ofertas** de ahí — exactamente 2 si hay al menos 2 candidatos en esa intersección, menos si no los hay.
 - Si **ningún** club de tu entorno llega al tier alto (tu nivel ya superó a tu liga actual, o a tu país de origen si sos veterano), la garantía **desaparece del todo** — salvo la excepción de abajo para veteranos.
 
 "Tu entorno" es:
 
 - Normalmente, **tu liga actual**.
-- Desde los **33 años** (`EDAD_OCASO_RETORNO_PAIS`, [config.ts:1021](app/src/game/config.ts:1021)), pasa a ser **tu país de origen** — para simular volver a cerrar la carrera en casa, aunque la hayas jugado toda en el exterior.
+- Desde los **33 años** (`EDAD_OCASO_RETORNO_PAIS`, [config.ts:1038](app/src/game/config.ts:1038)), pasa a ser **tu país de origen** — para simular volver a cerrar la carrera en casa, aunque la hayas jugado toda en el exterior.
 
-**Retorno nostálgico esporádico (solo veteranos, 33+)**: si tu país de origen ya no entra en el tier alto (tu nivel lo superó de sobra) pero igual hay clubes elegibles ahí, aparece **como máximo 1** oferta de esos clubes con **30% de probabilidad** por ventana (`PROB_OFERTA_NOSTALGICA`, [config.ts:1022](app/src/game/config.ts:1022)) — ya no es una garantía, es una posibilidad ocasional de que un club de tu país intente el gesto sentimental de traerte de vuelta, sin que se sienta forzado en cada carrera.
+**Retorno nostálgico esporádico (solo veteranos, 33+)**: si tu país de origen ya no entra en el tier alto (tu nivel lo superó de sobra) pero igual hay clubes elegibles ahí, aparece **como máximo 1** oferta de esos clubes con **30% de probabilidad** por ventana (`PROB_OFERTA_NOSTALGICA`, [config.ts:1039](app/src/game/config.ts:1039)) — ya no es una garantía, es una posibilidad ocasional de que un club de tu país intente el gesto sentimental de traerte de vuelta, sin que se sienta forzado en cada carrera.
 
 El resto de los cupos (y todo, si no hay candidatos de entorno) sale libre del pool elegible completo, mismo criterio de mejor encaje. Si aun así faltan candidatos distintos, se completa repitiendo clubes antes que mostrar menos ofertas de las que corresponden.
 
@@ -786,7 +822,7 @@ El resto de los cupos (y todo, si no hay candidatos de entorno) sale libre del p
 
 Las cartas ya **no se mezclan en orden aleatorio**: la carta de tu club actual (quedarme, o el retiro forzoso si no te renuevan) va siempre **primera**; si además aparece la opción de retirarte voluntariamente (16.4), esa va **segunda**. El resto de ofertas de club llena los cupos restantes, en cualquier orden — así el jugador siempre encuentra "seguir acá" (y "retirarme", si corresponde) en el mismo lugar de la fila, en vez de tener que buscarlos entre las demás ofertas.
 
-Un solo clic resuelve toda la pausa (`resolveOferta`, [career.ts:1008](app/src/stores/career.ts:1008)):
+Un solo clic resuelve toda la pausa (`resolveOferta`, [career.ts:1119](app/src/stores/career.ts:1119)):
 
 - **Retiro** → cierra la carrera ([sección 17](#17-fin-de-carrera-retiro-y-resumen)).
 - **Fichar por un club nuevo** → la ventana única de fichajes (ver [sección 7](#7-calendario-de-temporada)) cae siempre en pretemporada, así que el traspaso arranca la temporada entera de cero con el club nuevo (nunca parte un año en dos filas de historial): se actualiza club, liga, valor de mercado, se reinician `competiciones` desde cero (la clasificación internacional no se hereda — es del club, no tuya), se resetea `temporadasEnClubActual` a 0 y la forma vuelve a "regular".
@@ -806,19 +842,19 @@ pesoTitular < 0.35                (PRESTAMO_PESO_TITULAR_UMBRAL — no te estás
 promedioTemporadaAnterior < 6.0   (PRESTAMO_PROMEDIO_UMBRAL — por debajo del neutral, 6.5)
 ```
 
-(`clubDebePrestar`, [config.ts:979](app/src/game/config.ts:979)). Pasado el período de gracia, sigue rigiendo 16.3 sin cambios — un préstamo solo tiene sentido mientras el club todavía te quiere conservar a largo plazo.
+(`clubDebePrestar`, [config.ts:996](app/src/game/config.ts:996)). Pasado el período de gracia, sigue rigiendo 16.3 sin cambios — un préstamo solo tiene sentido mientras el club todavía te quiere conservar a largo plazo.
 
 Si corresponde, la pausa muestra solo 2 cartas: "Quedarme" (igual que siempre) y "Préstamo", con un club destino elegido con el mismo criterio de encaje de 16.6 (misma ventana de OVR de 16.5, mismo peso por cercanía de nivel). Aceptarlo actualiza club/competiciones/pesoTitular/forma igual que un traspaso real de 16.8 — pero, a diferencia de un traspaso, **no** resetea `temporadasEnClubActual` ni `esPrimerClub`: seguís siendo del club dueño, así que su reloj de contrato sigue corriendo esa temporada también.
 
 Al cerrar la temporada de préstamo, volvés automáticamente al club dueño — sin pedirte nada, sin heredar `pesoTitular` (te lo tenés que volver a ganar ahí, no en el club prestado) ni clasificación internacional (es del club dueño, y no hay forma de saber cómo le fue mientras no estabas — mismo criterio que ya usa un traspaso real, que tampoco la hereda).
 
-(`generarLoteOfertas` [career.ts:362](app/src/stores/career.ts:362) / `resolveOferta` [career.ts:1008](app/src/stores/career.ts:1008) / `finalizarTemporada` [career.ts:816](app/src/stores/career.ts:816))
+(`generarLoteOfertas` [career.ts:379](app/src/stores/career.ts:379) / `resolveOferta` [career.ts:1119](app/src/stores/career.ts:1119) / `finalizarTemporada` [career.ts:869](app/src/stores/career.ts:869))
 
 ---
 
 ## 17. Fin de carrera: retiro y resumen
 
-Al aceptar una carta de retiro (`finalizarCarrera`, [career.ts:1072](app/src/stores/career.ts:1072)):
+Al aceptar una carta de retiro (`finalizarCarrera`, [career.ts:1185](app/src/stores/career.ts:1185)):
 
 - Se archiva la temporada en curso tal como quedó — **solo si de verdad se jugó algo** (`t.partidos > 0`). El retiro siempre se decide en la pausa de fichajes, que cae al arranque de una temporada nueva (`crearCalendarioTemporada`, progreso 0, antes de simular cualquier tramo — ver [sección 7](#7-calendario-de-temporada)), así que esa temporada recién creada nunca tiene partidos jugados. Antes se guardaba igual en el historial, dejando siempre una fila fantasma con 0 partidos/goles/asistencias como "última temporada" de toda carrera.
 - El spotlight desaparece y el panel de decisiones (`DecisionsPanel.vue`) muestra el mensaje de despedida con **2 botones**:
@@ -830,15 +866,43 @@ Al aceptar una carta de retiro (`finalizarCarrera`, [career.ts:1072](app/src/sto
     - **Trofeos**, agrupados por tipo (un solo ícono por trofeo distinto, con un contador "×N" si lo ganaste más de una vez).
   - **"Aceptar"** → `router.push('/')` para volver a la pantalla de creación de personaje y arrancar una carrera nueva ([DecisionsPanel.vue:71](app/src/components/carrera/DecisionsPanel.vue:71)).
 
-Toda la lógica de agregación (incluida la serie de OVR para el gráfico) vive en `construirResumenCarrera()` ([career.ts:1090](app/src/stores/career.ts:1090)).
+Toda la lógica de agregación (incluida la serie de OVR para el gráfico) vive en `construirResumenCarrera()` ([career.ts:1210](app/src/stores/career.ts:1210)).
+
+### Epílogo: un último flavor sobre cómo sigue tu historia
+
+Antes de mostrar el mensaje final de arriba, `DecisionsPanel.vue` primero
+te hace una sola pregunta de despedida — no es un modo de juego nuevo, no
+simula una carrera de entrenador, es una decisión de 1 tramo que solo
+cambia una frase (`v-if="career.carreraFinalizada && !career.epilogoElegido"`,
+[DecisionsPanel.vue:87-95](app/src/components/carrera/DecisionsPanel.vue:87)):
+
+> "Tu carrera profesional terminó. ¿Qué sigue para vos?"
+> **"Colgar los botines para siempre"** / **"Seguir ligado al fútbol"**
+
+Cada botón llama a `career.resolverEpilogo(optionIdx)` ([career.ts:1205](app/src/stores/career.ts:1205)),
+que guarda la elección en `epilogoElegido` (`'retirado'` o `'entrenador'`,
+tipo `EpilogoOpcion`, [career-types.ts:182](app/src/game/career-types.ts:182))
+y persiste (`guardar()`). Recién ahí aparece la segunda rama
+(`v-else-if="career.carreraFinalizada && career.epilogoElegido"`,
+[DecisionsPanel.vue:97-108](app/src/components/carrera/DecisionsPanel.vue:97)) con el mensaje de
+despedida original más una frase agregada según la elección ("Se aleja
+del fútbol profesional." / "Sigue ligado al fútbol como entrenador."), y
+los botones de siempre. La misma frase se repite en el subtítulo del
+banner de `ResumenModal.vue` ([ResumenModal.vue:112-117](app/src/components/carrera/ResumenModal.vue:112)),
+`v-if="career.epilogoElegido"`, para que quede visible también si volvés
+a abrir el resumen más tarde.
+
+Si recargás la página justo antes de elegir, `cargar()` restaura
+`carreraFinalizada: true` con `epilogoElegido: null` y la pregunta vuelve
+a aparecer tal cual — no queda una pantalla rota a mitad de camino.
 
 ---
 
 ## 18. Solicitud de cambio de dorsal
 
-Se habilita al cerrar **cada** temporada ([career.ts:908-909](app/src/stores/career.ts:908)) y queda disponible hasta que se use (no hace falta pedirlo en el momento). Un solo pedido por vez.
+Se habilita al cerrar **cada** temporada ([career.ts:1016-1017](app/src/stores/career.ts:1016)) y queda disponible hasta que se use (no hace falta pedirlo en el momento). Un solo pedido por vez.
 
-`probabilidadAceptarCambioNumero(ovr, equipoAcumuladoTemporada)` ([config.ts:1914](app/src/game/config.ts:1914)) — evaluado con el OVR y el rendimiento colectivo **con los que cerró** la temporada anterior, no con los de la nueva (que todavía no jugó nada):
+`probabilidadAceptarCambioNumero(ovr, equipoAcumuladoTemporada)` ([config.ts:1940](app/src/game/config.ts:1940)) — evaluado con el OVR y el rendimiento colectivo **con los que cerró** la temporada anterior, no con los de la nueva (que todavía no jugó nada):
 
 ```
 prob = clamp(0.3 + (ovr − 45) × 0.008 + equipoAcumuladoTemporada × 0.05, 0.05, 0.95)
@@ -858,7 +922,7 @@ Sistema aparte del banco de eventos (aunque su tarjeta se muestra en el mismo lu
 
 ### 19.2 Convocatoria
 
-Se sortea **una vez por temporada**, igual mecanismo que Alto Impacto (ver [sección 20](#20-banco-de-eventos-de-temporada-dataeventsts)): cada país tiene un "OVR de referencia" que te da un 50/50 de ser convocado — `probConvocatoria(ovr, fuerzaSeleccion)` ([config.ts:1749](app/src/game/config.ts:1749)):
+Se sortea **una vez por temporada**, igual mecanismo que Alto Impacto (ver [sección 20](#20-banco-de-eventos-de-temporada-dataeventsts)): cada país tiene un "OVR de referencia" que te da un 50/50 de ser convocado — `probConvocatoria(ovr, fuerzaSeleccion)` ([config.ts:1763](app/src/game/config.ts:1763)):
 
 ```
 umbral = 50 + fuerzaSeleccion × 0.35                         (UMBRAL_OVR_CONVOCATORIA_BASE/_FACTOR)
@@ -882,7 +946,7 @@ Se identifica con un 🌍 en la esquina superior derecha de la tarjeta (mismo lu
 
 ### 19.4 Qué se juega — amistosos, eliminatorias o el torneo grande
 
-El calendario de grandes torneos sale directo del número de temporada, sin estado adicional que guardar (`tipoAnoTorneoSeleccion`, [config.ts:1811](app/src/game/config.ts:1811)):
+El calendario de grandes torneos sale directo del número de temporada, sin estado adicional que guardar (`tipoAnoTorneoSeleccion`, [config.ts:1825](app/src/game/config.ts:1825)):
 
 ```
 temporada % 4 == 1  →  año de Mundial
@@ -890,7 +954,7 @@ temporada % 4 == 3  →  año de copa continental (Copa América / Eurocopa / Co
 en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 ```
 
-Al aceptar priorizar la convocatoria, `resolverParticipacionSeleccion` ([career.ts:918](app/src/stores/career.ts:918)) resuelve todo de un saque (no se reparte en tramos como las copas de club):
+Al aceptar priorizar la convocatoria, `resolverParticipacionSeleccion` ([career.ts:1026](app/src/stores/career.ts:1026)) resuelve todo de un saque (no se reparte en tramos como las copas de club):
 
 - **Año sin torneo**: jugás entre 3 y 5 amistosos (`PARTIDOS_AMISTOSO_SELECCION_MIN/MAX`) — antes era un número fijo (2), sin variación de temporada a temporada.
 - **Año de torneo**: la campaña de eliminatorias se juega **siempre**, clasifiques o no — entre 6 y 10 partidos (`PARTIDOS_ELIMINATORIAS_MIN/MAX`). Antes esto solo aparecía como "premio consuelo" al no clasificar, con el mismo número fijo (2) que un año de amistosos, así que nunca se sentían distintos. Después se tira si tu país **clasifica** (`probClasificarTorneoSeleccion(calidad) = clamp(0.15 + 0.8 × calidad, 0.05, 0.97)`, más parejo que ganarlo):
@@ -900,9 +964,9 @@ Al aceptar priorizar la convocatoria, `resolverParticipacionSeleccion` ([career.
 
 Con esto, el total de partidos de un año de torneo grande varía entre 6 (no clasificó) y 17+ (campeón del Mundial) en vez de saltar solo entre 2 (amistoso) o 6 (techo viejo de una campaña corta) como antes.
 
-`calidad` es `calidadSeleccion(fuerzaSeleccion, forma)` ([config.ts:1764](app/src/game/config.ts:1764)): la fuerza fija del país pesa la enorme mayoría, con un empujón chico (`SELECCION_PESO_JUGADOR = 0.15`) según tu forma del momento — un solo jugador no decide el destino de todo un seleccionado.
+`calidad` es `calidadSeleccion(fuerzaSeleccion, forma)` ([config.ts:1778](app/src/game/config.ts:1778)): la fuerza fija del país pesa la enorme mayoría, con un empujón chico (`SELECCION_PESO_JUGADOR = 0.15`) según tu forma del momento — un solo jugador no decide el destino de todo un seleccionado.
 
-Los goles y asistencias de esos partidos reutilizan `GameConfig.simularTramo` tal cual la usa el club (misma propensión por posición individual, [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)), para que rendir con la selección se sienta igual que con el club — [career.ts:965-972](app/src/stores/career.ts:965).
+Los goles y asistencias de esos partidos reutilizan `GameConfig.simularTramo` tal cual la usa el club (misma propensión por posición individual, [sección 10](#10-estadísticas-del-tramo-goles-asistencias-mvp-rating)), para que rendir con la selección se sienta igual que con el club — [career.ts:1073-1080](app/src/stores/career.ts:1073).
 
 ### 19.5 Estadísticas y dónde se ven
 
@@ -910,7 +974,7 @@ Cada temporada guarda su propio `seleccionPartidos`/`seleccionGoles`/`seleccionA
 
 - **Temporada en curso**: si hubo convocatoria, el spotlight muestra una línea aparte con la bandera del país + "Selección: N PJ · M G · P A", debajo del club/liga (desktop y mobile).
 - **Historial**: cada temporada pasada con convocatoria repite esa misma línea en su propia fila, sin desplazar las columnas de club (trofeos, OVR, stats).
-- **Resumen final de carrera**: una sección "Con la selección" con la bandera, el país y el total acumulado de partidos/goles/asistencias de toda la carrera (`construirResumenCarrera`, [career.ts:1090](app/src/stores/career.ts:1090)) — y los trofeos de selección aparecen mezclados con los de club en la misma fila de trofeos, porque comparten el mismo array.
+- **Resumen final de carrera**: una sección "Con la selección" con la bandera, el país y el total acumulado de partidos/goles/asistencias de toda la carrera (`construirResumenCarrera`, [career.ts:1210](app/src/stores/career.ts:1210)) — y los trofeos de selección aparecen mezclados con los de club en la misma fila de trofeos, porque comparten el mismo array.
 
 ---
 
@@ -926,17 +990,19 @@ Cada temporada guarda su propio `seleccionPartidos`/`seleccionGoles`/`seleccionA
 | `porEdad.veterano` | 34 | 33+ años |
 | `altoImpacto` | 22 | Cualquier edad, máx. 1 por temporada |
 
-**Selección de un evento normal** (`elegirEventoPorTipo`, [career.ts:232](app/src/stores/career.ts:232)): para cada pausa, 50/50 si sale del banco `generales` o del banco correspondiente a la edad actual; dentro de ese banco se filtra por tipo (`"personal"` o `"deportivo"` — cada pausa siempre muestra exactamente 1 de cada). **Ningún evento se repite en la misma carrera**: se recuerda cada id ya usado (`eventosUsados`, [career.ts:120](app/src/stores/career.ts:120), compartido entre bancos) y se excluye de futuros sorteos; si un banco se queda sin eventos sin usar de ese tipo (carrera muy larga), se libera el filtro para ese banco puntual antes que forzar una repetición.
+**Selección de un evento normal** (`elegirEventoPorTipo`, [career.ts:249](app/src/stores/career.ts:249)): para cada pausa, 50/50 si sale del banco `generales` o del banco correspondiente a la edad actual; dentro de ese banco se filtra por tipo (`"personal"` o `"deportivo"` — cada pausa siempre muestra exactamente 1 de cada). **Ningún evento se repite en la misma carrera**: se recuerda cada id ya usado (`eventosUsados`, [career.ts:124](app/src/stores/career.ts:124), compartido entre bancos) y se excluye de futuros sorteos; si un banco se queda sin eventos sin usar de ese tipo (carrera muy larga), se libera el filtro para ese banco puntual antes que forzar una repetición.
 
-**Eventos de debut**: 2 eventos de `porEdad.novato` (`nov-08`, `nov-32`) están escritos sobre el debut profesional en sí ("un defensor te marca en tu debut", "debutás en un estadio gigante") — un momento que ocurre una única vez. Quedan marcados con `debut: true` y `esElegibleParaDebut(evento)` ([career.ts:223](app/src/stores/career.ts:223)) los excluye del sorteo salvo que sea, literal, la primera pausa de decisión de toda la carrera (Temporada 1, antes de simular el primer tramo).
+**Eventos de debut**: 2 eventos de `porEdad.novato` (`nov-08`, `nov-32`) están escritos sobre el debut profesional en sí ("un defensor te marca en tu debut", "debutás en un estadio gigante") — un momento que ocurre una única vez. Quedan marcados con `debut: true` y `esElegibleParaDebut(evento)` ([career.ts:240](app/src/stores/career.ts:240)) los excluye del sorteo salvo que sea, literal, la primera pausa de decisión de toda la carrera (Temporada 1, antes de simular el primer tramo).
 
-**Eventos incompatibles con estar lesionado**: 14 eventos (12 normales + `ai-16`/`ai-17` de `altoImpacto`) presuponen que el jugador está jugando en ese momento — pedir un penal, ganarse minutos, marcar al goleador rival, jugar con una molestia, recibir una crítica post-partido — algo contradictorio si está lesionado y sin sumar minutos. Quedan marcados con `noDuranteLesion: true` y `esElegibleDuranteLesion(evento)` ([career.ts:227](app/src/stores/career.ts:227)) los excluye del sorteo mientras `temporadaActual.lesionActiva` esté activo (ver [sección 13](#13-lesiones)) — el resto del banco (familia, prensa, vestuario, eventos que solo mencionan un partido próximo sin requerir que el jugador esté en cancha) sigue funcionando igual durante la baja.
+**Eventos incompatibles con estar lesionado**: 14 eventos (12 normales + `ai-16`/`ai-17` de `altoImpacto`) presuponen que el jugador está jugando en ese momento — pedir un penal, ganarse minutos, marcar al goleador rival, jugar con una molestia, recibir una crítica post-partido — algo contradictorio si está lesionado y sin sumar minutos. Quedan marcados con `noDuranteLesion: true` y `esElegibleDuranteLesion(evento)` ([career.ts:244](app/src/stores/career.ts:244)) los excluye del sorteo mientras `temporadaActual.lesionActiva` esté activo (ver [sección 13](#13-lesiones)) — el resto del banco (familia, prensa, vestuario, eventos que solo mencionan un partido próximo sin requerir que el jugador esté en cancha) sigue funcionando igual durante la baja.
 
 **Sin decisiones "gratis"**: cada opción de cada evento normal (no aplica a `altoImpacto`, ver el porqué debajo) tiene siempre **al menos una señal positiva y una negativa** entre `rendimiento`/`forma`/`equipo` — ninguna opción es pura-positiva ni pura-negativa, y ninguna queda neutra-plana. La idea no es que una opción "gane" a la otra en todo, sino que el jugador elija cuál le conviene más, cuál le hace perder más o cuál le hace perder menos. Un segundo pase completo sobre las 452 opciones del banco (238 modificadas) eliminó los últimos casos de "opción comprometida en las tres dimensiones vs. opción pasiva floja" que todavía quedaban del primer ajuste — siempre inyectando la señal que falta en un eje que esa opción tenía en cero, nunca pisando la única señal que ya tenía. La única excepción a propósito sigue siendo un evento de `altoImpacto` sobre aceptar un soborno para arreglar un partido (`ai-17`) — ahí rechazar la propuesta debe ser, sí, objetivamente mejor en todo: no es un dilema de números, es una cuestión de integridad.
 
-**Eventos de Alto Impacto**: sin restricción de edad, efectos mucho más fuertes (hasta ±6 de rendimiento, ±4 de equipo — contra ±3/±2 de los eventos normales), y algunos tienen **las dos opciones en negativo a propósito** (elegir el mal menor, no "ganar"). Se identifican con un ⚠️ en la tarjeta. Se sortea al crear la temporada si va a haber uno (30% de probabilidad) y en qué tramo — [career.ts:171](app/src/stores/career.ts:171); si sale, reemplaza al evento del tipo que corresponda en esa pausa — mismo mecanismo de reemplazo que usa la convocatoria a la selección nacional ([sección 19](#19-selección-nacional)), que compite por el mismo slot "deportivo".
+**Eventos de Alto Impacto**: sin restricción de edad, efectos mucho más fuertes (hasta ±6 de rendimiento, ±4 de equipo — contra ±3/±2 de los eventos normales), y algunos tienen **las dos opciones en negativo a propósito** (elegir el mal menor, no "ganar"). Se identifican con un ⚠️ en la tarjeta. Se sortea al crear la temporada si va a haber uno (30% de probabilidad) y en qué tramo — [career.ts:185](app/src/stores/career.ts:185); si sale, reemplaza al evento del tipo que corresponda en esa pausa — mismo mecanismo de reemplazo que usa la convocatoria a la selección nacional ([sección 19](#19-selección-nacional)), que compite por el mismo slot "deportivo".
 
 Cada opción define el texto del botón y sus `efectos` (`rendimiento` −3..+3 normal / −6..+6 alto impacto, `forma` nuevo estado fijo, `equipo` −2..+2 normal / −4..+4 alto impacto). También trae un texto de `resultado` en los datos — es contenido narrativo pensado para uso futuro (por ejemplo, un registro/historial de decisiones), pero **hoy no se muestra en ningún lado de la interfaz**: se sacó del toast que lo mostraba antes porque era pura redundancia con lo que ya decía el botón elegido.
+
+**`efectos.fama`** (opcional, `EfectosOpcion`, [events.ts:71](app/src/data/events.ts:71) — ver [sección 15](#15-valor-de-mercado)): a diferencia de `rendimiento`/`forma`/`equipo`, no está definido en las 226 entradas — queda en `undefined` (equivalente a 0) salvo en las **~26 entradas con `personajes: ["prensa"]`**, curadas a mano según el tono de cada opción (valores chicos, de −2 a +3). Al resolver la decisión, si la opción elegida trae `fama`, se suma a `fama.value` clampeado a `FAMA_MAX` ([career.ts:1102-1104](app/src/stores/career.ts:1102)) — el resto de los eventos (familia, vestuario, deportivos) no mueve la fama, solo la prensa te hace más o menos conocido.
 
 **Lesiones** (contenido, no la lógica — ver [sección 13](#13-lesiones)): 17 lesiones reales con nombre y descripción médica, repartidas en nivel3 (6, leves), nivel2 (6, moderadas) y nivel1 (5, graves — LCA, fractura de tibia/peroné, tendón de Aquiles, hernia discal, rotura muscular grado 3).
 
@@ -1040,13 +1106,17 @@ La interfaz vanilla manipulaba el DOM a mano (funciones tipo `crestHtml`/`animar
   - **Chips de trofeo con la silueta real** (`dibujarIconoTrofeo`, [resumen-canvas.ts](app/src/game/resumen-canvas.ts)): cada chip dibuja el mismo ícono real que ya usa la interfaz (`RUTA_ESCUDOS_TROFEOS`), no el 🏆 genérico — el canvas no tiene `mask-image`, así que el mismo efecto de "recolorear una silueta según su alpha" se logra dibujando la imagen en un `<canvas>` auxiliar en blanco y pintando encima con `globalCompositeOperation: "source-atop"`, y recién ese resultado ya recoloreado se copia al canvas principal. Hacer el recoloreado directo sobre el canvas principal (encima del fondo translúcido del chip, ya dibujado) pinta el cuadrado entero en vez de solo la silueta, porque `source-atop` ve ese fondo como "ya no transparente" en todo el recuadro. Si el trofeo todavía no tiene imagen cargada, ese chip cae solo al 🏆 + texto, igual que en la interfaz.
 - **Con la selección**: cuando hubo convocatoria esa temporada, el spotlight y el historial muestran una línea aparte con la bandera del país + partidos/goles/asistencias con la selección (ver [sección 19](#19-selección-nacional)) — nunca mezclada con los números de club.
 - **Chips del hero** (edad, país, valor de mercado): los 3 comparten el mismo estilo neutro (texto blanco, borde translúcido) en `HeroPanel.vue` — visualmente el mismo tipo de dato, sin que ninguno destaque sobre los otros dos sin motivo.
+- **Chip de fama**: entre el chip de país y el de valor de mercado, `HeroPanel.vue` agrega un 4to chip con `famaTierLabel(career.fama)` — a propósito **no** comparte el estilo neutro de los otros 3: usa `famaTierColor` como color de texto/borde, la misma paleta de 6 niveles descrita en [sección 15](#15-valor-de-mercado), para que se lea de un vistazo como un dato distinto (reputación, no un stat de cancha).
+- **Badge de Capitán**: `.lineup-tag.lineup-tag--capitan` ("Capitán", color `#facc15`) en `SpotlightCard.vue` — mismo lugar y mismo estilo de pill que ya usan los badges de Titular/Suplente/Préstamo, `v-if="s.capitan"`, desktop y mobile. En el historial, `TimelineList.vue` agrega un sufijo `(C)` después del nombre del club de esa temporada, mismo patrón que ya usa `(préstamo)`.
+- **Tarjeta de epílogo**: al retirarte, antes del mensaje final de despedida (ver [sección 17](#17-fin-de-carrera-retiro-y-resumen)), `DecisionsPanel.vue` muestra una tarjeta de una sola pregunta con 2 botones — reutiliza las clases `.retiro`/`.retiro__actions` del bloque de retiro de siempre, no un componente nuevo.
+- **Sección "Tu rival"** en `ResumenModal.vue`: después de la sección de Trofeos, 6 tiles comparando tus estadísticas de carrera (goles, asistencias, pico de OVR) contra las del rival — se muestra siempre, porque el rival se genera en toda carrera desde `iniciarCarrera()` (ver [sección 14.3](#143-rival-de-carrera)). A propósito no se agregó al canvas de "Compartir resumen" (ver más abajo) en esta versión.
 - **Reseteo de zoom en iOS (`resetZoom`, [composables/resetZoom.ts](app/src/composables/resetZoom.ts))**: el original cambiaba de pantalla con una carga de página real, que resetea gratis cualquier zoom que el navegador haya dejado activo (típicamente al enfocar un input con `font-size` chico — varios campos del formulario de personaje, y el número del `NumeroModal`, tienen menos de 16px). En la SPA, sin recarga real, ese zoom se arrastraría de una vista a la siguiente — se fuerza el reseteo tocando `maximum-scale` del `<meta name="viewport">` un instante y devolviéndolo, con tres disparadores distintos:
   - `router.afterEach` ([router/index.ts:54](app/src/router/index.ts:54)) para cualquier navegación.
   - Una llamada explícita como **lo primero** que hace el `onMounted` de cada una de las 3 vistas ([PersonajeView.vue](app/src/views/PersonajeView.vue), [EquipoView.vue](app/src/views/EquipoView.vue), [CarreraView.vue](app/src/views/CarreraView.vue)) — sin esa llamada explícita, una medición de layout hecha por la vista nueva (ver el punto siguiente) podía correr antes de que el reseteo del router surtiera efecto y quedar calibrada contra un zoom todavía "fantasma".
   - **`instalarResetZoomAlCerrarTeclado()`** ([composables/resetZoom.ts:44](app/src/composables/resetZoom.ts:44)): un único listener global de `focusout`, instalado una sola vez en `onMounted` de [App.vue](app/src/App.vue), que llama a `resetZoom()` cada vez que se blurea cualquier `<input>`/`<textarea>` de la app. Cubre el caso que los otros dos disparadores no cubrían: cerrar el teclado tocando afuera del campo (o "listo" del teclado) sin navegar ni cerrar un modal — antes ese zoom se quedaba pegado hasta la próxima navegación. `NumeroModal.vue` ya no llama a `resetZoom()` por su cuenta en `cerrar()` — su `(document.activeElement as HTMLElement | null)?.blur()` dispara este listener global de forma síncrona, así que la llamada propia había quedado redundante (y, de hecho, disparaba el reseteo dos veces seguidas).
 - **Altura real de viewport en mobile (`--vh-real`)**: el layout de `CarreraView.vue` (hero fijo / centro scrolleable / footer de decisiones fijo) depende de conocer la altura visible real de la pantalla. `100dvh` la calcula bien en Safari/iOS, pero varios navegadores mobile (Chrome/Firefox en Android, algunos in-app browsers) la calculan mal al cargar la página y dejan una franja del footer tapada. `actualizarAlturaViewport()` ([views/CarreraView.vue:39](app/src/views/CarreraView.vue:39)) prioriza `window.visualViewport?.height` sobre `window.innerHeight` — esa API está pensada específicamente para "cuánto se ve de verdad ahora" y descuenta el teclado en pantalla y los ajustes de la barra de direcciones, mientras que `innerHeight` dejaba casos de layout cortado en Android; `innerHeight` queda como respaldo para navegadores sin `visualViewport`. Se mide por JS al montar el componente (después de `resetZoom()`, ver arriba) y en cada resize/orientationchange (incluido el propio evento `resize` de `visualViewport`), y esa variable pisa a `100dvh` en `.career-shell` como última palabra ([views/CarreraView.vue:157](app/src/views/CarreraView.vue:157)) — `100vh` y `100dvh` quedan como respaldo en cascada para cuando el JS todavía no corrió. En Android la barra de direcciones puede seguir animando/asentándose un instante después del montado inicial, sin disparar ningún evento de resize (no hay scroll de página real que la oculte) — una remedición corta 300ms después (`reintentoAlturaViewport`, [views/CarreraView.vue:78](app/src/views/CarreraView.vue:78)) agarra el valor ya asentado por si la primera quedó de más, y se limpia con `clearTimeout` al desmontar.
 - **Toast**: composable compartido `useToast` ([composables/useToast.ts:9](app/src/composables/useToast.ts:9)) reemplaza a `showToast` — antes cada una de las 3 pantallas tenía su propia copia del mismo patrón (mensaje + visible + timer) escrita a mano; ahora cada vista lo instancia una vez (`message`/`visible`/`show`) y, en `CarreraView.vue`, además usa `drainQueue` para vaciar la cola de mensajes que produce el store (`career.mensajes`, el reemplazo reactivo de los `showToast(...)` sueltos que el motor original llamaba directo). En `CarreraView.vue` el toast aparece debajo del hero en vez de abajo de la pantalla (`.body--career .toast--visible`, [views/CarreraView.vue:186](app/src/views/CarreraView.vue:186)), porque ahí abajo siempre está el panel de decisiones. En mobile (`@media (max-width: 640px)`) ocupa casi todo el ancho de pantalla (`calc(100vw - 1.5rem)`) en vez de ajustarse solo al texto — más fácil de leer en una pantalla chica.
-- **Pie de versión** (`GameConfig.VERSION`, `GameConfig.FECHA_PUBLICACION` — [config.ts:381-382](app/src/game/config.ts:381)): un único punto de verdad para el número de versión y la fecha de publicación. Cada una de las 3 vistas (`PersonajeView.vue`, `EquipoView.vue`, `CarreraView.vue`) renderiza su propio `<footer class="app-footer">` leyendo esas mismas dos constantes — en `PersonajeView.vue`/`EquipoView.vue` es el último elemento de la vista (scroll normal); en `CarreraView.vue` va dentro de `.career`, después del historial, para no restarle alto fijo al hero/spotlight/decisiones.
+- **Pie de versión** (`GameConfig.VERSION`, `GameConfig.FECHA_PUBLICACION` — [config.ts:389-390](app/src/game/config.ts:389)): un único punto de verdad para el número de versión y la fecha de publicación. Cada una de las 3 vistas (`PersonajeView.vue`, `EquipoView.vue`, `CarreraView.vue`) renderiza su propio `<footer class="app-footer">` leyendo esas mismas dos constantes — en `PersonajeView.vue`/`EquipoView.vue` es el último elemento de la vista (scroll normal); en `CarreraView.vue` va dentro de `.career`, después del historial, para no restarle alto fijo al hero/spotlight/decisiones.
 
 ---
 
@@ -1054,10 +1124,10 @@ La interfaz vanilla manipulaba el DOM a mano (funciones tipo `crestHtml`/`animar
 
 A diferencia de la versión vanilla (que solo guardaba la identidad/club inicial del jugador y perdía toda la progresión de la carrera al recargar), la reescritura a Vue agrega **guardado real de partida en curso** — recargar la página, o cerrar la pestaña y volver más tarde, retoma la carrera exactamente donde quedó.
 
-- **`localStorage["leyenda-carrera"]`** (`STORAGE_KEY`, [career.ts:36](app/src/stores/career.ts:36)) guarda un snapshot serializado con todo el estado necesario para reconstruir la carrera: `player`, `temporadaActual`, `temporadasFinalizadas`, `temporadasEnClubActual`, `esPrimerClub`, `edadRetiroForzoso`, `factorTalento`, `potencialTecho`, `carreraFinalizada`, `eventosUsados` (como array — se reconstruye como `Set` al cargar) y el contexto de la solicitud de cambio de dorsal.
-- **`guardar()`** ([career.ts:1156](app/src/stores/career.ts:1156)) se llama después de **cada** checkpoint que cambia el estado de la carrera: iniciar carrera, cerrar un tramo, cerrar una temporada, resolver una decisión o una oferta, confirmar un cambio de dorsal, y retirarse — nunca hay una ventana donde el progreso en memoria esté más adelantado que lo último guardado. Envuelto en `try/catch` sin re-lanzar: si `localStorage` falla (modo privado, cuota llena), la carrera sigue jugable en memoria, simplemente no persiste ese guardado puntual.
-- **`cargar()`** ([career.ts:1189](app/src/stores/career.ts:1189)) reconstruye todo el estado del store a partir del snapshot guardado, y devuelve `true`/`false` según si había una partida guardada válida. Se invoca **solo** al entrar a `/carrera` sin una carrera ya activa en memoria ([views/CarreraView.vue:44](app/src/views/CarreraView.vue:44)) — o sea, al recargar la página estando en esa ruta (la navegación normal Personaje → Equipo → Carrera arranca la carrera directo en memoria vía `iniciarCarrera`, sin pasar por `cargar()`). Si tampoco hay nada guardado, redirige a `/`.
-- **`hayCarreraGuardada()`** ([career.ts:1180](app/src/stores/career.ts:1180)) y **`limpiarPartidaGuardada()`** ([career.ts:1226](app/src/stores/career.ts:1226)) están expuestas por el store (comprobar si existe una partida sin cargarla, y borrarla del todo) pero **ninguna vista las usa todavía** — quedan disponibles para una futura pantalla de "continuar carrera" o "borrar mi progreso" en la creación de personaje.
+- **`localStorage["leyenda-carrera"]`** (`STORAGE_KEY`, [career.ts:40](app/src/stores/career.ts:40)) guarda un snapshot serializado con todo el estado necesario para reconstruir la carrera: `player`, `temporadaActual`, `temporadasFinalizadas`, `temporadasEnClubActual`, `esPrimerClub`, `edadRetiroForzoso`, `factorTalento`, `potencialTecho`, `carreraFinalizada`, `eventosUsados` (como array — se reconstruye como `Set` al cargar) y el contexto de la solicitud de cambio de dorsal.
+- **`guardar()`** ([career.ts:1276](app/src/stores/career.ts:1276)) se llama después de **cada** checkpoint que cambia el estado de la carrera: iniciar carrera, cerrar un tramo, cerrar una temporada, resolver una decisión o una oferta, confirmar un cambio de dorsal, y retirarse — nunca hay una ventana donde el progreso en memoria esté más adelantado que lo último guardado. Envuelto en `try/catch` sin re-lanzar: si `localStorage` falla (modo privado, cuota llena), la carrera sigue jugable en memoria, simplemente no persiste ese guardado puntual.
+- **`cargar()`** ([career.ts:1312](app/src/stores/career.ts:1312)) reconstruye todo el estado del store a partir del snapshot guardado, y devuelve `true`/`false` según si había una partida guardada válida. Se invoca **solo** al entrar a `/carrera` sin una carrera ya activa en memoria ([views/CarreraView.vue:44](app/src/views/CarreraView.vue:44)) — o sea, al recargar la página estando en esa ruta (la navegación normal Personaje → Equipo → Carrera arranca la carrera directo en memoria vía `iniciarCarrera`, sin pasar por `cargar()`). Si tampoco hay nada guardado, redirige a `/`.
+- **`hayCarreraGuardada()`** ([career.ts:1303](app/src/stores/career.ts:1303)) y **`limpiarPartidaGuardada()`** ([career.ts:1355](app/src/stores/career.ts:1355)) están expuestas por el store (comprobar si existe una partida sin cargarla, y borrarla del todo) pero **ninguna vista las usa todavía** — quedan disponibles para una futura pantalla de "continuar carrera" o "borrar mi progreso" en la creación de personaje.
 - **`localStorage["leyendaPlayerDraft"]`** sigue existiendo aparte, con el mismo rol que tenía en la vanilla: identidad del jugador + club/OVR inicial, desde la creación de personaje hasta que `iniciarCarrera` arranca la Temporada 1 (ver [sección 4](#4-creación-de-personaje-viewspersonajeviewvue) y [sección 5](#5-elección-de-club-inicial-viewsequipoviewvue)) — no se toca una vez la carrera está en curso.
 - No hay backend, base de datos externa, ni llamadas de red propias del juego (aparte de pedir escudos/banderas/imágenes de trofeos como archivos estáticos, y las banderas de país a flagcdn.com).
 
@@ -1183,6 +1253,11 @@ Todas viven en [`app/src/game/config.ts`](app/src/game/config.ts). Cambiar cualq
 | `LESION_NIVEL2_OVR_MIN/MAX` | 1 / 3 | Rango de OVR perdido por una lesión moderada |
 | `LESION_NIVEL1_OVR_MIN/MAX` | 4 / 10 | Rango de OVR perdido por una lesión grave |
 | `LESION_RECUPERACION_OVR` | 0.5 | % del OVR perdido por lesión que se recupera al darte de alta |
+| `CAPITAN_UMBRAL_TEMPORADAS` | 3 | Temporadas mínimas en el mismo club para poder ser nombrado capitán |
+| `CAPITAN_UMBRAL_PESO_TITULAR` | 0.75 | `pesoTitular` mínimo (con el que arranca la próxima temporada) para ser nombrado capitán, ver [sección 9](#9-participación-cuántos-partidos-jugás-vos) |
+| `FAMA_MAX` | 100 | Techo de la fama acumulada |
+| `FAMA_POR_TROFEO` | 2 | Fama ganada por cada trofeo de club o de selección, al cierre de temporada |
+| `FAMA_POR_PREMIO_INDIVIDUAL` | 6 | Fama ganada por cada Bota/Balón de Oro o Once Ideal, al cierre de temporada |
 
 ---
 
@@ -1197,3 +1272,5 @@ Todas viven en [`app/src/game/config.ts`](app/src/game/config.ts). Cambiar cualq
 - **Turquía, Grecia, Rusia, China, El Salvador y Ucrania** tienen liga y equipos cargados pero todavía no son nacionalidades elegibles en la creación de personaje — se puede fichar por sus clubes durante la carrera, pero no arrancarla siendo local ahí.
 - **AFC todavía no tiene copa continental de segundo nivel** (a diferencia de UEFA/CONMEBOL) — un club japonés o chino solo puede clasificar a la AFC Champions League Elite, nunca a un equivalente de la Europa League/Sudamericana.
 - **CAF no tiene ninguna liga doméstica de club cargada** — solo existe como confederación de selecciones nacionales (para la Copa Africana de Naciones, [sección 19](#19-selección-nacional)); ningún club africano es fichable todavía.
+- **El rival de carrera** ([sección 14.3](#143-rival-de-carrera)) no tiene nombre propio, ni se le simulan trofeos o lesiones — solo OVR, goles y asistencias — y todavía no aparece en la tarjeta de "Compartir resumen" (`resumen-canvas.ts`), solo en `ResumenModal.vue`. Son recortes de alcance deliberados, no pendientes técnicos.
+- **El epílogo post-retiro** ([sección 17](#17-fin-de-carrera-retiro-y-resumen)) es una sola decisión de flavor — no simula una carrera como entrenador ni ningún modo de juego nuevo.

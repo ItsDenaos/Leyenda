@@ -373,6 +373,11 @@ interface GameConfigShape {
   duracionLesion(nivel: NivelLesion, tramosDisponibles: number): number;
   ovrPerdidoPorLesion(nivel: NivelLesion): number;
   LESION_RECUPERACION_OVR: number;
+  CAPITAN_UMBRAL_TEMPORADAS: number;
+  CAPITAN_UMBRAL_PESO_TITULAR: number;
+  FAMA_MAX: number;
+  FAMA_POR_TROFEO: number;
+  FAMA_POR_PREMIO_INDIVIDUAL: number;
 }
 
 export const GameConfig: GameConfigShape = {
@@ -381,8 +386,8 @@ export const GameConfig: GameConfigShape = {
   // que arma el texto — acá solo viven los datos).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada componente.
-  VERSION: "1.1.3",
-  FECHA_PUBLICACION: "15 de septiembre de 2026 · 17:31",
+  VERSION: "1.2.0",
+  FECHA_PUBLICACION: "16 de septiembre de 2026 · 11:33",
 
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
@@ -2013,4 +2018,27 @@ export const GameConfig: GameConfigShape = {
   // era un golpe físico puntual, no una pérdida de nivel definitiva.
   // Se aplica una sola vez, al darte de alta (ver simularTramoYAvanzar).
   LESION_RECUPERACION_OVR: 0.5,
+
+  // ============================================================
+  // CAPITANÍA — no es un sorteo, es una consecuencia de ganarte el
+  // puesto Y quedarte: hacen falta temporadas consecutivas en el
+  // mismo club (temporadasEnClubActual, que ya resetea sola en un
+  // traspaso real) Y un pesoTitular alto de verdad, no alcanza con
+  // la antigüedad sola (ver finalizarTemporada).
+  // ============================================================
+  CAPITAN_UMBRAL_TEMPORADAS: 3,
+  CAPITAN_UMBRAL_PESO_TITULAR: 0.75,
+
+  // ============================================================
+  // FAMA — reputación pública del jugador, escala acotada 0-100
+  // como el resto de los medidores del juego (OVR, pesoTitular) —
+  // pero es un eje DISTINTO del OVR a propósito: podés ser muy
+  // bueno y poco conocido, o al revés. Monotónica: solo sube,
+  // nunca decae — no hay "mala prensa" que te reste fama en esta
+  // versión, solo eventos de prensa que suman poco o mucho según
+  // la opción elegida (ver EfectosOpcion.fama en data/events.ts).
+  // ============================================================
+  FAMA_MAX: 100,
+  FAMA_POR_TROFEO: 2, // un trofeo de club o de selección, cada uno
+  FAMA_POR_PREMIO_INDIVIDUAL: 6, // Bota/Balón de Oro, Once Ideal — pesan más que un trofeo de equipo
 };

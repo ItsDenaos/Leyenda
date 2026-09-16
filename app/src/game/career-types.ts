@@ -134,6 +134,7 @@ export interface Temporada {
   forma: Forma
   pesoTitular: number
   titular: boolean
+  capitan: boolean
   progreso: number
   enCurso: boolean
   calendario: PausaCalendario[]
@@ -176,6 +177,26 @@ export interface ResumenCarrera {
 export interface ContextoSolicitudNumero {
   ovr: number
   rendimiento: number
+}
+
+export type EpilogoOpcion = 'retirado' | 'entrenador'
+
+// Rival de carrera — un candidato élite generado una sola vez, al mismo
+// tiempo que vos (mismo criterio de nivel que un candidato a premios
+// mundiales, ver generarRival en career.ts), que avanza en paralelo a tu
+// carrera temporada a temporada. No simula trofeos/lesiones propias, solo
+// OVR + goles + asistencias — mantiene el feature chico a propósito.
+export interface Rival {
+  equipoId: string
+  ligaId: string
+  posicion: string
+  ovr: number
+  ovrPico: number
+  factorTalento: number
+  potencialTecho: number
+  edadInicial: number
+  golesCarrera: number
+  asistenciasCarrera: number
 }
 
 export type { GrupoPosicion }

@@ -14,6 +14,27 @@ export function ovrTierColor(ovr: number): string {
   return '#cd7f32' // bronce
 }
 
+// Niveles de fama, un eje DISTINTO del OVR a propósito (podés ser muy
+// bueno y poco conocido, o al revés) — paleta propia, no la de
+// ovrTierColor, para que no se lean como el mismo medidor.
+export function famaTierColor(fama: number): string {
+  if (fama >= 90) return '#fde047' // leyenda — dorado brillante
+  if (fama >= 70) return '#ec4899' // ídolo — rosa/magenta
+  if (fama >= 50) return '#f59e0b' // estrella — ámbar
+  if (fama >= 30) return '#38bdf8' // conocido — celeste
+  if (fama >= 10) return '#22c55e' // promesa — verde
+  return '#8b93a8' // anónimo — gris
+}
+
+export function famaTierLabel(fama: number): string {
+  if (fama >= 90) return 'Leyenda mundial'
+  if (fama >= 70) return 'Ídolo'
+  if (fama >= 50) return 'Estrella'
+  if (fama >= 30) return 'Conocido'
+  if (fama >= 10) return 'Promesa'
+  return 'Anónimo'
+}
+
 export function formatMarketValue(value: number): string {
   if (value >= 1000000) return `€${(value / 1000000).toFixed(1).replace(/\.0$/, '')}M`
   if (value >= 1000) return `€${Math.round(value / 1000)}K`

@@ -18,7 +18,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { GameConfig } from '../game/config'
+import { POSITION_NAMES } from '../game/format'
 import { GameDatabase, type Liga, type Equipo, type Competicion } from '../data/database'
+import type { GrupoPosicion } from '../game/config'
 import { equipoDe, ligaDe } from '../data/database-helpers'
 import { GameEvents, type Evento } from '../data/events'
 import type {
@@ -31,6 +33,8 @@ import type {
   EstadoCompeticionEliminatoria,
   ContextoSolicitudNumero,
   ResumenCarrera,
+  EpilogoOpcion,
+  Rival,
 } from '../game/career-types'
 
 const STORAGE_KEY = 'leyenda-carrera'
@@ -120,6 +124,14 @@ export const useCareerStore = defineStore('career', () => {
   const eventosUsados = ref<Set<string>>(new Set())
   const puedeSolicitarNumero = ref(false)
   const contextoSolicitudNumero = ref<ContextoSolicitudNumero | null>(null)
+  // Qué elegiste hacer después de retirarte — se pregunta una sola vez,
+  // justo al aceptar el retiro (ver resolverEpilogo/finalizarCarrera).
+  const epilogoElegido = ref<EpilogoOpcion | null>(null)
+  // Reputación pública — eje DISTINTO del OVR, escala 0-100, monotónica
+  // (ver FAMA_* en config.ts). Sube con decisiones de prensa y trofeos.
+  const fama = ref(0)
+  // Rival de carrera, generado una sola vez al empezar (ver generarRival).
+  const rival = ref<Rival | null>(null)
   // Cola de avisos puntuales para la UI (reemplaza showToast) — la UI la
   // consume y la vacía, el store nunca toca el DOM.
   const mensajes = ref<string[]>([])
@@ -139,6 +151,7 @@ export const useCareerStore = defineStore('career', () => {
     valorMercado: number,
     clasificacionInternacional: 'primerNivel' | 'segundoNivel' | null = null,
     pesoTitularHeredado?: number,
+    esCapitan = false,
   ): Temporada {
     if (!player.value) throw new Error('No hay jugador — llamar a iniciarCarrera primero')
     const seleccion = GameDatabase.selecciones.find((s) => s.pais === player.value!.pais) ?? null
@@ -163,6 +176,7 @@ export const useCareerStore = defineStore('career', () => {
       forma: 'regular',
       pesoTitular,
       titular: pesoTitular >= 0.5,
+      capitan: esCapitan,
       progreso: 0,
       enCurso: true,
       calendario: GameConfig.crearCalendarioTemporada(numero),
@@ -203,7 +217,10 @@ export const useCareerStore = defineStore('career', () => {
     eventosUsados.value = new Set()
     puedeSolicitarNumero.value = false
     contextoSolicitudNumero.value = null
+    epilogoElegido.value = null
+    fama.value = 0
     mensajes.value = []
+    rival.value = generarRival(Number(datosJugador.edad))
 
     if (!datosJugador.equipoId || typeof datosJugador.ovrInicial !== 'number') {
       throw new Error('Faltan equipoId/ovrInicial — elegí un club antes de iniciar la carrera')
@@ -696,43 +713,79 @@ export const useCareerStore = defineStore('career', () => {
     }, GameConfig.ANIMACION_TRAMO_MS + 150)
   }
 
-  // ---------------- PREMIOS MUNDIALES ----------------
-  function generarCandidatosPremiosMundiales() {
+  // ---------------- PREMIOS MUNDIALES / RIVAL ----------------
+  // Todos los equipos de todas las ligas con competición doméstica cargada
+  // — mismo pool que usaría un fichaje real (ver generarLoteOfertas), para
+  // que el club de cada candidato élite (premio mundial o el rival de
+  // carrera) tenga sentido con su nivel.
+  function poolEquiposElite(): { liga: Liga; equipo: Equipo; competicion: Competicion }[] {
     const ligasConCompeticion = GameDatabase.ligas
       .map((liga) => ({
         liga,
         competicion: GameDatabase.competiciones.find((c) => c.tipo === 'domestica' && c.categoria === 'liga' && c.ligaId === liga.id),
       }))
       .filter((x): x is { liga: Liga; competicion: Competicion } => Boolean(x.competicion))
-    if (ligasConCompeticion.length === 0) return []
-
-    // Todos los equipos de todas las ligas con competición cargada, listos
-    // para filtrar por "ventana de OVR" — mismo pool que usaría un fichaje
-    // real (ver generarLoteOfertas), para que el club de cada candidato
-    // tenga sentido con su nivel (antes el club y el OVR se sorteaban
-    // sin relación entre sí, y podía salir p. ej. un delantero de 96 OVR
-    // y 38 goles en un club chico sin ningún poder real para eso).
-    const poolEquipos = ligasConCompeticion.flatMap(({ liga, competicion }) =>
+    return ligasConCompeticion.flatMap(({ liga, competicion }) =>
       GameDatabase.equipos.filter((e) => e.ligaId === liga.id).map((equipo) => ({ liga, equipo, competicion })),
     )
+  }
+
+  // Elige club + grupo de posición para UN candidato de nivel élite, dado
+  // su OVR — misma "ventana de OVR"/cercanía de nivel que ya usa el
+  // sistema de fichajes real (sección 16.5/16.6), así un candidato de
+  // nivel alto aparece en un club de ese nivel, no en cualquiera al azar.
+  // Reusada por generarCandidatosPremiosMundiales y generarRival, para que
+  // el rival sea estadísticamente "de la misma liga" que esos candidatos.
+  function elegirClubYGrupoElite(
+    pool: { liga: Liga; equipo: Equipo; competicion: Competicion }[],
+    ovr: number,
+  ): { liga: Liga; equipo: Equipo; competicion: Competicion; grupo: GrupoPosicion } | null {
+    let elegibles = pool.filter((x) => GameConfig.equipoElegibleParaOvr(x.equipo, x.liga, ovr))
+    if (elegibles.length === 0) elegibles = pool
+    const poderObjetivoVal = GameConfig.poderObjetivo(ovr)
+    const pesoFn = (x: (typeof elegibles)[number]) =>
+      GameConfig.pesoPorCercaniaNivel(GameConfig.poderEquipo(x.equipo, x.liga), GameConfig.poderLiga(x.liga), poderObjetivoVal)
+    const [elegido] = GameConfig.elegirMejorEncaje(elegibles, pesoFn, 1)
+    if (!elegido) return null
+    return { ...elegido, grupo: GameConfig.sortearGrupoCandidatoPremio() }
+  }
+
+  // Rival de carrera: un candidato élite generado UNA sola vez, al empezar
+  // la carrera, que avanza en paralelo temporada a temporada (ver el
+  // bloque correspondiente en finalizarTemporada) — no se re-sortea nunca.
+  function generarRival(edadJugador: number): Rival | null {
+    const poolEquipos = poolEquiposElite()
+    if (poolEquipos.length === 0) return null
+
+    const ovr = GameConfig.sortearOvrCandidatoPremio()
+    const elegido = elegirClubYGrupoElite(poolEquipos, ovr)
+    if (!elegido) return null
+
+    return {
+      equipoId: elegido.equipo.id,
+      ligaId: elegido.liga.id,
+      posicion: GameConfig.POSICION_REPRESENTATIVA_GRUPO[elegido.grupo],
+      ovr,
+      ovrPico: ovr,
+      factorTalento: GameConfig.sortearFactorTalento(),
+      potencialTecho: GameConfig.sortearPotencialTecho(),
+      edadInicial: edadJugador,
+      golesCarrera: 0,
+      asistenciasCarrera: 0,
+    }
+  }
+
+  function generarCandidatosPremiosMundiales() {
+    const poolEquipos = poolEquiposElite()
+    if (poolEquipos.length === 0) return []
 
     const candidatos: { liga: Liga; equipo: Equipo; grupo: string; ovr: number; goles: number; asistencias: number; promedio: number; ganoTrofeo: boolean }[] = []
     for (let i = 0; i < GameConfig.PREMIOS_CANDIDATOS_N; i++) {
       const ovr = GameConfig.sortearOvrCandidatoPremio()
-
-      // Misma "ventana de OVR"/cercanía de nivel que ya usa el sistema de
-      // fichajes real (sección 16.5/16.6) — así un candidato de nivel alto
-      // aparece en un club de ese nivel, no en cualquiera al azar.
-      let elegibles = poolEquipos.filter((x) => GameConfig.equipoElegibleParaOvr(x.equipo, x.liga, ovr))
-      if (elegibles.length === 0) elegibles = poolEquipos
-      const poderObjetivoVal = GameConfig.poderObjetivo(ovr)
-      const pesoFn = (x: (typeof elegibles)[number]) =>
-        GameConfig.pesoPorCercaniaNivel(GameConfig.poderEquipo(x.equipo, x.liga), GameConfig.poderLiga(x.liga), poderObjetivoVal)
-      const [elegido] = GameConfig.elegirMejorEncaje(elegibles, pesoFn, 1)
+      const elegido = elegirClubYGrupoElite(poolEquipos, ovr)
       if (!elegido) continue
-      const { liga, equipo, competicion } = elegido
+      const { liga, equipo, competicion, grupo } = elegido
 
-      const grupo = GameConfig.sortearGrupoCandidatoPremio()
       const factorTalentoCandidato = GameConfig.sortearFactorTalento()
       const resultado = GameConfig.simularTramo({
         partidos: competicion.partidosMinimos,
@@ -863,6 +916,39 @@ export const useCareerStore = defineStore('career', () => {
     const candidatosPremios = generarCandidatosPremiosMundiales()
     mensajesFinales.push(...evaluarPremiosMundiales(candidatosPremios, ganasteTrofeoDeEquipoOSeleccion))
 
+    // Fama por trofeos de ESTA temporada (t.trofeos ya incluye, acá, los de
+    // club/selección Y los premios individuales que acaba de agregar
+    // evaluarPremiosMundiales) — los premios pesan más que un trofeo de equipo.
+    const NOMBRES_PREMIOS_INDIVIDUALES = new Set(['Bota de Oro', 'Balón de Oro', 'Once Ideal'])
+    const deltaFama = t.trofeos.reduce(
+      (suma, tr) => suma + (NOMBRES_PREMIOS_INDIVIDUALES.has(tr.nombre) ? GameConfig.FAMA_POR_PREMIO_INDIVIDUAL : GameConfig.FAMA_POR_TROFEO),
+      0,
+    )
+    if (deltaFama > 0) fama.value = GameConfig.clamp(fama.value + deltaFama, 0, GameConfig.FAMA_MAX)
+
+    // Rival de carrera: avanza en paralelo, misma fórmula de crecimiento de
+    // OVR que el jugador (ajustarOvrTramo), sin decisiones propias
+    // (rendimientoAcumulado: 0) — no se simulan sus trofeos ni lesiones,
+    // solo OVR + goles + asistencias (ver Rival en career-types.ts).
+    if (rival.value) {
+      const equipoRival = equipoDe(rival.value.equipoId)
+      const ligaRival = ligaDe(equipoRival)
+      const compLigaRival = buscarCompeticionDomestica(ligaRival.id, 'liga')
+      const edadRival = rival.value.edadInicial + (t.numero - 1)
+      const resultadoRival = GameConfig.simularTramo({
+        partidos: compLigaRival?.partidosMinimos ?? 0,
+        posicion: rival.value.posicion,
+        ovr: rival.value.ovr,
+        rendimientoAcumulado: 0,
+        fuerzaLiga: ligaRival.fuerza,
+        factorTalento: rival.value.factorTalento,
+      })
+      rival.value.golesCarrera += resultadoRival.goles
+      rival.value.asistenciasCarrera += resultadoRival.asistencias
+      rival.value.ovr = GameConfig.ajustarOvrTramo(rival.value.ovr, 0, edadRival, rival.value.factorTalento, rival.value.potencialTecho)
+      rival.value.ovrPico = Math.max(rival.value.ovrPico, rival.value.ovr)
+    }
+
     let clasificacionProxima: 'primerNivel' | 'segundoNivel' | null = null
     if (ganasteLiga || fuerza >= GameConfig.UMBRAL_CLASIFICA_PRIMER_NIVEL) {
       clasificacionProxima = 'primerNivel'
@@ -876,6 +962,14 @@ export const useCareerStore = defineStore('career', () => {
     t.progreso = 100
     const numeroCerrada = t.numero
     temporadasFinalizadas.value.push(t)
+
+    if (rival.value) {
+      const golesJugadorCarrera = temporadasFinalizadas.value.reduce((suma, tt) => suma + tt.goles, 0)
+      const nombrePosicionRival = (POSITION_NAMES[rival.value.posicion] ?? rival.value.posicion).toLowerCase()
+      mensajesFinales.push(
+        `Tu rival, un ${nombrePosicionRival} de ${equipoDe(rival.value.equipoId).nombre}, lleva ${rival.value.golesCarrera} goles en su carrera — vos llevás ${golesJugadorCarrera}.`,
+      )
+    }
 
     const ovrHeredado = t.ovr
     const equipoAcumuladoCerrado = t.equipoAcumuladoTemporada
@@ -892,6 +986,15 @@ export const useCareerStore = defineStore('career', () => {
     const equipoProxima = volviendoDePrestamo ? equipoDe(equipoIdProxima) : equipo
     const ligaProxima = volviendoDePrestamo ? ligaDe(equipoProxima) : liga
 
+    // Capitanía: se re-gana en el club nuevo (pesoTitular vuelve al piso en
+    // un traspaso/préstamo), nunca se hereda de un club a otro — por eso se
+    // calcula con el pesoTitular con el que arranca la PRÓXIMA temporada,
+    // no con el que cerró esta.
+    const pesoTitularProxima = volviendoDePrestamo ? GameConfig.PESO_TITULAR_INICIAL : pesoTitularCerrado
+    const esCapitanProxima =
+      temporadasEnClubActual.value >= GameConfig.CAPITAN_UMBRAL_TEMPORADAS &&
+      pesoTitularProxima >= GameConfig.CAPITAN_UMBRAL_PESO_TITULAR
+
     temporadaActual.value = crearTemporada(
       numeroCerrada + 1,
       equipoIdProxima,
@@ -899,7 +1002,12 @@ export const useCareerStore = defineStore('career', () => {
       GameConfig.calcularValorMercado(ovrHeredado, equipoProxima, ligaProxima),
       volviendoDePrestamo ? null : clasificacionProxima,
       volviendoDePrestamo ? undefined : pesoTitularCerrado,
+      esCapitanProxima,
     )
+
+    if (esCapitanProxima && !t.capitan) {
+      mensajesFinales.push(`¡Te nombraron capitán de ${equipoProxima.nombre}!`)
+    }
 
     if (volviendoDePrestamo) {
       mensajesFinales.push(`Tu préstamo en ${equipo.nombre} terminó — volvés a ${equipoProxima.nombre}.`)
@@ -991,6 +1099,9 @@ export const useCareerStore = defineStore('career', () => {
     }
     t.bufferRendimiento += option.efectos.rendimiento
     t.bufferEquipo += option.efectos.equipo
+    if (option.efectos.fama) {
+      fama.value = GameConfig.clamp(fama.value + option.efectos.fama, 0, GameConfig.FAMA_MAX)
+    }
 
     if (decision.seleccion) {
       const resultado = resolverParticipacionSeleccion(Boolean(option.prioriza))
@@ -1021,6 +1132,7 @@ export const useCareerStore = defineStore('career', () => {
       esPrimerClub.value = false
       t.titular = false
       t.pesoTitular = GameConfig.PESO_TITULAR_INICIAL
+      t.capitan = false
       t.forma = 'regular'
       t.valorMercado = GameConfig.calcularValorMercado(t.ovr, item.equipo, item.liga)
     }
@@ -1035,6 +1147,7 @@ export const useCareerStore = defineStore('career', () => {
       t.competiciones = inicializarCompeticionesTemporada(item.equipo.id, null)
       t.titular = false
       t.pesoTitular = GameConfig.PESO_TITULAR_INICIAL
+      t.capitan = false
       t.forma = 'regular'
       t.valorMercado = GameConfig.calcularValorMercado(t.ovr, item.equipo, item.liga)
     }
@@ -1084,6 +1197,13 @@ export const useCareerStore = defineStore('career', () => {
       temporadasFinalizadas.value.push(t)
     }
     puedeSolicitarNumero.value = false
+    guardar()
+  }
+
+  // La carrera ya terminó acá — no hay forma/rendimiento/equipo que tocar
+  // (a diferencia de resolveDecisionEvento), es solo una frase de cierre.
+  function resolverEpilogo(optionIdx: number) {
+    epilogoElegido.value = optionIdx === 0 ? 'retirado' : 'entrenador'
     guardar()
   }
 
@@ -1169,6 +1289,9 @@ export const useCareerStore = defineStore('career', () => {
         eventosUsados: [...eventosUsados.value],
         puedeSolicitarNumero: puedeSolicitarNumero.value,
         contextoSolicitudNumero: contextoSolicitudNumero.value,
+        epilogoElegido: epilogoElegido.value,
+        fama: fama.value,
+        rival: rival.value,
       }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
     } catch {
@@ -1204,6 +1327,9 @@ export const useCareerStore = defineStore('career', () => {
         eventosUsados: string[]
         puedeSolicitarNumero: boolean
         contextoSolicitudNumero: ContextoSolicitudNumero | null
+        epilogoElegido?: EpilogoOpcion | null
+        fama?: number
+        rival?: Rival | null
       }
       player.value = snapshot.player
       temporadaActual.value = snapshot.temporadaActual
@@ -1217,6 +1343,9 @@ export const useCareerStore = defineStore('career', () => {
       eventosUsados.value = new Set(snapshot.eventosUsados)
       puedeSolicitarNumero.value = snapshot.puedeSolicitarNumero
       contextoSolicitudNumero.value = snapshot.contextoSolicitudNumero
+      epilogoElegido.value = snapshot.epilogoElegido ?? null
+      fama.value = snapshot.fama ?? 0
+      rival.value = snapshot.rival ?? null
       return true
     } catch {
       return false
@@ -1245,6 +1374,9 @@ export const useCareerStore = defineStore('career', () => {
     carreraFinalizada,
     puedeSolicitarNumero,
     contextoSolicitudNumero,
+    epilogoElegido,
+    fama,
+    rival,
     mensajes,
     // getters
     carreraIniciada,
@@ -1256,6 +1388,7 @@ export const useCareerStore = defineStore('career', () => {
     resolveOferta,
     confirmarCambioNumero,
     finalizarCarrera,
+    resolverEpilogo,
     construirResumenCarrera,
     guardar,
     cargar,
