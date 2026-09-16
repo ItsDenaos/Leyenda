@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 1.1.2 — publicada el 14 de septiembre de 2026 · 14:43**
+**Versión 1.1.3 — publicada el 15 de septiembre de 2026 · 17:31**
 
 Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
 
@@ -114,12 +114,12 @@ Cada tanto (nunca en todas las temporadas) se sortea si te convocan, y si te lla
 
 En esa tarjeta elegís entre 2 caminos, y ninguno es gratis:
 
-- **Priorizar la convocatoria** — jugás con tu selección (amistosos, eliminatorias, o el torneo grande si te toca ese ciclo), sumando partidos, goles y hasta trofeos — pero tu club nota que volviste con menos frecura, y eso le resta un poco al equipo.
+- **Priorizar la convocatoria** — jugás con tu selección (amistosos, eliminatorias, o el torneo grande si te toca ese ciclo), sumando partidos, goles, asistencias y hasta trofeos — pero tu club nota que volviste con menos frecura, y eso le resta un poco al equipo.
 - **Cuidar tu lugar en el club** — tu club te lo agradece, pero esa ventana con la selección la perdés por completo.
 
 Cada 4 temporadas te toca el **Mundial**; 2 temporadas después de cada Mundial, la **copa continental** de tu confederación (Copa América, Eurocopa, Copa Oro, Copa Africana o Copa Asiática, según tu país). Si tu selección clasifica y vas avanzando ronda a ronda, podés terminar siendo campeón — y ese trofeo se suma a los mismos que ya ganaste con tu club, mezclado en la misma fila.
 
-Tus partidos y goles con la selección se ven aparte de los de club, nunca sumados a ellos — en la tarjeta de tu temporada actual, en tu historial, y en el resumen final de tu carrera vas a ver una línea con la bandera de tu país específicamente para eso.
+Tus partidos, goles y asistencias con la selección se ven aparte de los de club, nunca sumados a ellos — en la tarjeta de tu temporada actual, en tu historial, y en el resumen final de tu carrera vas a ver una línea con la bandera de tu país específicamente para eso.
 
 ---
 

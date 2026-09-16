@@ -174,6 +174,7 @@ export const useCareerStore = defineStore('career', () => {
       convocatoriaPausa: convocado ? GameConfig.randomInt(0, GameConfig.TOTAL_TRAMOS_TEMPORADA - 1) : null,
       seleccionPartidos: 0,
       seleccionGoles: 0,
+      seleccionAsistencias: 0,
       lesionActiva: null,
       loteActual: [],
       bufferRendimiento: 0,
@@ -961,7 +962,7 @@ export const useCareerStore = defineStore('career', () => {
       }
     }
 
-    const { goles } = GameConfig.simularTramo({
+    const { goles, asistencias } = GameConfig.simularTramo({
       partidos,
       posicion: player.value!.posicion,
       ovr: t.ovr,
@@ -971,6 +972,7 @@ export const useCareerStore = defineStore('career', () => {
     })
     t.seleccionPartidos += partidos
     t.seleccionGoles += goles
+    t.seleccionAsistencias += asistencias
     if (goles > 0) mensaje += ` Anotaste ${goles} gol${goles === 1 ? '' : 'es'}.`
 
     return { mensaje }
@@ -1103,7 +1105,8 @@ export const useCareerStore = defineStore('career', () => {
       mvp = 0,
       sumaRating = 0
     let seleccionPartidos = 0,
-      seleccionGoles = 0
+      seleccionGoles = 0,
+      seleccionAsistencias = 0
     let mayorOvr = 0,
       mayorValor = 0
     const trofeosPorNombre = new Map<string, { nombre: string; imagen: string | null; cantidad: number }>()
@@ -1118,6 +1121,7 @@ export const useCareerStore = defineStore('career', () => {
       sumaRating += s.sumaRating
       seleccionPartidos += s.seleccionPartidos || 0
       seleccionGoles += s.seleccionGoles || 0
+      seleccionAsistencias += s.seleccionAsistencias || 0
       if (s.ovr > mayorOvr) mayorOvr = s.ovr
       if (s.valorMercado > mayorValor) mayorValor = s.valorMercado
       numerosTemporada.add(s.numero)
@@ -1137,6 +1141,7 @@ export const useCareerStore = defineStore('career', () => {
       promedio: partidos > 0 ? sumaRating / partidos : 0,
       seleccionPartidos,
       seleccionGoles,
+      seleccionAsistencias,
       mayorOvr,
       mayorValor,
       ovrDebut: serieOvr.length > 0 ? (serieOvr[0]?.ovr ?? 0) : 0,

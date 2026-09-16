@@ -915,8 +915,8 @@ export const GameDatabase: GameDatabaseShape = {
     // Formato vigente desde 2024-25 (fase de liga, igual que la Champions
     // League europea que copió): 8 partidos de fase de liga asegurados +
     // octavos, cuartos, semis y una final a partido único.
-    { id: "afc-champions-league-elite", nombre: "AFC Champions League Elite", tipo: "internacional", categoria: "primerNivel", confederacion: "AFC", trofeoImagen: "", partidosMinimos: 8, partidosExtra: 9 },
-    { id: "afc-champions-league-two", nombre: "AFC Champions League Two", tipo: "internacional", categoria: "segundoNivel", confederacion: "AFC", trofeoImagen: "", partidosMinimos: 6, partidosExtra: 7 },
+    { id: "afc-champions-league-elite", nombre: "AFC Champions League Elite", tipo: "internacional", categoria: "primerNivel", confederacion: "AFC", trofeoImagen: "afc-champions-league-elite.png", partidosMinimos: 8, partidosExtra: 9 },
+    { id: "afc-champions-league-two", nombre: "AFC Champions League Two", tipo: "internacional", categoria: "segundoNivel", confederacion: "AFC", trofeoImagen: "afc-champions-league-two.png", partidosMinimos: 6, partidosExtra: 7 },
 
     // -------- SELECCIÓN NACIONAL --------
     // tipo "seleccion": categoria "mundial" (una sola, global, sin

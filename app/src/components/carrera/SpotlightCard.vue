@@ -81,7 +81,7 @@ const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () 
         </span>
         <span v-if="s.seleccionPartidos > 0" class="spotlight-card__seleccion">
           <FlagImg :code="s.seleccion!.paisCode" :emoji="s.seleccion!.paisFlag" class-css="flag-img" />
-          Selección: {{ s.seleccionPartidos }} PJ · {{ s.seleccionGoles }} G
+          Selección: {{ s.seleccionPartidos }} PJ · {{ s.seleccionGoles }} G · {{ s.seleccionAsistencias || 0 }} A
         </span>
       </div>
       <div class="spotlight-card__status">
@@ -131,7 +131,7 @@ const promedioAnimado = useAnimatedNumber(() => s.value.promedio, undefined, () 
     </div>
     <div v-if="s.seleccionPartidos > 0" class="spotlight-mobile__seleccion">
       <FlagImg :code="s.seleccion!.paisCode" :emoji="s.seleccion!.paisFlag" class-css="flag-img" />
-      Selección: {{ s.seleccionPartidos }} PJ · {{ s.seleccionGoles }} G
+      Selección: {{ s.seleccionPartidos }} PJ · {{ s.seleccionGoles }} G · {{ s.seleccionAsistencias || 0 }} A
     </div>
     <div class="spotlight-mobile__bar" :title="`${progresoMobile}% de la temporada`">
       <div

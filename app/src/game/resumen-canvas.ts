@@ -408,7 +408,7 @@ export async function generarTarjetaResumenCanvas(player: Player, r: ResumenCarr
     const anchoPais = ctx.measureText(player.pais).width
     ctx.fillStyle = '#9aa3c2'
     ctx.font = '400 22px "Segoe UI", sans-serif'
-    const golesTxt = `${r.seleccionPartidos} partido${r.seleccionPartidos === 1 ? '' : 's'} · ${r.seleccionGoles} gol${r.seleccionGoles === 1 ? '' : 'es'}`
+    const golesTxt = `${r.seleccionPartidos} partido${r.seleccionPartidos === 1 ? '' : 's'} · ${r.seleccionGoles} gol${r.seleccionGoles === 1 ? '' : 'es'} · ${r.seleccionAsistencias} asistencia${r.seleccionAsistencias === 1 ? '' : 's'}`
     ctx.fillText(golesTxt, 60 + banderaW + 16 + anchoPais + 20, y)
     y += 50
   }

@@ -71,10 +71,10 @@ function toggleExpandida(numero: number, tieneTrofeos: boolean) {
         <span
           v-if="fila.temporada.seleccionPartidos > 0"
           class="timeline-item__seleccion"
-          :title="`Con la selección: ${fila.temporada.seleccionPartidos} partidos, ${fila.temporada.seleccionGoles} goles`"
+          :title="`Con la selección: ${fila.temporada.seleccionPartidos} partidos, ${fila.temporada.seleccionGoles} goles, ${fila.temporada.seleccionAsistencias || 0} asistencias`"
         >
           <FlagImg :code="fila.temporada.seleccion!.paisCode" :emoji="fila.temporada.seleccion!.paisFlag" class-css="flag-img" />
-          {{ fila.temporada.seleccionPartidos }} PJ · {{ fila.temporada.seleccionGoles }} G
+          {{ fila.temporada.seleccionPartidos }} PJ · {{ fila.temporada.seleccionGoles }} G · {{ fila.temporada.seleccionAsistencias || 0 }} A
         </span>
       </div>
 
@@ -95,7 +95,7 @@ function toggleExpandida(numero: number, tieneTrofeos: boolean) {
             >
             <span v-if="fila.temporada.seleccionPartidos > 0" class="timeline-item__mmeta timeline-item__seleccion">
               <FlagImg :code="fila.temporada.seleccion!.paisCode" :emoji="fila.temporada.seleccion!.paisFlag" class-css="flag-img" />
-              Selección: {{ fila.temporada.seleccionPartidos }} PJ · {{ fila.temporada.seleccionGoles }} G
+              Selección: {{ fila.temporada.seleccionPartidos }} PJ · {{ fila.temporada.seleccionGoles }} G · {{ fila.temporada.seleccionAsistencias || 0 }} A
             </span>
           </div>
           <span class="ovr-badge ovr-badge--sm" :style="{ '--ovr-color': fila.color }">{{ fila.temporada.ovr }}</span>
@@ -253,18 +253,6 @@ function toggleExpandida(numero: number, tieneTrofeos: boolean) {
     gap: 0.35rem;
     padding-top: 0.4rem;
     border-top: 1px solid var(--card-border);
-  }
-  /* El contenedor flex real de las tarjetas no es este div sino
-     `.trophies` (renderizado adentro de TrophyBadges.vue, un componente
-     hijo) — .trophies--icon-only ya alinea por abajo por default (ver
-     base.css), que es lo correcto mientras el nombre está colapsado. Al
-     expandir la tarjeta, el nombre pasa a ser visible debajo del ícono
-     (.trophy-card--stacked) y ahí sí hace falta volver a flex-start: si
-     el nombre de un trofeo salta a 2 líneas mientras los demás quedan en
-     1, alinear por abajo recentraría verticalmente el ícono de ESE
-     trofeo respecto a los demás. */
-  .timeline-item--expandida .timeline-item__mtrophies :deep(.trophies) {
-    align-items: flex-start;
   }
 }
 </style>
