@@ -8,7 +8,7 @@
 //    checkpoint, que funde todo el panel — mismo rol que
 //    cambiarContenidoDecisiones().
 //  - Una tarjeta resuelta dentro de la MISMA pausa (ej. quedan 2 eventos,
-//    resolvés 1) → <TransitionGroup>, que anima la salida de esa tarjeta
+//    resuelves 1) → <TransitionGroup>, que anima la salida de esa tarjeta
 //    y el reacomodo de las que quedan — mismo rol que
 //    capturarPosicionesCards()/animarReacomodoCards() (técnica FLIP),
 //    pero provisto por Vue en vez de a mano.
@@ -86,7 +86,7 @@ function volverInicio() {
 
       <div v-if="career.carreraFinalizada && !career.epilogoElegido" class="decisions__track">
         <div class="retiro">
-          <p class="decisions__empty">Tu carrera profesional terminó. ¿Qué sigue para vos?</p>
+          <p class="decisions__empty">Tu carrera profesional terminó. ¿Qué sigue para ti?</p>
           <div class="retiro__actions">
             <button type="button" class="btn" @click="career.resolverEpilogo(0)">Colgar los botines para siempre</button>
             <button type="button" class="btn btn--ghost" @click="career.resolverEpilogo(1)">Seguir ligado al fútbol</button>

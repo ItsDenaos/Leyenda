@@ -124,7 +124,7 @@ describe('DecisionsPanel', () => {
     expect(wrapper.find('h2').text()).toBe('Carrera finalizada')
     expect(wrapper.find('.decisions__count').text()).toBe('Retirado')
     expect(wrapper.find('.retiro').exists()).toBe(true)
-    expect(wrapper.text()).toContain('¿Qué sigue para vos?')
+    expect(wrapper.text()).toContain('¿Qué sigue para ti?')
     expect(wrapper.text()).not.toContain('PEREZ')
   })
 

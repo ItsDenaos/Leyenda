@@ -405,10 +405,10 @@ export const useCareerStore = defineStore('career', () => {
     const contratoTerminado = !enGraciaDeContrato && GameConfig.contratoDebeTerminar(equipoActual, ligaActual, ovr, promedioTemporadaAnterior)
     const puedeElegirRetiro = !contratoTerminado && edad >= GameConfig.EDAD_RETIRO_OFERTA
 
-    // El club todavía te quiere (seguís en gracia de contrato), pero no te
+    // El club todavía te quiere (sigues en gracia de contrato), pero no te
     // está dando minutos — en vez de la ventana de fichajes normal, te
     // ofrece cederte a otro club por esta temporada. Pasada la gracia, el
-    // caso "no rendís" ya lo cubre contratoDebeTerminar de arriba (venta/
+    // caso "no rindes" ya lo cubre contratoDebeTerminar de arriba (venta/
     // no renovación), así que el préstamo no compite con esa lógica.
     const debeSerPrestado = enGraciaDeContrato
       && promedioTemporadaAnterior !== null
@@ -688,7 +688,7 @@ export const useCareerStore = defineStore('career', () => {
         if (ovrRecuperado > 0) {
           t.ovr = GameConfig.clamp(t.ovr + ovrRecuperado, GameConfig.OVR_CARRERA_MIN, GameConfig.OVR_CARRERA_MAX)
         }
-        mensajeLesion = `Te recuperaste de tu lesión (${t.lesionActiva.nombre})${ovrRecuperado > 0 ? ` — recuperás ${ovrRecuperado} OVR` : ''}.`
+        mensajeLesion = `Te recuperaste de tu lesión (${t.lesionActiva.nombre})${ovrRecuperado > 0 ? ` — recuperas ${ovrRecuperado} OVR` : ''}.`
         if (t.lesionActiva.bloqueaForma) t.forma = 'regular'
         t.lesionActiva = null
       }
@@ -967,7 +967,7 @@ export const useCareerStore = defineStore('career', () => {
       const golesJugadorCarrera = temporadasFinalizadas.value.reduce((suma, tt) => suma + tt.goles, 0)
       const nombrePosicionRival = (POSITION_NAMES[rival.value.posicion] ?? rival.value.posicion).toLowerCase()
       mensajesFinales.push(
-        `Tu rival, un ${nombrePosicionRival} de ${equipoDe(rival.value.equipoId).nombre}, lleva ${rival.value.golesCarrera} goles en su carrera — vos llevás ${golesJugadorCarrera}.`,
+        `Tu rival, un ${nombrePosicionRival} de ${equipoDe(rival.value.equipoId).nombre}, lleva ${rival.value.golesCarrera} goles en su carrera — tú llevas ${golesJugadorCarrera}.`,
       )
     }
 
@@ -977,7 +977,7 @@ export const useCareerStore = defineStore('career', () => {
 
     // Si esta temporada fue a préstamo, la próxima arranca sola de vuelta
     // en el club dueño — sin pedirte nada, la cesión ya terminó. No
-    // heredás pesoTitular (te lo tenés que volver a ganar ahí, no en el
+    // heredas pesoTitular (te lo tienes que volver a ganar ahí, no en el
     // club prestado) ni clasificación internacional (es del club dueño,
     // y no hay forma de saber cómo le fue mientras no estabas — mismo
     // criterio que ya usa un traspaso real, que tampoco la hereda).
@@ -1010,7 +1010,7 @@ export const useCareerStore = defineStore('career', () => {
     }
 
     if (volviendoDePrestamo) {
-      mensajesFinales.push(`Tu préstamo en ${equipo.nombre} terminó — volvés a ${equipoProxima.nombre}.`)
+      mensajesFinales.push(`Tu préstamo en ${equipo.nombre} terminó — vuelves a ${equipoProxima.nombre}.`)
     }
 
     puedeSolicitarNumero.value = true
@@ -1138,7 +1138,7 @@ export const useCareerStore = defineStore('career', () => {
     }
 
     if (item.tipoOferta === 'prestamo') {
-      // A diferencia de un traspaso real: seguís siendo del club dueño
+      // A diferencia de un traspaso real: sigues siendo del club dueño
       // (temporadasEnClubActual/esPrimerClub no se tocan — su reloj de
       // contrato sigue corriendo esta temporada también, ver finalizarTemporada
       // para la vuelta automática al cerrar la temporada).

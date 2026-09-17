@@ -91,7 +91,7 @@ describe('ResumenModal', () => {
     expect(wrapper.find('.modal-overlay').attributes('hidden')).toBeUndefined()
     expect(wrapper.find('.resumen__name').text()).toBe('PEREZ')
     // 6 stats "core" + 1 de fama, más 6 de la sección "Tu rival" (3 pares
-    // vos/rival) — el rival siempre se genera en iniciarCarrera().
+    // jugador/rival) — el rival siempre se genera en iniciarCarrera().
     expect(wrapper.findAll('.stat').length).toBe(13)
     expect(wrapper.find('.resumen__club').exists()).toBe(true)
   })

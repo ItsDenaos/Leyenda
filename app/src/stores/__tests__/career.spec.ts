@@ -409,7 +409,7 @@ describe('useCareerStore', () => {
       expect(store.temporadasEnClubActual).toBeGreaterThanOrEqual(GameConfig.CAPITAN_UMBRAL_TEMPORADAS)
       expect(store.mensajes.some((m) => m.includes('nombraron capitán'))).toBe(true)
 
-      // Un traspaso real resetea la capitanía — te la tenés que volver a ganar.
+      // Un traspaso real resetea la capitanía — te la tienes que volver a ganar.
       const clubActualId = store.temporadaActual!.equipoId
       const otroClub = GameDatabase.equipos.find((e) => e.id !== clubActualId)!
       const otraLiga = GameDatabase.ligas.find((l) => l.id === otroClub.ligaId)!

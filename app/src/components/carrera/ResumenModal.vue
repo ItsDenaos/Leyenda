@@ -204,7 +204,7 @@ async function copiarResumenComoImagen() {
 
         <div v-if="career.rival && rivalEquipo" class="resumen__section">
           <h5 class="resumen__section-title">Tu rival</h5>
-          <p class="resumen__empty">Un {{ rivalPosicionNombre }} de {{ rivalEquipo.nombre }} — empezó su carrera el mismo día que vos.</p>
+          <p class="resumen__empty">Un {{ rivalPosicionNombre }} de {{ rivalEquipo.nombre }} — empezó su carrera el mismo día que tú.</p>
           <div class="resumen__stats">
             <div class="stat"><span class="stat__value">{{ resumen.goles }}</span><span class="stat__label">Tus goles</span></div>
             <div class="stat"><span class="stat__value">{{ career.rival.golesCarrera }}</span><span class="stat__label">Sus goles</span></div>

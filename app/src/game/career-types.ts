@@ -118,9 +118,9 @@ export interface Temporada {
   numero: number
   anio: string
   equipoId: string
-  // Si no es null, esta temporada jugás a préstamo: `equipoId` es el club
-  // donde jugás, `clubDuenoId` el dueño de tu ficha — al cerrar la
-  // temporada volvés ahí solo, sin pedirte nada (ver finalizarTemporada).
+  // Si no es null, esta temporada juegas a préstamo: `equipoId` es el club
+  // donde juegas, `clubDuenoId` el dueño de tu ficha — al cerrar la
+  // temporada vuelves ahí solo, sin pedirte nada (ver finalizarTemporada).
   clubDuenoId: string | null
   ovr: number
   partidos: number
@@ -182,7 +182,7 @@ export interface ContextoSolicitudNumero {
 export type EpilogoOpcion = 'retirado' | 'entrenador'
 
 // Rival de carrera — un candidato élite generado una sola vez, al mismo
-// tiempo que vos (mismo criterio de nivel que un candidato a premios
+// tiempo que tú (mismo criterio de nivel que un candidato a premios
 // mundiales, ver generarRival en career.ts), que avanza en paralelo a tu
 // carrera temporada a temporada. No simula trofeos/lesiones propias, solo
 // OVR + goles + asistencias — mantiene el feature chico a propósito.

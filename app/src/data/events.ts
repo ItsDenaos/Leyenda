@@ -388,7 +388,7 @@ export const GameEvents: GameEventsShape = {
       id: "gen-33", tipo: "deportivo", personajes: ["companeros"],
       pregunta: "El equipo pierde varios partidos seguidos y el ambiente se tensa.",
       opciones: [
-        { texto: "Hablar frente al grupo para levantar el ánimo", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Tus palabras te motivan a vos, pero no todos en el vestuario están de acuerdo con que te tomes esas atribuciones." },
+        { texto: "Hablar frente al grupo para levantar el ánimo", efectos: { rendimiento: 1, forma: "inspirado", equipo: -1 }, resultado: "Tus palabras te motivan a ti, pero no todos en el vestuario están de acuerdo con que te tomes esas atribuciones." },
         { texto: "Dejar que el cuerpo técnico maneje la situación", efectos: { rendimiento: 0, forma: "desanimado", equipo: 1 }, resultado: "El ambiente sigue tenso por unos días más." },
       ],
     },
@@ -853,7 +853,7 @@ export const GameEvents: GameEventsShape = {
     },
     {
       id: "gen-91", tipo: "deportivo", personajes: ["rival"],
-      pregunta: "Un compañero de la selección juega ahora en el equipo rival y debés enfrentarlo.",
+      pregunta: "Un compañero de la selección juega ahora en el equipo rival y debes enfrentarlo.",
       opciones: [
         { texto: "Saludarlo con respeto antes del partido", efectos: { rendimiento: 0, forma: "animado", equipo: -1 }, resultado: "El vínculo personal no afecta la seriedad del partido." },
         { texto: "Evitar cualquier contacto antes de jugar", efectos: { rendimiento: 1, forma: "regular", equipo: -1 }, resultado: "Mantienes el foco total en la competencia." },

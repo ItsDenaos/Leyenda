@@ -2,7 +2,7 @@
 
 **Versión 1.2.0 — publicada el 16 de septiembre de 2026 · 11:33**
 
-Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesional hasta el día en que colgás los botines — vos tomás las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentás.
+Bienvenido a *Leyenda*. Eres un futbolista desde tus primeros pasos como profesional hasta el día en que cuelgas los botines — tú tomas las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentas.
 
 ---
 
@@ -31,9 +31,9 @@ Bienvenido a *Leyenda*. Sos un futbolista desde tus primeros pasos como profesio
 
 ## 1. Antes de arrancar: qué es Leyenda
 
-*Leyenda* es un simulador de carrera: creás un jugador, elegís tu primer club, y después vivís temporada tras temporada tomando decisiones — algunas personales, algunas deportivas, y siempre la más importante, dónde vas a jugar. No controlás los partidos en sí; el juego los resuelve solo y te muestra el resultado. Lo que sí controlás es *cómo llegás* a cada partido: tus decisiones, tu club, tu momento.
+*Leyenda* es un simulador de carrera: creas un jugador, eliges tu primer club, y después vives temporada tras temporada tomando decisiones — algunas personales, algunas deportivas, y siempre la más importante, dónde vas a jugar. No controlas los partidos en sí; el juego los resuelve solo y te muestra el resultado. Lo que sí controlas es *cómo llegas* a cada partido: tus decisiones, tu club, tu momento.
 
-Es un juego de una sola sesión: **no hay botón de guardar**. Mientras la pestaña esté abierta tu carrera sigue viva; si la cerrás o recargás la página, arrancás de nuevo desde la Temporada 1 (con el mismo nombre, país y posición que ya habías elegido, pero el progreso de la carrera en sí se pierde). Pensalo como una partida de mesa: se juega de una sentada.
+Es un juego de una sola sesión: **no hay botón de guardar**. Mientras la pestaña esté abierta tu carrera sigue viva; si la cierras o recargas la página, arrancas de nuevo desde la Temporada 1 (con el mismo nombre, país y posición que ya habías elegido, pero el progreso de la carrera en sí se pierde). Pensalo como una partida de mesa: se juega de una sentada.
 
 ---
 
@@ -45,7 +45,7 @@ La primera pantalla te pide 3 cosas, en 3 pasos:
 - **¿De dónde eres?** — tu país. Esto importa: si tu país tiene una liga real cargada en el juego (23 de los 46 países disponibles, de Argentina y España a Bolivia, Costa Rica o Paraguay), vas a arrancar tu carrera ahí. Si tu país no tiene liga propia, vas a debutar "de extranjero" en una de las 5 grandes ligas de Europa (Premier League, La Liga, Serie A, Bundesliga o Ligue 1), sorteada al azar.
 - **¿Dónde juegas?** — tu posición en la cancha, entre las 12 clásicas (arquero, defensores, mediocampistas y delanteros). No es solo estética: define tu perfil de estadísticas. Un delantero va a acumular goles por encima de todo; un mediocampista o un lateral van a repartir bastantes más asistencias que goles (el lateral, todavía más — piensa en centros al área); un defensor central suma algún gol ocasional de pelota parada, pero casi no asiste. Y a mayor OVR, más lejos de lo normal rinden esas estadísticas — un crack de verdad puede terminar una temporada con más goles que partidos jugados, con algún que otro doblete o hat-trick en el camino.
 
-A medida que completás los pasos, tu ficha (a la izquierda en escritorio, al final en el celular) se va llenando en vivo, con tu camiseta y tus datos. Tu número de camiseta te lo asigna el club al debutar — no se elige acá.
+A medida que completas los pasos, tu ficha (a la izquierda en escritorio, al final en el celular) se va llenando en vivo, con tu camiseta y tus datos. Tu número de camiseta te lo asigna el club al debutar — no se elige acá.
 
 ---
 
@@ -53,11 +53,11 @@ A medida que completás los pasos, tu ficha (a la izquierda en escritorio, al fi
 
 Te van a ofrecer **4 clubes** para arrancar. Cada oferta te muestra el nombre del club, su liga, y la bandera del país de esa liga — sin ninguna etiqueta ni número que te diga qué tan grande es cada uno, para que decidas por sensación, no por matemática.
 
-Elegí con cabeza: cuanto más grande el club y más competitiva la liga, **más alto vas a arrancar de nivel**, pero también vas a tener más competencia por un lugar en el equipo titular y menos margen para errores al principio. Un club chico te da un arranque más tranquilo; uno grande, un desafío mayor desde el día uno. No hay una respuesta correcta — depende de qué carrera querés vivir.
+Elegí con cabeza: cuanto más grande el club y más competitiva la liga, **más alto vas a arrancar de nivel**, pero también vas a tener más competencia por un lugar en el equipo titular y menos margen para errores al principio. Un club chico te da un arranque más tranquilo; uno grande, un desafío mayor desde el día uno. No hay una respuesta correcta — depende de qué carrera quieres vivir.
 
 Y esto no es solo cosa del arranque: el nivel de la liga sigue pesando en tus números durante **toda** tu carrera ahí. El mismo OVR rinde claramente mejor en una liga floja (donde estás por encima de la media de tus rivales) que en una top (donde ese mismo nivel te deja por debajo) — un 70 de nivel en una liga chica puede sacar casi el doble de goles en una temporada que ese mismo 70 jugando en una de las grandes ligas europeas.
 
-Una vez que elegís, arranca tu Temporada 1.
+Una vez que eliges, arranca tu Temporada 1.
 
 ---
 
@@ -65,9 +65,9 @@ Una vez que elegís, arranca tu Temporada 1.
 
 La pantalla principal tiene 3 partes fijas:
 
-- **Arriba (el header):** tu nombre, posición, dorsal, club actual y tu **OVR** (tu nivel general, el número más importante del juego — cuanto más alto, mejor sos). El color del círculo de tu OVR cambia según tu nivel: bronce, plata, oro, zafiro, rubí y, en la cima absoluta, amatista. Debajo, tu edad, tu país, tu **fama** (tu reputación, un dato aparte de tu OVR — ver [sección 12](#12-trofeos-y-competiciones)) y tu valor de mercado actual.
+- **Arriba (el header):** tu nombre, posición, dorsal, club actual y tu **OVR** (tu nivel general, el número más importante del juego — cuanto más alto, mejor eres). El color del círculo de tu OVR cambia según tu nivel: bronce, plata, oro, zafiro, rubí y, en la cima absoluta, amatista. Debajo, tu edad, tu país, tu **fama** (tu reputación, un dato aparte de tu OVR — ver [sección 12](#12-trofeos-y-competiciones)) y tu valor de mercado actual.
 - **En el medio (scrolleable):** la temporada en curso — tu progreso (%), tus estadísticas de esta temporada (partidos, goles, asistencias, MVP y promedio de rating) y tu estado de forma — y, debajo, el **historial** de todas tus temporadas anteriores, con sus estadísticas y los trofeos que ganaste en cada una.
-- **Abajo (fijo):** el panel de **decisiones** — acá es donde interactuás. Cada tanto se abre una pausa con algo para resolver: dos decisiones para tomar, o un lote de ofertas de fichaje.
+- **Abajo (fijo):** el panel de **decisiones** — acá es donde interactúas. Cada tanto se abre una pausa con algo para resolver: dos decisiones para tomar, o un lote de ofertas de fichaje.
 
 ---
 
@@ -75,12 +75,12 @@ La pantalla principal tiene 3 partes fijas:
 
 Una temporada se divide en bloques de partidos ("tramos") separados por pausas. En total vas a ver **4 pausas por temporada** (3 en tu primera temporada):
 
-1. Una única ventana de fichajes al arrancar la temporada (a partir de la 2ª temporada — en la primera ya elegiste club en la creación). Es la **única** oportunidad de cambiar de club en todo el año: si fichás, arrancás la temporada entera de cero con tu club nuevo.
+1. Una única ventana de fichajes al arrancar la temporada (a partir de la 2ª temporada — en la primera ya elegiste club en la creación). Es la **única** oportunidad de cambiar de club en todo el año: si fichas, arrancas la temporada entera de cero con tu club nuevo.
 2. Una pausa de decisiones, en algún punto de la primera mitad.
 3. Otra pausa de decisiones, en cualquier punto del año.
 4. Una última pausa de decisiones, ya sobre el cierre.
 
-Cada vez que resolvés todo lo que había en una pausa, el juego simula automáticamente el bloque de partidos siguiente: vas a ver tus estadísticas subir con una animación, tu OVR ajustarse, y tu progreso de temporada avanzar (siguiendo de cerca los partidos de liga que ya jugaste) — todo eso pasa solo, no hace falta ningún clic extra.
+Cada vez que resuelves todo lo que había en una pausa, el juego simula automáticamente el bloque de partidos siguiente: vas a ver tus estadísticas subir con una animación, tu OVR ajustarse, y tu progreso de temporada avanzar (siguiendo de cerca los partidos de liga que ya jugaste) — todo eso pasa solo, no hace falta ningún clic extra.
 
 Al cerrar la temporada (después de la última pausa) vas a ver si ganaste la liga y, si llegaste a la final, la copa nacional — con un mensaje resumiendo cómo te fue — y arranca la siguiente.
 
@@ -90,10 +90,10 @@ Al cerrar la temporada (después de la última pausa) vas a ver si ganaste la li
 
 En cada pausa de decisiones vas a ver **2 tarjetas**: una "Personal" (familia, pareja, prensa, agente, hinchada) y una "Deportiva" (entrenador, compañeros, rivales). Cada una te presenta una situación con **2 opciones** para elegir.
 
-Antes de elegir, cada botón te muestra claramente qué va a pasar si lo tocás:
+Antes de elegir, cada botón te muestra claramente qué va a pasar si lo tocas:
 
 - **Rendimiento** — sube o baja tu desempeño de cara al próximo bloque de partidos (más goles/asistencias, mejor chance de ser figura).
-- **Forma** — tu estado de ánimo/físico cambia a uno nuevo (inspirado, en plenitud, animado, regular, desanimado, bajo de forma...). Tu forma afecta cuánto jugás y cómo rinde el equipo.
+- **Forma** — tu estado de ánimo/físico cambia a uno nuevo (inspirado, en plenitud, animado, regular, desanimado, bajo de forma...). Tu forma afecta cuánto juegas y cómo rinde el equipo.
 - **Equipo** — cómo le sienta tu decisión al plantel colectivamente, algo que suma (o resta) a las chances de tu club de pelear títulos esa temporada.
 
 No hay una opción "correcta" siempre — a veces conviene arriesgar por rendimiento propio, a veces conviene cuidar el grupo. Un evento nunca se va a repetir dos veces en la misma carrera, así que vas a ir viendo situaciones distintas todo el tiempo.
@@ -112,12 +112,12 @@ Además de tu club, con el tiempo vas a empezar a sumar partidos con la **selecc
 
 Cada tanto (nunca en todas las temporadas) se sortea si te convocan, y si te llaman vas a ver una tarjeta marcada con un 🌍 en vez de la deportiva de siempre. Cuanto más grande futbolísticamente sea tu país, más alto tiene que ser tu nivel para que te llamen — a una potencia como Brasil o Francia hay que llegarle con un nivel de élite; a una selección más chica, con un buen nivel medio ya alcanza.
 
-En esa tarjeta elegís entre 2 caminos, y ninguno es gratis:
+En esa tarjeta eliges entre 2 caminos, y ninguno es gratis:
 
-- **Priorizar la convocatoria** — jugás con tu selección (amistosos, eliminatorias, o el torneo grande si te toca ese ciclo), sumando partidos, goles, asistencias y hasta trofeos — pero tu club nota que volviste con menos frecura, y eso le resta un poco al equipo.
-- **Cuidar tu lugar en el club** — tu club te lo agradece, pero esa ventana con la selección la perdés por completo.
+- **Priorizar la convocatoria** — juegas con tu selección (amistosos, eliminatorias, o el torneo grande si te toca ese ciclo), sumando partidos, goles, asistencias y hasta trofeos — pero tu club nota que volviste con menos frecura, y eso le resta un poco al equipo.
+- **Cuidar tu lugar en el club** — tu club te lo agradece, pero esa ventana con la selección la pierdes por completo.
 
-Cada 4 temporadas te toca el **Mundial**; 2 temporadas después de cada Mundial, la **copa continental** de tu confederación (Copa América, Eurocopa, Copa Oro, Copa Africana o Copa Asiática, según tu país). Si tu selección clasifica y vas avanzando ronda a ronda, podés terminar siendo campeón — y ese trofeo se suma a los mismos que ya ganaste con tu club, mezclado en la misma fila.
+Cada 4 temporadas te toca el **Mundial**; 2 temporadas después de cada Mundial, la **copa continental** de tu confederación (Copa América, Eurocopa, Copa Oro, Copa Africana o Copa Asiática, según tu país). Si tu selección clasifica y vas avanzando ronda a ronda, puedes terminar siendo campeón — y ese trofeo se suma a los mismos que ya ganaste con tu club, mezclado en la misma fila.
 
 Tus partidos, goles y asistencias con la selección se ven aparte de los de club, nunca sumados a ellos — en la tarjeta de tu temporada actual, en tu historial, y en el resumen final de tu carrera vas a ver una línea con la bandera de tu país específicamente para eso.
 
@@ -125,122 +125,122 @@ Tus partidos, goles y asistencias con la selección se ven aparte de los de club
 
 ## 9. Tu forma y tu rendimiento
 
-Tu **forma** (visible como una píldora de color en el panel de temporada) va desde "Inspirado" 🔥 en el mejor de los casos hasta "Tocado físicamente" 🤕 en el peor — pasando por "En plenitud", "Animado", "Regular", "Desanimado" y "Bajo de forma". Cada decisión te empuja hacia un estado objetivo, pero no te teletransporta ahí de golpe: te vas acercando de a poco, así que una racha de decisiones en la misma dirección construye un cambio real, y una sola decisión aislada no te hace pasar de "Inspirado" a "Tocado" de un tirón. Afecta directamente cuántos minutos vas a tener: en buena forma jugás más partidos y rendís mejor; en mala forma, te quedás afuera más seguido.
+Tu **forma** (visible como una píldora de color en el panel de temporada) va desde "Inspirado" 🔥 en el mejor de los casos hasta "Tocado físicamente" 🤕 en el peor — pasando por "En plenitud", "Animado", "Regular", "Desanimado" y "Bajo de forma". Cada decisión te empuja hacia un estado objetivo, pero no te teletransporta ahí de golpe: te vas acercando de a poco, así que una racha de decisiones en la misma dirección construye un cambio real, y una sola decisión aislada no te hace pasar de "Inspirado" a "Tocado" de un tirón. Afecta directamente cuántos minutos vas a tener: en buena forma juegas más partidos y rindes mejor; en mala forma, te quedas afuera más seguido.
 
-Ser **titular** en un bloque de partidos también suma minutos reales — no es solo una etiqueta, un titular efectivamente juega más que un suplente. Y no es un sorteo nuevo cada vez: cuanto mejor rindas siendo titular, más te "ganás" el puesto de cara a los próximos bloques (e incluso de una temporada a la siguiente, mientras sigas en el mismo club) — una gran temporada no se olvida al arrancar la próxima. Al fichar por un club nuevo, ese progreso se resetea: ahí también hay que ganarse el puesto desde cero.
+Ser **titular** en un bloque de partidos también suma minutos reales — no es solo una etiqueta, un titular efectivamente juega más que un suplente. Y no es un sorteo nuevo cada vez: cuanto mejor rindas siendo titular, más te "ganas" el puesto de cara a los próximos bloques (e incluso de una temporada a la siguiente, mientras sigas en el mismo club) — una gran temporada no se olvida al arrancar la próxima. Al fichar por un club nuevo, ese progreso se resetea: ahí también hay que ganarse el puesto desde cero.
 
-Si te consolidás como titular indiscutido de un mismo club durante varias temporadas seguidas, en algún momento te van a nombrar **capitán** — vas a ver un aviso puntual y, desde ahí, una cinta "Capitán" en tu tarjeta de temporada y en tu historial mientras la mantengas. Es un reconocimiento a tu continuidad en ese plantel: si te vas a otro club (transferencia o préstamo), la volvés a tener que ganar ahí, aunque ya la hayas tenido antes en otro lado.
+Si te consolidas como titular indiscutido de un mismo club durante varias temporadas seguidas, en algún momento te van a nombrar **capitán** — vas a ver un aviso puntual y, desde ahí, una cinta "Capitán" en tu tarjeta de temporada y en tu historial mientras la mantengas. Es un reconocimiento a tu continuidad en ese plantel: si te vas a otro club (transferencia o préstamo), la vuelves a tener que ganar ahí, aunque ya la hayas tenido antes en otro lado.
 
-**Si sos un novato de 16 a 19 años**, vas a jugar bastante menos que un jugador ya asentado con el mismo nivel, y te va a costar más ganarte la titularidad — ningún club te la da de entrada solo por tu OVR a esa edad, te lo tenés que ganar con el tiempo. Esa desventaja se mantiene pareja durante todos esos años de novato y recién a partir de los 19 empieza a aflojar de a poco, hasta desaparecer del todo hacia los 24. Y tus minutos ahora también responden a tu rendimiento REAL en cancha, no solo a tu forma y tus decisiones: si venís jugando bien de verdad, te ganás más minutos en el próximo bloque; si venís rindiendo flojo, te los recortan.
+**Si eres un novato de 16 a 19 años**, vas a jugar bastante menos que un jugador ya asentado con el mismo nivel, y te va a costar más ganarte la titularidad — ningún club te la da de entrada solo por tu OVR a esa edad, te lo tienes que ganar con el tiempo. Esa desventaja se mantiene pareja durante todos esos años de novato y recién a partir de los 19 empieza a aflojar de a poco, hasta desaparecer del todo hacia los 24. Y tus minutos ahora también responden a tu rendimiento REAL en cancha, no solo a tu forma y tus decisiones: si vienes jugando bien de verdad, te ganas más minutos en el próximo bloque; si vienes rindiendo flojo, te los recortan.
 
 ---
 
 ## 10. Lesiones
 
-Cada tanto, en una pausa de decisiones, en vez de las 2 tarjetas de siempre vas a ver un **parte médico**: te lesionaste. No hay nada que decidir ahí — lo leés y tocás "Continuar" cuando quieras seguir. Hay 3 niveles:
+Cada tanto, en una pausa de decisiones, en vez de las 2 tarjetas de siempre vas a ver un **parte médico**: te lesionaste. No hay nada que decidir ahí — lo lees y tocas "Continuar" cuando quieras seguir. Hay 3 niveles:
 
-- **Leve** — te perdés el próximo bloque de partidos, nada más.
-- **Moderada** — te perdés 1 o 2 bloques, tu forma queda "Tocado físicamente" mientras dura, y tu OVR baja un poquito.
+- **Leve** — te pierdes el próximo bloque de partidos, nada más.
+- **Moderada** — te pierdes 1 o 2 bloques, tu forma queda "Tocado físicamente" mientras dura, y tu OVR baja un poquito.
 - **Grave** — puede dejarte afuera el resto de la temporada, con una baja más importante de OVR.
 
-El riesgo de lesionarte sube un poco con la edad. No hay forma de evitarlo del todo (las decisiones que tomás no lo previenen), es parte del riesgo de cualquier carrera — pero las graves son mucho menos frecuentes que las leves.
+El riesgo de lesionarte sube un poco con la edad. No hay forma de evitarlo del todo (las decisiones que tomas no lo previenen), es parte del riesgo de cualquier carrera — pero las graves son mucho menos frecuentes que las leves.
 
-Mientras estás de baja, las pausas de decisión siguen llegando con normalidad (familia, prensa, vestuario) — lo único que no vas a ver es una decisión que dé por hecho que estás jugando en ese momento (pedir un penal, pelear un lugar en el equipo titular), algo que no tendría sentido con vos afuera de la cancha.
+Mientras estás de baja, las pausas de decisión siguen llegando con normalidad (familia, prensa, vestuario) — lo único que no vas a ver es una decisión que dé por hecho que estás jugando en ese momento (pedir un penal, pelear un lugar en el equipo titular), algo que no tendría sentido contigo afuera de la cancha.
 
 Mientras estés lesionado, tu tarjeta de temporada se marca con un borde y un resplandor rojo — para que de un vistazo sepas que hay algo importante pasando, incluso si no llegaste a leer el parte médico.
 
-La buena noticia: el OVR que perdés por una lesión **no es para siempre**. Cuando te dan de alta, recuperás una parte de ese OVR — fue un golpe físico puntual, no que te volviste peor jugador de la nada. El mensaje de "te recuperaste" te va a avisar cuánto recuperaste.
+La buena noticia: el OVR que pierdes por una lesión **no es para siempre**. Cuando te dan de alta, recuperas una parte de ese OVR — fue un golpe físico puntual, no que te volviste peor jugador de la nada. El mensaje de "te recuperaste" te va a avisar cuánto recuperaste.
 
 ---
 
 ## 11. Cómo crece (y decae) tu nivel
 
-Tu **OVR** es tu nivel general — el número que decide qué tan bien rendís y qué clubes se pueden interesar en vos. Sube solo, de a poco, en cada bloque de partidos, más rápido cuanto mejor te vaya (buen rendimiento en tus decisiones = crecimiento más fuerte).
+Tu **OVR** es tu nivel general — el número que decide qué tan bien rindes y qué clubes se pueden interesar en ti. Sube solo, de a poco, en cada bloque de partidos, más rápido cuanto mejor te vaya (buen rendimiento en tus decisiones = crecimiento más fuerte).
 
-- **Hasta los 28 años**, crecés a tu ritmo pleno.
-- **De 29 a 34**, entrás en tu meseta: cuesta cada vez más sumar, y hacia el final de esa ventana ya es normal empezar a bajar un poco en vez de seguir subiendo. Tu pico como jugador suele caer en algún punto de esta etapa.
+- **Hasta los 28 años**, creces a tu ritmo pleno.
+- **De 29 a 34**, entras en tu meseta: cuesta cada vez más sumar, y hacia el final de esa ventana ya es normal empezar a bajar un poco en vez de seguir subiendo. Tu pico como jugador suele caer en algún punto de esta etapa.
 - **De 35 en adelante**, el crecimiento por buenas decisiones prácticamente desaparece y el desgaste natural sigue creciendo, cada vez más marcado — para cuando te llega el retiro obligatorio (entre los 41 y 45), lo normal es que ya hayas bajado bastante desde tu mejor momento, no que sigas cerca de tu techo.
 
-Además de la edad, cada jugador que creás tiene un **techo real** oculto — el nivel más alto que ese jugador en particular puede llegar a alcanzar, sorteado en el momento de crear el personaje y que nunca vas a ver expuesto en ningún número. La mayoría de las carreras van a terminar como jugadores sólidos (entre 80 y 89 de pico), una minoría se va a quedar más floja, y otra minoría —la menos común— va a llegar a ser una verdadera estrella de 90 para arriba. Cerca de tu techo, subir cuesta mucho más… pero nunca es del todo imposible: de vez en cuando, con una racha realmente buena, podés sorprender y pasarte por uno o dos puntos.
+Además de la edad, cada jugador que creas tiene un **techo real** oculto — el nivel más alto que ese jugador en particular puede llegar a alcanzar, sorteado en el momento de crear el personaje y que nunca vas a ver expuesto en ningún número. La mayoría de las carreras van a terminar como jugadores sólidos (entre 80 y 89 de pico), una minoría se va a quedar más floja, y otra minoría —la menos común— va a llegar a ser una verdadera estrella de 90 para arriba. Cerca de tu techo, subir cuesta mucho más… pero nunca es del todo imposible: de vez en cuando, con una racha realmente buena, puedes sorprender y pasarte por uno o dos puntos.
 
-Además, cada jugador que creás tiene un **ritmo de desarrollo propio**, que tampoco vas a ver expuesto en ningún número: con exactamente las mismas decisiones, dos carreras no van a crecer (ni decaer) igual — alguna vez te va a tocar un jugador de desarrollo más lento, y otras veces un verdadero talento precoz que además se sostiene mejor con la edad. Ese mismo talento oculto también se nota en la cancha, no solo en el crecimiento: a igual OVR, un talento precoz ya rinde mejor desde el arranque — se le nota que tiene algo especial antes de que el número lo confirme — mientras que un desarrollo más lento se siente genuinamente en blanco al principio. No toda carrera arranca floja y mejora con el tiempo; algunas ya vienen jugando bien desde el debut. Es parte de la sorpresa de cada carrera nueva.
+Además, cada jugador que creas tiene un **ritmo de desarrollo propio**, que tampoco vas a ver expuesto en ningún número: con exactamente las mismas decisiones, dos carreras no van a crecer (ni decaer) igual — alguna vez te va a tocar un jugador de desarrollo más lento, y otras veces un verdadero talento precoz que además se sostiene mejor con la edad. Ese mismo talento oculto también se nota en la cancha, no solo en el crecimiento: a igual OVR, un talento precoz ya rinde mejor desde el arranque — se le nota que tiene algo especial antes de que el número lo confirme — mientras que un desarrollo más lento se siente genuinamente en blanco al principio. No toda carrera arranca floja y mejora con el tiempo; algunas ya vienen jugando bien desde el debut. Es parte de la sorpresa de cada carrera nueva.
 
-Si arrancaste en un club chico con un nivel bajo, los primeros años vas a mejorar **más rápido de lo normal** — mientras seas joven y sigas por debajo de un nivel ya consolidado, cada bloque de partidos te suma un poco más de lo que sumaría más adelante en la carrera. Es la forma en que el juego representa a un pibe que recién debuta y todavía tiene mucho margen para pulirse rápido — un veterano que bajó de nivel por la edad no tiene este empujón, ese es un problema distinto.
+Si arrancaste en un club chico con un nivel bajo, los primeros años vas a mejorar **más rápido de lo normal** — mientras seas joven y sigas por debajo de un nivel ya consolidado, cada bloque de partidos te suma un poco más de lo que sumaría más adelante en la carrera. Es la forma en que el juego representa a un jugador joven que recién debuta y todavía tiene mucho margen para pulirse rápido — un veterano que bajó de nivel por la edad no tiene este empujón, ese es un problema distinto.
 
 ---
 
 ## 12. Trofeos y competiciones
 
-Cada temporada jugás, según tu club: tu **liga doméstica** siempre, tu **copa nacional** siempre, y una **competición internacional** (Champions/Libertadores o su segundo nivel) **solo si clasificaste** la temporada anterior por haber tenido una gran campaña.
+Cada temporada juegas, según tu club: tu **liga doméstica** siempre, tu **copa nacional** siempre, y una **competición internacional** (Champions/Libertadores o su segundo nivel) **solo si clasificaste** la temporada anterior por haber tenido una gran campaña.
 
-Al cierre de cada temporada te enterás si saliste campeón — cuanto mejor le haya ido a tu club (su nivel, tu forma, cómo vinieron tus decisiones "de equipo" en el año, **y tu propio rendimiento estadístico de la temporada**) más chances tenés. Una temporada floja para vos pesa poco; una temporada de ensueño (muchos goles, asistencias y premios a la figura del partido) empuja de verdad las chances de título de tu equipo, no solo las decisiones que tomaste en los eventos. Ganar la liga es difícil y reservado casi siempre a los grandes; la copa nacional es bastante más pareja, con chances reales incluso para un club chico en un buen año.
+Al cierre de cada temporada te enteras si saliste campeón — cuanto mejor le haya ido a tu club (su nivel, tu forma, cómo vinieron tus decisiones "de equipo" en el año, **y tu propio rendimiento estadístico de la temporada**) más chances tienes. Una temporada floja para ti pesa poco; una temporada de ensueño (muchos goles, asistencias y premios a la figura del partido) empuja de verdad las chances de título de tu equipo, no solo las decisiones que tomaste en los eventos. Ganar la liga es difícil y reservado casi siempre a los grandes; la copa nacional es bastante más pareja, con chances reales incluso para un club chico en un buen año.
 
-Todos los trofeos que ganás quedan guardados en tu historial, con su escudo real — incluidos los que ganes con tu selección nacional (ver [sección 8](#8-tu-selección-nacional)), mezclados junto a los de club.
+Todos los trofeos que ganas quedan guardados en tu historial, con su escudo real — incluidos los que ganes con tu selección nacional (ver [sección 8](#8-tu-selección-nacional)), mezclados junto a los de club.
 
-**Premios individuales a nivel mundial**: además de los títulos de club y selección, al cierre de cada temporada podés ganar hasta 3 reconocimientos individuales, comparando tu año contra los mejores futbolistas del mundo esa temporada:
+**Premios individuales a nivel mundial**: además de los títulos de club y selección, al cierre de cada temporada puedes ganar hasta 3 reconocimientos individuales, comparando tu año contra los mejores futbolistas del mundo esa temporada:
 
 - **Bota de Oro** 🥾 — al máximo goleador del mundo, sin importar tu posición.
 - **Once Ideal** ⭐ — al mejor jugador del año en tu propia posición.
 - **Balón de Oro** 🏆 — el más difícil de los tres: hace falta estar entre los mejores en rendimiento, en producción goleadora, **y** haber ganado algo esa temporada — ninguna de las tres cosas alcanza sola.
 
-Si quedás cerca sin ganar la Bota de Oro, un mensaje te va a avisar en qué puesto terminaste. Estos tres premios se guardan igual que cualquier otro trofeo, en tu historial y en el resumen final de tu carrera.
+Si quedas cerca sin ganar la Bota de Oro, un mensaje te va a avisar en qué puesto terminaste. Estos tres premios se guardan igual que cualquier otro trofeo, en tu historial y en el resumen final de tu carrera.
 
-**Tu fama** crece con cada trofeo que levantás (de club o de selección) y, más todavía, con cada premio individual — un Balón de Oro pesa más que ganar una copa nacional. También se mueve un poco con algunas decisiones de prensa a lo largo de la carrera: una entrevista que sale bien, una polémica mal manejada. Es un medidor aparte de tu OVR: podés ser un jugador sólido pero poco conocido, o todo lo contrario, dependiendo de cómo se dio tu carrera. Se muestra como una etiqueta en tu header (de "Anónimo" a "Leyenda mundial") y como un tile más en el resumen final.
+**Tu fama** crece con cada trofeo que levantas (de club o de selección) y, más todavía, con cada premio individual — un Balón de Oro pesa más que ganar una copa nacional. También se mueve un poco con algunas decisiones de prensa a lo largo de la carrera: una entrevista que sale bien, una polémica mal manejada. Es un medidor aparte de tu OVR: puedes ser un jugador sólido pero poco conocido, o todo lo contrario, dependiendo de cómo se dio tu carrera. Se muestra como una etiqueta en tu header (de "Anónimo" a "Leyenda mundial") y como un tile más en el resumen final.
 
-**Tu rival**: desde el arranque de la carrera, el juego te asigna en secreto a un rival de tu mismo nivel — un jugador de otra posición y otro club que crece con vos, temporada a temporada. Al cerrar cada año vas a ver un mensaje comparando cómo van sus números de gol/asistencia contra los tuyos, y en el resumen final de tu carrera hay una sección aparte con la comparación completa. No tiene nombre ni se le siguen sus trofeos o lesiones — es solo una referencia para medir tu carrera contra "alguien" además de contra vos mismo.
+**Tu rival**: desde el arranque de la carrera, el juego te asigna en secreto a un rival de tu mismo nivel — un jugador de otra posición y otro club que crece contigo, temporada a temporada. Al cerrar cada año vas a ver un mensaje comparando cómo van sus números de gol/asistencia contra los tuyos, y en el resumen final de tu carrera hay una sección aparte con la comparación completa. No tiene nombre ni se le siguen sus trofeos o lesiones — es solo una referencia para medir tu carrera contra "alguien" además de contra ti mismo.
 
 ---
 
 ## 13. Tu valor de mercado
 
-Es cuánto "valés" en el mercado de fichajes — sube con tu OVR (cada punto extra vale cada vez más, sobre todo cerca de la cima) y con la plata y el prestigio de tu club/liga actual (no con qué tan bien le esté yendo en la cancha esa temporada — eso es otra cosa). Lo vas a ver siempre en tu header, y es lo que determina si un club puede ofrecerte sin que la oferta se sienta un despropósito.
+Es cuánto "vales" en el mercado de fichajes — sube con tu OVR (cada punto extra vale cada vez más, sobre todo cerca de la cima) y con la plata y el prestigio de tu club/liga actual (no con qué tan bien le esté yendo en la cancha esa temporada — eso es otra cosa). Lo vas a ver siempre en tu header, y es lo que determina si un club puede ofrecerte sin que la oferta se sienta un despropósito.
 
 ---
 
 ## 14. El mercado de fichajes
 
-En la única ventana de fichajes de cada temporada vas a ver hasta 4 tarjetas: normalmente **3 ofertas de otros clubes** + la carta de tu club actual (**"Quedarme"**). Esa carta de tu club siempre va **primera**, así la encontrás siempre en el mismo lugar; si en algún momento podés elegir retirarte, esa opción va **segunda**. Un solo clic resuelve toda la pausa.
+En la única ventana de fichajes de cada temporada vas a ver hasta 4 tarjetas: normalmente **3 ofertas de otros clubes** + la carta de tu club actual (**"Quedarme"**). Esa carta de tu club siempre va **primera**, así la encuentras siempre en el mismo lugar; si en algún momento puedes elegir retirarte, esa opción va **segunda**. Un solo clic resuelve toda la pausa.
 
 Cosas para tener en cuenta:
 
 - **Las ofertas tienen sentido**: no vas a recibir ofertas de clubes muy por debajo o muy por encima de tu nivel real — cada club solo aparece si de verdad estás a su altura. Y ahora, si tu nivel da para los grandes de Europa, van a aparecer de verdad — antes, un nivel altísimo seguía trayendo casi solo ofertas de tu propia región.
-- **Al menos 2 de cada 3 ofertas suelen ser de tu propia liga — pero solo mientras siga siendo un destino a tu altura.** En cuanto tu nivel supera claramente a tu liga actual, esa garantía desaparece y vas a ver ofertas de todos lados según tu nivel real, no según dónde jugás hoy.
+- **Al menos 2 de cada 3 ofertas suelen ser de tu propia liga — pero solo mientras siga siendo un destino a tu altura.** En cuanto tu nivel supera claramente a tu liga actual, esa garantía desaparece y vas a ver ofertas de todos lados según tu nivel real, no según dónde juegas hoy.
 - **Desde los 33 años**, ese mismo criterio de "entorno" pasa a mirar tu **país de origen** en vez de tu liga — para simular la vuelta a casa a cerrar la carrera, aunque la hayas jugado toda en el exterior. Pero si tu nivel ya superó de sobra a los clubes de tu país, esa vuelta a casa deja de estar garantizada: pasa a ser una posibilidad ocasional (una de cada tres ventanas, aproximadamente), no algo que vas a ver todos los años.
 - **Cuanto más joven seas, mejores clubes vas a ver** a igual nivel — un jugador de 27 años con buen OVR va a recibir mejores ofertas que uno de 38 con el mismo OVR: los clubes apuestan más fuerte a quien todavía tiene recorrido.
 - Vas a ver "Te valoran en €X" en cada oferta — es una referencia de cuánto te valora ESE club en particular, puede variar un poco de una oferta a otra aunque el nivel del club sea parecido.
-- **Recién fichado a un club, tenés 2 temporadas de tranquilidad** (**4** si es tu primer club, el de la creación de personaje — te dan el doble de margen por ser tu debut real): por más que tu nivel no termine de convencer, ese club no te va a dejar ir hasta que hayas tenido esas temporadas completas para demostrar algo.
-- **Desde los 36 años** podés elegir **retirarte voluntariamente** aunque tu club te siga queriendo — ocupa una de las 4 cartas.
-- Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de "Quedarme" se reemplaza por una de retiro forzoso — todavía podés fichar por otro club en esa misma pausa, si hay ofertas. Igual, si veniste de cerrar una temporada realmente brillante (muchos goles/asistencias, gran promedio), eso puede salvarte el contrato aunque el número de OVR no haya llegado del todo — el club no te evalúa solo por un número, también por cómo jugaste de verdad.
-- **Si tu club todavía confía en vos a largo plazo pero no te está dando minutos** (poco protagonismo y bajo rendimiento cuando jugaste, todavía dentro de tu período de tranquilidad), en vez de la ventana normal vas a ver solo 2 cartas: "Quedarme" y un **préstamo** a otro club por esa temporada, para que sumes minutos en otro lado. Al cerrar esa temporada volvés solo a tu club dueño, sin pedirte nada — pero tenés que volver a ganarte el puesto ahí, no en el club prestado.
+- **Recién fichado a un club, tienes 2 temporadas de tranquilidad** (**4** si es tu primer club, el de la creación de personaje — te dan el doble de margen por ser tu debut real): por más que tu nivel no termine de convencer, ese club no te va a dejar ir hasta que hayas tenido esas temporadas completas para demostrar algo.
+- **Desde los 36 años** puedes elegir **retirarte voluntariamente** aunque tu club te siga queriendo — ocupa una de las 4 cartas.
+- Si tu club decide no renovarte (tu nivel ya no alcanza para ese club, pasado el período de tranquilidad), la carta de "Quedarme" se reemplaza por una de retiro forzoso — todavía puedes fichar por otro club en esa misma pausa, si hay ofertas. Igual, si veniste de cerrar una temporada realmente brillante (muchos goles/asistencias, gran promedio), eso puede salvarte el contrato aunque el número de OVR no haya llegado del todo — el club no te evalúa solo por un número, también por cómo jugaste de verdad.
+- **Si tu club todavía confía en ti a largo plazo pero no te está dando minutos** (poco protagonismo y bajo rendimiento cuando jugaste, todavía dentro de tu período de tranquilidad), en vez de la ventana normal vas a ver solo 2 cartas: "Quedarme" y un **préstamo** a otro club por esa temporada, para que sumes minutos en otro lado. Al cerrar esa temporada vuelves solo a tu club dueño, sin pedirte nada — pero tienes que volver a ganarte el puesto ahí, no en el club prestado.
 
 ---
 
 ## 15. Pedir un cambio de dorsal
 
-Al cerrar cada temporada, se habilita un botón (el lápiz ✎ al lado de tu número, en el header) para pedirle al club un dorsal nuevo. Podés pedirlo en el momento o guardarlo para más adelante — queda disponible hasta que lo uses. El club lo acepta o no según tu peso en el plantel (tu nivel y cómo le fue al equipo esa temporada) — no importa qué número pidas en sí, ni "cuán codiciado" sea.
+Al cerrar cada temporada, se habilita un botón (el lápiz ✎ al lado de tu número, en el header) para pedirle al club un dorsal nuevo. Puedes pedirlo en el momento o guardarlo para más adelante — queda disponible hasta que lo uses. El club lo acepta o no según tu peso en el plantel (tu nivel y cómo le fue al equipo esa temporada) — no importa qué número pidas en sí, ni "cuán codiciado" sea.
 
 ---
 
 ## 16. El retiro y el resumen de tu carrera
 
-Tu carrera termina cuando aceptás una carta de retiro — sea porque vos lo elegiste, porque tu club ya no te renovó, o porque llegaste a una edad (entre 41 y 45 años, distinta en cada carrera) en la que ya nadie te oferta nada más. Ese final no llega de un día para el otro: en tus últimas 2 temporadas antes de esa edad vas a notar que cada vez menos clubes se interesan en vos, hasta quedarte con una sola oferta — una carrera que se apaga de a poco, no un corte de un año a otro.
+Tu carrera termina cuando aceptas una carta de retiro — sea porque tú lo elegiste, porque tu club ya no te renovó, o porque llegaste a una edad (entre 41 y 45 años, distinta en cada carrera) en la que ya nadie te oferta nada más. Ese final no llega de un día para el otro: en tus últimas 2 temporadas antes de esa edad vas a notar que cada vez menos clubes se interesan en ti, hasta quedarte con una sola oferta — una carrera que se apaga de a poco, no un corte de un año a otro.
 
-Antes del mensaje final, el juego te hace una última pregunta: **¿qué sigue para vos?** Podés elegir "Colgar los botines para siempre" o "Seguir ligado al fútbol" (como entrenador) — no cambia ninguna estadística ni abre un modo nuevo, es solo el cierre de tu historia, y la frase que elijas queda reflejada en el mensaje de despedida y en el resumen de tu carrera.
+Antes del mensaje final, el juego te hace una última pregunta: **¿qué sigue para ti?** Puedes elegir "Colgar los botines para siempre" o "Seguir ligado al fútbol" (como entrenador) — no cambia ninguna estadística ni abre un modo nuevo, es solo el cierre de tu historia, y la frase que elijas queda reflejada en el mensaje de despedida y en el resumen de tu carrera.
 
 Al retirarte vas a ver 2 botones:
 
 - **"Ver resumen de mi carrera"** — abre una pantalla con todo lo que hiciste: un gráfico con la evolución de tu OVR temporada a temporada (de tu debut a tu pico), tus estadísticas combinadas de punta a punta (partidos, goles, asistencias, MVP, promedio, mayor valor de mercado, y tu fama final), el recorrido completo de los clubes en los que jugaste (en orden), cuánto jugaste con tu selección si te tocó convocatoria alguna vez, la comparación final contra tu rival de carrera, y todos los trofeos que ganaste — si repetiste alguno, vas a ver un "×N" al lado en vez de verlo repetido.
 - **"Aceptar"** — te lleva de vuelta al inicio, listo para empezar una carrera nueva.
 
-Junto a la ✕ para cerrar ese resumen hay un botón **"C"**: lo tocás y te copia todo el resumen como una imagen lista para pegar donde quieras (redes, chat, donde sea) — no hace falta sacarle captura de pantalla.
+Junto a la ✕ para cerrar ese resumen hay un botón **"C"**: lo tocas y te copia todo el resumen como una imagen lista para pegar donde quieras (redes, chat, donde sea) — no hace falta sacarle captura de pantalla.
 
 ---
 
 ## 17. Consejos para tu primera carrera
 
-- **No tengas miedo de arrancar en un club chico.** Es más fácil ganarte un lugar, y las ofertas de mejores clubes van a ir llegando a medida que subís de nivel.
-- **Prestá atención a tu forma.** Una racha de malas decisiones te puede dejar afuera del equipo justo cuando más necesitás minutos para crecer.
-- **No siempre conviene fichar por la primera oferta que llega.** A veces "Quedarme" en un club donde ya sos importante rinde más, a largo plazo, que un club apenas mejor donde vas a tener que ganarte todo de nuevo.
+- **No tengas miedo de arrancar en un club chico.** Es más fácil ganarte un lugar, y las ofertas de mejores clubes van a ir llegando a medida que subes de nivel.
+- **Prestá atención a tu forma.** Una racha de malas decisiones te puede dejar afuera del equipo justo cuando más necesitas minutos para crecer.
+- **No siempre conviene fichar por la primera oferta que llega.** A veces "Quedarme" en un club donde ya eres importante rinde más, a largo plazo, que un club apenas mejor donde vas a tener que ganarte todo de nuevo.
 - **Cuidado con las decisiones de Alto Impacto (⚠️)** — sopesá bien: a veces ninguna opción es "ganar", solo elegir qué perder menos.
 - **Los años de tu pico (hasta los 26-31) son los más valiosos** para construir el nivel que te va a sostener en el declive de después — no los desperdicies con decisiones descuidadas.
 - **Ya pasados los 30, prestá atención a tu club actual**: si tu nivel empieza a quedarse corto para donde estás, es cuestión de tiempo hasta que te toque bajar de categoría o buscar un lugar donde encajes mejor.
@@ -259,7 +259,7 @@ Si ya pasaron 2 temporadas completas en ese club y tu nivel se quedó muy por de
 Los clubes top del mundo solo entran en juego con un nivel muy alto — si tu carrera todavía no llegó ahí, vas a seguir viendo ofertas acordes a tu momento actual. Seguí subiendo de nivel y van a empezar a aparecer.
 
 **Mi jugador se lesionó justo antes de una ventana de fichajes — ¿me afecta las ofertas?**
-Sí, una lesión resta OVR de una y puede achicar por un tiempo el nivel de club al que podés aspirar — pero no es un golpe para siempre: al darte de alta recuperás una parte de ese OVR, y el resto se recupera con el tiempo si seguís rindiendo bien.
+Sí, una lesión resta OVR de una y puede achicar por un tiempo el nivel de club al que puedes aspirar — pero no es un golpe para siempre: al darte de alta recuperas una parte de ese OVR, y el resto se recupera con el tiempo si sigues rindiendo bien.
 
 **¿Puedo elegir jugar siempre para mi selección, todas las temporadas?**
 No — la convocatoria se sortea, no se pide. Cuanto más alto tu nivel para lo que exige tu país, más seguido te va a tocar, pero nunca es garantizado.
