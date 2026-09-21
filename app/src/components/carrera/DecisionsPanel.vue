@@ -41,11 +41,9 @@ function esOfertaItem(item: LoteItem): item is OfertaItem {
 // exactamente cuando iniciarCheckpoint() arranca una escena nueva. El
 // retiro no dispara un nuevo checkpoint (finalizarCarrera no lo llama),
 // así que carreraFinalizada se suma a la key para que ese cambio de
-// "escena" también funda el panel — y epilogoElegido para que el paso de
-// la tarjeta de epílogo al mensaje final de retiro también funda, en vez
-// de saltar de golpe.
+// "escena" también funda el panel.
 const sceneKey = computed(
-  () => `${temporada.value.numero}-${temporada.value.checkpointIndex}-${career.carreraFinalizada}-${career.epilogoElegido}`,
+  () => `${temporada.value.numero}-${temporada.value.checkpointIndex}-${career.carreraFinalizada}`,
 )
 
 const esParteMedico = computed(() => lote.value.length === 1 && esInformeLesion(lote.value[0]!))
@@ -84,21 +82,10 @@ function volverInicio() {
         <span class="decisions__count">{{ contador }}</span>
       </div>
 
-      <div v-if="career.carreraFinalizada && !career.epilogoElegido" class="decisions__track">
-        <div class="retiro">
-          <p class="decisions__empty">Tu carrera profesional terminó. ¿Qué sigue para ti?</p>
-          <div class="retiro__actions">
-            <button type="button" class="btn" @click="career.resolverEpilogo(0)">Colgar los botines para siempre</button>
-            <button type="button" class="btn btn--ghost" @click="career.resolverEpilogo(1)">Seguir ligado al fútbol</button>
-          </div>
-        </div>
-      </div>
-
-      <div v-else-if="career.carreraFinalizada && career.epilogoElegido" class="decisions__track">
+      <div v-if="career.carreraFinalizada" class="decisions__track">
         <div class="retiro">
           <p class="decisions__empty">
             Te retiraste del fútbol profesional. ¡Gracias por una gran carrera, {{ career.player!.apellido }}!
-            {{ career.epilogoElegido === 'retirado' ? 'Se aleja del fútbol profesional.' : 'Sigue ligado al fútbol como entrenador.' }}
           </p>
           <div class="retiro__actions">
             <button type="button" class="btn btn--ghost" @click="emit('ver-resumen')">Ver resumen de mi carrera</button>

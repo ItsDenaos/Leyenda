@@ -386,8 +386,8 @@ export const GameConfig: GameConfigShape = {
   // que arma el texto — acá solo viven los datos).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada componente.
-  VERSION: "1.2.0",
-  FECHA_PUBLICACION: "16 de septiembre de 2026 · 11:33",
+  VERSION: "1.3.0",
+  FECHA_PUBLICACION: "21 de septiembre de 2026 · 00:35",
 
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
@@ -614,7 +614,7 @@ export const GameConfig: GameConfigShape = {
   // BASE/CRECIMIENTO arrancaron en 18000/1.185, pero esa curva es
   // demasiado "back-loaded": de OVR 90 a 99 el valor se multiplicaba por
   // 4.6x, así que un 90 real — ya un techo raro, la mayoría de las
-  // carreras buenas terminan entre 80 y 95 (ver sortearPotencialTecho) —
+  // carreras buenas terminan de pico en los 80s (ver sortearPotencialTecho) —
   // quedaba infravalorado en plata (~€50M jugando en el Real Madrid, muy
   // por debajo de lo que paga el mercado real por ese nivel). Con
   // 3,000,000 / 1.08 la franja "estrella real" (85-92) sube mucho más en
@@ -1383,20 +1383,24 @@ export const GameConfig: GameConfigShape = {
   // recorrer mucho terreno dentro de una carrera de duración finita.
   //
   // Los rangos de acá NO son directamente "dónde termina la carrera": se
-  // corrieron ~3000 carreras simuladas con rendimiento variable (bueno y
-  // malo, no siempre óptimo) contra la fórmula real de ajustarOvrTramo, y
-  // estos valores son los que hacen que el PICO FINAL de OVR quede
-  // repartido ~10% por debajo de 80, ~60% entre 80-89, ~30% en 90+ (los
-  // techos altos apuntan por encima de 90 porque varios de esos casos se
-  // quedan cortos por el camino, sea por mala racha o por no alcanzar el
-  // límite superior del rango).
-  POTENCIAL_TECHO_PROB_BAJO: 0.05,
-  POTENCIAL_TECHO_PROB_MEDIO: 0.55, // acumulado con el de arriba: 60% — el 40% restante es el tramo alto
-  POTENCIAL_TECHO_BAJO_MIN: 72,
-  POTENCIAL_TECHO_BAJO_MAX: 83,
-  POTENCIAL_TECHO_MEDIO_MIN: 85,
-  POTENCIAL_TECHO_MEDIO_MAX: 90,
-  POTENCIAL_TECHO_ALTO_MIN: 91,
+  // corrieron 600 carreras completas simuladas de punta a punta (vía el
+  // store real, no la fórmula aislada, con un jugador que no se retira
+  // apenas puede sino que sigue fichando mientras haya oferta — rendimiento
+  // variable, no siempre óptimo) para medir el PICO FINAL de OVR real.
+  // Con 5%/55%/40% (bajo 72-83 / medio 85-90 / alto 91-98) el pico
+  // terminaba en ~4% por debajo de 80, ~19% en 80-85, ~77% en 86+ (35% ya
+  // por encima de 90) — muy corrido hacia arriba. Con 30%/50%/20% (bajo
+  // 70-79 / medio 80-85 / alto 86-98) el pico queda en ~25% por debajo de
+  // 80, ~53% en 80-85, ~22% en 86+ (~10% por encima de 90) — la mayoría de
+  // las carreras, incluso jugando bien, terminan como jugadores sólidos de
+  // 80s, no de crack de 90+.
+  POTENCIAL_TECHO_PROB_BAJO: 0.3,
+  POTENCIAL_TECHO_PROB_MEDIO: 0.5, // acumulado con el de arriba: 80% — el 20% restante es el tramo alto
+  POTENCIAL_TECHO_BAJO_MIN: 70,
+  POTENCIAL_TECHO_BAJO_MAX: 79,
+  POTENCIAL_TECHO_MEDIO_MIN: 80,
+  POTENCIAL_TECHO_MEDIO_MAX: 85,
+  POTENCIAL_TECHO_ALTO_MIN: 86,
   POTENCIAL_TECHO_ALTO_MAX: 98,
   POTENCIAL_TECHO_FACTOR_MIN: 0.08, // qué fracción de lo que se pasaría del techo se deja pasar igual
 

@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 1.2.0 — publicada el 16 de septiembre de 2026 · 11:33**
+**Versión 1.3.0 — publicada el 21 de septiembre de 2026 · 00:35**
 
 Bienvenido a *Leyenda*. Eres un futbolista desde tus primeros pasos como profesional hasta el día en que cuelgas los botines — tú tomas las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentas.
 
@@ -119,7 +119,7 @@ En esa tarjeta eliges entre 2 caminos, y ninguno es gratis:
 
 Cada 4 temporadas te toca el **Mundial**; 2 temporadas después de cada Mundial, la **copa continental** de tu confederación (Copa América, Eurocopa, Copa Oro, Copa Africana o Copa Asiática, según tu país). Si tu selección clasifica y vas avanzando ronda a ronda, puedes terminar siendo campeón — y ese trofeo se suma a los mismos que ya ganaste con tu club, mezclado en la misma fila.
 
-Tus partidos, goles y asistencias con la selección se ven aparte de los de club, nunca sumados a ellos — en la tarjeta de tu temporada actual, en tu historial, y en el resumen final de tu carrera vas a ver una línea con la bandera de tu país específicamente para eso.
+Tus partidos, goles y asistencias con la selección se ven aparte de los de club, nunca sumados a ellos — en la tarjeta de tu temporada actual, en tu historial, y en el resumen final de tu carrera vas a ver una línea con la bandera de tu país específicamente para eso. Ese número cuenta solo el torneo en sí (fase de grupos + eliminación) — las eliminatorias previas quedan mencionadas en el mensaje de esa temporada, pero no se suman ahí, para que "eliminado en cuartos de final" siempre corresponda al mismo puñado de partidos, sin mezclarse con la campaña de clasificación.
 
 ---
 
@@ -187,8 +187,6 @@ Si quedas cerca sin ganar la Bota de Oro, un mensaje te va a avisar en qué pues
 
 **Tu fama** crece con cada trofeo que levantas (de club o de selección) y, más todavía, con cada premio individual — un Balón de Oro pesa más que ganar una copa nacional. También se mueve un poco con algunas decisiones de prensa a lo largo de la carrera: una entrevista que sale bien, una polémica mal manejada. Es un medidor aparte de tu OVR: puedes ser un jugador sólido pero poco conocido, o todo lo contrario, dependiendo de cómo se dio tu carrera. Se muestra como una etiqueta en tu header (de "Anónimo" a "Leyenda mundial") y como un tile más en el resumen final.
 
-**Tu rival**: desde el arranque de la carrera, el juego te asigna en secreto a un rival de tu mismo nivel — un jugador de otra posición y otro club que crece contigo, temporada a temporada. Al cerrar cada año vas a ver un mensaje comparando cómo van sus números de gol/asistencia contra los tuyos, y en el resumen final de tu carrera hay una sección aparte con la comparación completa. No tiene nombre ni se le siguen sus trofeos o lesiones — es solo una referencia para medir tu carrera contra "alguien" además de contra ti mismo.
-
 ---
 
 ## 13. Tu valor de mercado
@@ -225,11 +223,9 @@ Al cerrar cada temporada, se habilita un botón (el lápiz ✎ al lado de tu nú
 
 Tu carrera termina cuando aceptas una carta de retiro — sea porque tú lo elegiste, porque tu club ya no te renovó, o porque llegaste a una edad (entre 41 y 45 años, distinta en cada carrera) en la que ya nadie te oferta nada más. Ese final no llega de un día para el otro: en tus últimas 2 temporadas antes de esa edad vas a notar que cada vez menos clubes se interesan en ti, hasta quedarte con una sola oferta — una carrera que se apaga de a poco, no un corte de un año a otro.
 
-Antes del mensaje final, el juego te hace una última pregunta: **¿qué sigue para ti?** Puedes elegir "Colgar los botines para siempre" o "Seguir ligado al fútbol" (como entrenador) — no cambia ninguna estadística ni abre un modo nuevo, es solo el cierre de tu historia, y la frase que elijas queda reflejada en el mensaje de despedida y en el resumen de tu carrera.
-
 Al retirarte vas a ver 2 botones:
 
-- **"Ver resumen de mi carrera"** — abre una pantalla con todo lo que hiciste: un gráfico con la evolución de tu OVR temporada a temporada (de tu debut a tu pico), tus estadísticas combinadas de punta a punta (partidos, goles, asistencias, MVP, promedio, mayor valor de mercado, y tu fama final), el recorrido completo de los clubes en los que jugaste (en orden), cuánto jugaste con tu selección si te tocó convocatoria alguna vez, la comparación final contra tu rival de carrera, y todos los trofeos que ganaste — si repetiste alguno, vas a ver un "×N" al lado en vez de verlo repetido.
+- **"Ver resumen de mi carrera"** — abre una pantalla con todo lo que hiciste: un gráfico con la evolución de tu OVR temporada a temporada (de tu debut a tu pico), tus estadísticas combinadas de punta a punta (partidos, goles, asistencias, MVP, promedio, mayor valor de mercado, y tu fama final), el recorrido completo de los clubes en los que jugaste (en orden), cuánto jugaste con tu selección si te tocó convocatoria alguna vez, y todos los trofeos que ganaste — si repetiste alguno, vas a ver un "×N" al lado en vez de verlo repetido.
 - **"Aceptar"** — te lleva de vuelta al inicio, listo para empezar una carrera nueva.
 
 Junto a la ✕ para cerrar ese resumen hay un botón **"C"**: lo tocas y te copia todo el resumen como una imagen lista para pegar donde quieras (redes, chat, donde sea) — no hace falta sacarle captura de pantalla.

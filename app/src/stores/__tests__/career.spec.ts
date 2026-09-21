@@ -194,23 +194,6 @@ describe('useCareerStore', () => {
     }
   })
 
-  it('epílogo: resolverEpilogo guarda la opción elegida y persiste en guardar/cargar', () => {
-    const store = useCareerStore()
-    store.iniciarCarrera(jugadorDePrueba())
-    store.finalizarCarrera()
-
-    expect(store.epilogoElegido).toBeNull()
-
-    store.resolverEpilogo(1)
-    expect(store.epilogoElegido).toBe('entrenador')
-
-    setActivePinia(createPinia())
-    const storeNuevo = useCareerStore()
-    expect(storeNuevo.cargar()).toBe(true)
-    expect(storeNuevo.epilogoElegido).toBe('entrenador')
-    expect(storeNuevo.carreraFinalizada).toBe(true)
-  })
-
   it('fama: arranca en 0, sube con una decisión de prensa y clampea en FAMA_MAX', () => {
     const store = useCareerStore()
     store.iniciarCarrera(jugadorDePrueba())
@@ -236,6 +219,51 @@ describe('useCareerStore', () => {
       store.resolveDecisionEvento(`test-prensa-${i}`, 0)
     }
     expect(store.fama).toBe(GameConfig.FAMA_MAX)
+  })
+
+  it('fama: una decisión que la sube o la baja avisa con un toast, a diferencia de rendimiento/forma/equipo', () => {
+    const store = useCareerStore()
+    store.iniciarCarrera(jugadorDePrueba())
+
+    const decisionQueSube: DecisionCard = {
+      id: 'test-prensa-sube',
+      tipo: 'personal',
+      altoImpacto: false,
+      desc: 'Una decisión de prensa de prueba.',
+      opciones: [{ label: 'Opción A', variant: 'accept', efectos: { rendimiento: 0, forma: 'animado', equipo: 0, fama: 5 } }],
+    }
+    store.temporadaActual!.loteActual = [decisionQueSube]
+    store.resolveDecisionEvento('test-prensa-sube', 0)
+    // No se compara contra el último mensaje nomás: resolver la decisión
+    // también puede disparar la simulación del tramo (y sus propios
+    // mensajes de copa/liga) en la misma llamada.
+    expect(store.mensajes).toContain('Tu fama sube.')
+
+    const mensajesAntesDeBajar = store.mensajes.length
+    const decisionQueBaja: DecisionCard = {
+      id: 'test-prensa-baja',
+      tipo: 'personal',
+      altoImpacto: false,
+      desc: 'Otra decisión de prensa de prueba.',
+      opciones: [{ label: 'Opción A', variant: 'accept', efectos: { rendimiento: 0, forma: 'animado', equipo: 0, fama: -2 } }],
+    }
+    store.temporadaActual!.loteActual = [decisionQueBaja]
+    store.resolveDecisionEvento('test-prensa-baja', 0)
+    expect(store.mensajes.slice(mensajesAntesDeBajar)).toContain('Tu fama baja.')
+
+    // Sin efecto de fama, no se agrega ningún toast de fama.
+    const mensajesAntesSinFama = store.mensajes.length
+    const decisionSinFama: DecisionCard = {
+      id: 'test-sin-fama',
+      tipo: 'personal',
+      altoImpacto: false,
+      desc: 'Una decisión sin efecto de fama.',
+      opciones: [{ label: 'Opción A', variant: 'accept', efectos: { rendimiento: 0, forma: 'animado', equipo: 0, fama: 0 } }],
+    }
+    store.temporadaActual!.loteActual = [decisionSinFama]
+    store.resolveDecisionEvento('test-sin-fama', 0)
+    expect(store.mensajes.slice(mensajesAntesSinFama)).not.toContain('Tu fama sube.')
+    expect(store.mensajes.slice(mensajesAntesSinFama)).not.toContain('Tu fama baja.')
   })
 
   it('fama: sube al cerrar la temporada si ganaste trofeos, más por un premio individual que por uno de equipo', () => {
@@ -454,5 +482,40 @@ describe('useCareerStore', () => {
     const storeNuevo = useCareerStore()
     expect(storeNuevo.cargar()).toBe(true)
     expect(storeNuevo.rival).toEqual(rivalAntes)
+  })
+
+  it('selección: seleccionPartidos solo cuenta el torneo (nunca las eliminatorias), y el partido de la eliminación también cuenta', () => {
+    const store = useCareerStore()
+    store.iniciarCarrera(jugadorDePrueba())
+    const t = store.temporadaActual!
+    t.seleccion = { pais: 'Argentina', paisCode: 'ar', paisFlag: '🇦🇷', confederacion: 'CONMEBOL', fuerza: 90, prestigio: 90 }
+    t.tipoAnoSeleccion = 'mundial'
+
+    // Clasifica de una, avanza de grupos de una, gana octavos y pierde
+    // cuartos — sin importar cuántos partidos de eliminatorias haya
+    // sorteado GameConfig.randomInt (eso ya no debe afectar el conteo).
+    vi.spyOn(GameConfig, 'probClasificarTorneoSeleccion').mockReturnValue(1)
+    vi.spyOn(GameConfig, 'probAvanzarFaseDeGruposSeleccion').mockReturnValue(1)
+    vi.spyOn(GameConfig, 'probAvanzarRonda').mockReturnValueOnce(1).mockReturnValueOnce(0)
+
+    const decisionSeleccion: DecisionCard = {
+      id: 'test-mundial',
+      tipo: 'deportivo',
+      altoImpacto: false,
+      desc: 'Convocatoria de prueba.',
+      seleccion: true,
+      opciones: [{ label: 'Priorizar', variant: 'accept', prioriza: true, efectos: { rendimiento: 0, forma: 'animado', equipo: -1 } }],
+    }
+    t.loteActual = [decisionSeleccion]
+    store.resolveDecisionEvento('test-mundial', 0)
+
+    try {
+      // 3 de fase de grupos + octavos (ganado) + cuartos (perdido) = 5 —
+      // ninguna de las eliminatorias sorteadas entra en este número.
+      expect(store.temporadaActual!.seleccionPartidos).toBe(5)
+      expect(store.mensajes.some((m) => m.includes('partidos de eliminatorias') && m.includes('cuartos de final'))).toBe(true)
+    } finally {
+      vi.restoreAllMocks()
+    }
   })
 })

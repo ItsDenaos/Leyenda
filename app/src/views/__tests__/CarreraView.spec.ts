@@ -74,4 +74,34 @@ describe('CarreraView', () => {
     expect(push).not.toHaveBeenCalled()
     expect(wrapper.text()).toContain('GOMEZ')
   })
+
+  it('remide --vh-real al cambiar de pausa (cierre de temporada, nueva ventana, etc.), no solo al montar', async () => {
+    const career = useCareerStore()
+    const equipo = GameDatabase.equipos[0]!
+    career.iniciarCarrera({
+      apellido: 'PEREZ',
+      numero: 10,
+      pierna: 'derecha',
+      edad: 17,
+      pais: 'Argentina',
+      flag: '🇦🇷',
+      paisCode: 'ar',
+      posicion: 'DC',
+      equipoId: equipo.id,
+      ovrInicial: 58,
+    })
+
+    mount(CarreraView)
+    await nextTick()
+
+    const setProperty = vi.spyOn(document.documentElement.style, 'setProperty')
+    // Ver actualizarAlturaViewport (CarreraView.vue): remide en cada cambio
+    // de pausa porque ahí es donde el layout se reordena de golpe — sin
+    // este watcher, --vh-real solo se mide al montar la vista.
+    career.temporadaActual!.checkpointIndex++
+    await nextTick()
+    await nextTick()
+
+    expect(setProperty).toHaveBeenCalledWith('--vh-real', expect.any(String))
+  })
 })

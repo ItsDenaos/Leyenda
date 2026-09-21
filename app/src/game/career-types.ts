@@ -179,8 +179,6 @@ export interface ContextoSolicitudNumero {
   rendimiento: number
 }
 
-export type EpilogoOpcion = 'retirado' | 'entrenador'
-
 // Rival de carrera — un candidato élite generado una sola vez, al mismo
 // tiempo que tú (mismo criterio de nivel que un candidato a premios
 // mundiales, ver generarRival en career.ts), que avanza en paralelo a tu

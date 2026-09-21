@@ -18,7 +18,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { GameConfig } from '../game/config'
-import { POSITION_NAMES } from '../game/format'
 import { GameDatabase, type Liga, type Equipo, type Competicion } from '../data/database'
 import type { GrupoPosicion } from '../game/config'
 import { equipoDe, ligaDe } from '../data/database-helpers'
@@ -33,7 +32,6 @@ import type {
   EstadoCompeticionEliminatoria,
   ContextoSolicitudNumero,
   ResumenCarrera,
-  EpilogoOpcion,
   Rival,
 } from '../game/career-types'
 
@@ -124,13 +122,13 @@ export const useCareerStore = defineStore('career', () => {
   const eventosUsados = ref<Set<string>>(new Set())
   const puedeSolicitarNumero = ref(false)
   const contextoSolicitudNumero = ref<ContextoSolicitudNumero | null>(null)
-  // Qué elegiste hacer después de retirarte — se pregunta una sola vez,
-  // justo al aceptar el retiro (ver resolverEpilogo/finalizarCarrera).
-  const epilogoElegido = ref<EpilogoOpcion | null>(null)
   // Reputación pública — eje DISTINTO del OVR, escala 0-100, monotónica
   // (ver FAMA_* en config.ts). Sube con decisiones de prensa y trofeos.
   const fama = ref(0)
   // Rival de carrera, generado una sola vez al empezar (ver generarRival).
+  // Se sigue generando y avanzando cada temporada, pero por ahora ningún
+  // componente lo muestra — oculto a pedido, sin tocar el motor por si se
+  // reactiva más adelante.
   const rival = ref<Rival | null>(null)
   // Cola de avisos puntuales para la UI (reemplaza showToast) — la UI la
   // consume y la vacía, el store nunca toca el DOM.
@@ -217,7 +215,6 @@ export const useCareerStore = defineStore('career', () => {
     eventosUsados.value = new Set()
     puedeSolicitarNumero.value = false
     contextoSolicitudNumero.value = null
-    epilogoElegido.value = null
     fama.value = 0
     mensajes.value = []
     rival.value = generarRival(Number(datosJugador.edad))
@@ -963,14 +960,6 @@ export const useCareerStore = defineStore('career', () => {
     const numeroCerrada = t.numero
     temporadasFinalizadas.value.push(t)
 
-    if (rival.value) {
-      const golesJugadorCarrera = temporadasFinalizadas.value.reduce((suma, tt) => suma + tt.goles, 0)
-      const nombrePosicionRival = (POSITION_NAMES[rival.value.posicion] ?? rival.value.posicion).toLowerCase()
-      mensajesFinales.push(
-        `Tu rival, un ${nombrePosicionRival} de ${equipoDe(rival.value.equipoId).nombre}, lleva ${rival.value.golesCarrera} goles en su carrera — tú llevas ${golesJugadorCarrera}.`,
-      )
-    }
-
     const ovrHeredado = t.ovr
     const equipoAcumuladoCerrado = t.equipoAcumuladoTemporada
     const pesoTitularCerrado = t.pesoTitular
@@ -1031,54 +1020,73 @@ export const useCareerStore = defineStore('career', () => {
     const tipoAno = t.tipoAnoSeleccion
     const calidad = GameConfig.calidadSeleccion(seleccion.fuerza, t.forma)
 
-    let partidos: number
+    // partidosTorneo es lo único que se simula y se suma a las estadísticas
+    // de selección (seleccionPartidos/Goles/Asistencias) — las eliminatorias
+    // son una campaña aparte, de casi 2 años en la vida real, y quedan
+    // mencionadas solo en el texto del mensaje. Así, "eliminado en cuartos"
+    // siempre corresponde al mismo número de partidos jugados EN el torneo
+    // (grupos + rondas de eliminación), sin la cuenta inflada por las
+    // eliminatorias mezclada en el mismo total.
+    let partidosTorneo: number
     let mensaje: string
 
     if (!tipoAno) {
-      partidos = GameConfig.randomInt(GameConfig.PARTIDOS_AMISTOSO_SELECCION_MIN, GameConfig.PARTIDOS_AMISTOSO_SELECCION_MAX)
-      mensaje = `Jugaste ${partidos} amistosos con ${seleccion.pais}.`
+      partidosTorneo = GameConfig.randomInt(GameConfig.PARTIDOS_AMISTOSO_SELECCION_MIN, GameConfig.PARTIDOS_AMISTOSO_SELECCION_MAX)
+      mensaje = `Jugaste ${partidosTorneo} amistosos con ${seleccion.pais}.`
     } else {
       const nombreTorneo = nombreTorneoSeleccion(seleccion.confederacion, tipoAno)
       const partidosEliminatorias = GameConfig.randomInt(GameConfig.PARTIDOS_ELIMINATORIAS_MIN, GameConfig.PARTIDOS_ELIMINATORIAS_MAX)
       const clasifico = Math.random() < GameConfig.probClasificarTorneoSeleccion(calidad)
-      partidos = partidosEliminatorias
+      partidosTorneo = 0
       if (!clasifico) {
         mensaje = `Jugaste ${partidosEliminatorias} partidos de eliminatorias, pero ${seleccion.pais} no logró clasificarse a la ${nombreTorneo} esta vez.`
       } else {
-        partidos += GameConfig.PARTIDOS_FASE_DE_GRUPOS_SELECCION
+        const prefijoClasificacion = `Clasificaste a la ${nombreTorneo} con ${seleccion.pais} tras ${partidosEliminatorias} partidos de eliminatorias.`
+        partidosTorneo += GameConfig.PARTIDOS_FASE_DE_GRUPOS_SELECCION
         const avanzaGrupos = Math.random() < GameConfig.probAvanzarFaseDeGruposSeleccion(calidad)
         if (!avanzaGrupos) {
-          mensaje = `Clasificaste a la ${nombreTorneo} con ${seleccion.pais} tras ${partidosEliminatorias} partidos de eliminatorias, pero quedaste eliminado en la fase de grupos.`
+          mensaje = `${prefijoClasificacion} Quedaste eliminado en la fase de grupos.`
         } else {
           const totalRondas = tipoAno === 'mundial' ? GameConfig.RONDAS_KO_MUNDIAL : GameConfig.RONDAS_KO_CONTINENTAL
           const rondas = GameConfig.NOMBRES_RONDA_KO[totalRondas] as string[]
+          // Cada ronda se juega (y cuenta) se gane o se pierda — antes solo
+          // se sumaban las rondas ganadas, así que el partido en el que
+          // quedabas eliminado no se contaba, aunque sí se jugó.
           let rondasSuperadas = 0
-          while (rondasSuperadas < rondas.length && Math.random() < GameConfig.probAvanzarRonda(calidad)) {
-            rondasSuperadas++
-            partidos++
+          while (rondasSuperadas < rondas.length) {
+            partidosTorneo++
+            if (Math.random() < GameConfig.probAvanzarRonda(calidad)) {
+              rondasSuperadas++
+            } else {
+              break
+            }
           }
           if (rondasSuperadas === rondas.length) {
             const competicion = buscarCompeticionSeleccion(seleccion.confederacion, tipoAno)
             if (competicion) t.trofeos.push({ nombre: competicion.nombre, imagen: competicion.trofeoImagen })
-            mensaje = `¡Campeón de la ${nombreTorneo} con ${seleccion.pais}!`
+            mensaje = `${prefijoClasificacion} ¡Campeón de la ${nombreTorneo} con ${seleccion.pais}!`
           } else if (rondasSuperadas === rondas.length - 1) {
-            mensaje = `Fuiste subcampeón de la ${nombreTorneo} con ${seleccion.pais}.`
+            mensaje = `${prefijoClasificacion} Fuiste subcampeón de la ${nombreTorneo} con ${seleccion.pais}.`
           } else {
-            mensaje = `Quedaste eliminado en ${rondas[rondasSuperadas]} de la ${nombreTorneo} con ${seleccion.pais}.`
+            mensaje = `${prefijoClasificacion} Quedaste eliminado en ${rondas[rondasSuperadas]} de la ${nombreTorneo} con ${seleccion.pais}.`
           }
         }
       }
     }
 
-    const { goles, asistencias } = GameConfig.simularTramo({
-      partidos,
-      posicion: player.value!.posicion,
-      ovr: t.ovr,
-      rendimientoAcumulado: t.bufferRendimiento,
-      fuerzaLiga: seleccion.fuerza,
-      factorTalento: factorTalento.value,
-    })
-    t.seleccionPartidos += partidos
+    let goles = 0
+    let asistencias = 0
+    if (partidosTorneo > 0) {
+      ;({ goles, asistencias } = GameConfig.simularTramo({
+        partidos: partidosTorneo,
+        posicion: player.value!.posicion,
+        ovr: t.ovr,
+        rendimientoAcumulado: t.bufferRendimiento,
+        fuerzaLiga: seleccion.fuerza,
+        factorTalento: factorTalento.value,
+      }))
+    }
+    t.seleccionPartidos += partidosTorneo
     t.seleccionGoles += goles
     t.seleccionAsistencias += asistencias
     if (goles > 0) mensaje += ` Anotaste ${goles} gol${goles === 1 ? '' : 'es'}.`
@@ -1100,7 +1108,11 @@ export const useCareerStore = defineStore('career', () => {
     t.bufferRendimiento += option.efectos.rendimiento
     t.bufferEquipo += option.efectos.equipo
     if (option.efectos.fama) {
+      const famaAntes = fama.value
       fama.value = GameConfig.clamp(fama.value + option.efectos.fama, 0, GameConfig.FAMA_MAX)
+      if (fama.value !== famaAntes) {
+        mensajes.value.push(option.efectos.fama > 0 ? 'Tu fama sube.' : 'Tu fama baja.')
+      }
     }
 
     if (decision.seleccion) {
@@ -1200,13 +1212,6 @@ export const useCareerStore = defineStore('career', () => {
     guardar()
   }
 
-  // La carrera ya terminó acá — no hay forma/rendimiento/equipo que tocar
-  // (a diferencia de resolveDecisionEvento), es solo una frase de cierre.
-  function resolverEpilogo(optionIdx: number) {
-    epilogoElegido.value = optionIdx === 0 ? 'retirado' : 'entrenador'
-    guardar()
-  }
-
   function construirResumenCarrera(): ResumenCarrera {
     const filas = temporadasFinalizadas.value
 
@@ -1289,7 +1294,6 @@ export const useCareerStore = defineStore('career', () => {
         eventosUsados: [...eventosUsados.value],
         puedeSolicitarNumero: puedeSolicitarNumero.value,
         contextoSolicitudNumero: contextoSolicitudNumero.value,
-        epilogoElegido: epilogoElegido.value,
         fama: fama.value,
         rival: rival.value,
       }
@@ -1327,7 +1331,6 @@ export const useCareerStore = defineStore('career', () => {
         eventosUsados: string[]
         puedeSolicitarNumero: boolean
         contextoSolicitudNumero: ContextoSolicitudNumero | null
-        epilogoElegido?: EpilogoOpcion | null
         fama?: number
         rival?: Rival | null
       }
@@ -1343,7 +1346,6 @@ export const useCareerStore = defineStore('career', () => {
       eventosUsados.value = new Set(snapshot.eventosUsados)
       puedeSolicitarNumero.value = snapshot.puedeSolicitarNumero
       contextoSolicitudNumero.value = snapshot.contextoSolicitudNumero
-      epilogoElegido.value = snapshot.epilogoElegido ?? null
       fama.value = snapshot.fama ?? 0
       rival.value = snapshot.rival ?? null
       return true
@@ -1374,7 +1376,6 @@ export const useCareerStore = defineStore('career', () => {
     carreraFinalizada,
     puedeSolicitarNumero,
     contextoSolicitudNumero,
-    epilogoElegido,
     fama,
     rival,
     mensajes,
@@ -1388,7 +1389,6 @@ export const useCareerStore = defineStore('career', () => {
     resolveOferta,
     confirmarCambioNumero,
     finalizarCarrera,
-    resolverEpilogo,
     construirResumenCarrera,
     guardar,
     cargar,
