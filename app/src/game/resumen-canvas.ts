@@ -5,10 +5,6 @@
 // — el original evita así depender de una librería externa de captura de
 // DOM, y este port mantiene esa misma decisión.
 //
-// Nota: la sección "Tu rival" del ResumenModal (ver ResumenModal.vue) NO
-// tiene equivalente acá a propósito — agregarla implica cambiar la firma
-// de generarTarjetaResumenCanvas y dibujar a mano una sección nueva; se
-// deja para un fast-follow si hace falta, no es un olvido.
 import { GameConfig } from './config'
 import { ovrTierColor, formatMarketValue, POSITION_NAMES } from './format'
 import type { Player, ResumenCarrera } from './career-types'

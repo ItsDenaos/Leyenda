@@ -14,7 +14,7 @@ export function ovrTierColor(ovr: number): string {
   return '#cd7f32' // bronce
 }
 
-// Niveles de fama, un eje DISTINTO del OVR a propósito (podés ser muy
+// Niveles de fama, un eje DISTINTO del OVR a propósito (puedes ser muy
 // bueno y poco conocido, o al revés) — paleta propia, no la de
 // ovrTierColor, para que no se lean como el mismo medidor.
 export function famaTierColor(fama: number): string {

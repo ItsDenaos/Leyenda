@@ -116,7 +116,7 @@ describe('DecisionsPanel', () => {
     expect(career.temporadaActual!.loteActual.some((d) => 'id' in d && d.id === 'a')).toBe(false)
   })
 
-  it('con la carrera finalizada, muestra "Carrera finalizada" y primero la tarjeta de epílogo', () => {
+  it('con la carrera finalizada, muestra "Carrera finalizada" y el mensaje de retiro', () => {
     const career = iniciar()
     career.finalizarCarrera()
 
@@ -124,27 +124,13 @@ describe('DecisionsPanel', () => {
     expect(wrapper.find('h2').text()).toBe('Carrera finalizada')
     expect(wrapper.find('.decisions__count').text()).toBe('Retirado')
     expect(wrapper.find('.retiro').exists()).toBe(true)
-    expect(wrapper.text()).toContain('¿Qué sigue para vos?')
-    expect(wrapper.text()).not.toContain('PEREZ')
-  })
-
-  it('elegir una opción del epílogo llama a resolverEpilogo y después muestra el mensaje final con las acciones de retiro', async () => {
-    const career = iniciar()
-    career.finalizarCarrera()
-
-    const wrapper = mount(DecisionsPanel)
-    await wrapper.findAll('.retiro__actions .btn')[0]!.trigger('click')
-
-    expect(career.epilogoElegido).toBe('retirado')
     expect(wrapper.text()).toContain('PEREZ')
-    expect(wrapper.text()).toContain('Se aleja del fútbol profesional.')
     expect(wrapper.find('.retiro__actions .btn--ghost').text()).toBe('Ver resumen de mi carrera')
   })
 
   it('"Ver resumen de mi carrera" emite ver-resumen', async () => {
     const career = iniciar()
     career.finalizarCarrera()
-    career.resolverEpilogo(0)
 
     const wrapper = mount(DecisionsPanel)
     await wrapper.find('.retiro__actions .btn--ghost').trigger('click')
@@ -154,7 +140,6 @@ describe('DecisionsPanel', () => {
   it('"Aceptar" navega a /', async () => {
     const career = iniciar()
     career.finalizarCarrera()
-    career.resolverEpilogo(1)
 
     const wrapper = mount(DecisionsPanel)
     const botones = wrapper.findAll('.retiro__actions .btn')

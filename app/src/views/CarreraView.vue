@@ -5,7 +5,7 @@
 // de altura real de viewport en móvil, y el toast compartido consumiendo
 // la cola de mensajes del store. Spotlight (7b), historial (7c) y el panel
 // de decisiones (7d) llegan en los próximos sub-bloques.
-import { onMounted, onUnmounted, watch, ref } from 'vue'
+import { onMounted, onUnmounted, watch, nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCareerStore } from '@/stores/career'
 import { useToast } from '@/composables/useToast'
@@ -70,6 +70,13 @@ onMounted(() => {
   window.addEventListener('resize', actualizarAlturaViewport)
   window.addEventListener('orientationchange', actualizarAlturaViewport)
   window.visualViewport?.addEventListener('resize', actualizarAlturaViewport)
+  // 'scroll' de visualViewport se dispara cuando el navegador muestra/oculta
+  // su propia barra y eso desplaza el viewport visual — sin que necesariamente
+  // dispare 'resize' (visto en Edge/Android: su barra inferior dinámica no es
+  // tan consistente en eso como Chrome, con quien se probó originalmente este
+  // fix). Es justo el caso que el timeout de abajo no cubre, porque puede
+  // pasar en cualquier momento de la sesión, no solo al cargar.
+  window.visualViewport?.addEventListener('scroll', actualizarAlturaViewport)
   // En Android, la barra de direcciones puede seguir animando/asentándose
   // un instante después de este primer montado (sin disparar 'resize' ni
   // 'orientationchange' acá, porque no hay scroll de página real que la
@@ -85,11 +92,27 @@ onUnmounted(() => {
   window.removeEventListener('resize', actualizarAlturaViewport)
   window.removeEventListener('orientationchange', actualizarAlturaViewport)
   window.visualViewport?.removeEventListener('resize', actualizarAlturaViewport)
+  window.visualViewport?.removeEventListener('scroll', actualizarAlturaViewport)
 })
 
 watch(
   () => career.mensajes.length,
   () => drainQueue(career.mensajes),
+)
+
+// Cada vez que cambia la pausa (cierre de temporada, nueva ventana de
+// fichajes, retiro) el layout se reordena de golpe — el momento más
+// probable para que el navegador reaccione mostrando/ocultando su propia
+// barra sin que este componente se entere (ver actualizarAlturaViewport
+// arriba). nextTick espera a que Vue termine de aplicar ese reflow antes
+// de remedir, para no quedarse con un valor de a mitad de camino.
+watch(
+  () => career.temporadaActual
+    ? `${career.temporadaActual.numero}-${career.temporadaActual.checkpointIndex}-${career.carreraFinalizada}`
+    : null,
+  () => {
+    nextTick(actualizarAlturaViewport)
+  },
 )
 </script>
 

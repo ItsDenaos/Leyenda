@@ -386,8 +386,8 @@ export const GameConfig: GameConfigShape = {
   // que arma el texto — acá solo viven los datos).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada componente.
-  VERSION: "1.2.0",
-  FECHA_PUBLICACION: "16 de septiembre de 2026 · 11:33",
+  VERSION: "1.3.0",
+  FECHA_PUBLICACION: "21 de septiembre de 2026 · 00:35",
 
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
@@ -607,14 +607,14 @@ export const GameConfig: GameConfigShape = {
   // Curva exponencial sobre el OVR (como en la vida real: cada punto
   // extra de calidad cerca del techo vale desproporcionadamente más),
   // multiplicada por el prestigio Y la economía del club/liga actual —
-  // a propósito NO usa el eje fuerza: cuánto valés en el mercado
+  // a propósito NO usa el eje fuerza: cuánto vales en el mercado
   // depende de la plata y la marca del club que te tiene, no de si ese
   // club está ganando títulos esta temporada.
   //
   // BASE/CRECIMIENTO arrancaron en 18000/1.185, pero esa curva es
   // demasiado "back-loaded": de OVR 90 a 99 el valor se multiplicaba por
   // 4.6x, así que un 90 real — ya un techo raro, la mayoría de las
-  // carreras buenas terminan entre 80 y 95 (ver sortearPotencialTecho) —
+  // carreras buenas terminan de pico en los 80s (ver sortearPotencialTecho) —
   // quedaba infravalorado en plata (~€50M jugando en el Real Madrid, muy
   // por debajo de lo que paga el mercado real por ese nivel). Con
   // 3,000,000 / 1.08 la franja "estrella real" (85-92) sube mucho más en
@@ -668,7 +668,7 @@ export const GameConfig: GameConfigShape = {
   // de OVR (ver más abajo), un club no debería ofertarte si ficharte
   // implicara un desplome de tu valor de mercado — señal clara de que,
   // aunque el OVR dé "elegible" en el margen, ese club no está realmente
-  // a tu altura. `valorEnClub` es el valor que tendrías vos en ESE club
+  // a tu altura. `valorEnClub` es el valor que tendrías tú en ESE club
   // en particular (mismo OVR, distinto nivel de equipo/liga).
   OFERTA_UMBRAL_CAIDA_VALOR: 0.4, // mínimo: no menos del 40% de tu valor actual
   ofertaTieneValorRazonable(valorActual, valorEnClub) {
@@ -698,7 +698,7 @@ export const GameConfig: GameConfigShape = {
   // Cada opción de evento ya no TELETRANSPORTA la forma al estado que
   // indica su `efectos.forma` — lo usa como un objetivo hacia el que te
   // "empuja" ese eje, recorriendo una fracción del camino desde donde
-  // ya estabas. Así, si en la misma pausa resolvés 2 decisiones que
+  // ya estabas. Así, si en la misma pausa resuelves 2 decisiones que
   // tiran para el mismo lado, tu forma sigue mejorando/empeorando en
   // vez de que la segunda pise a la primera — y si tiran para lados
   // opuestos, se combinan en vez de que gane la que se resolvió último.
@@ -950,9 +950,9 @@ export const GameConfig: GameConfigShape = {
   // el propio club que te fichó te "no renovaría" en la primera ventana
   // de traspasos, antes de que hayas tenido una sola temporada para
   // demostrar algo. Se cuenta en carrera.js (temporadasEnClubActual) y
-  // se resetea cada vez que cambiás de club, sea el inicial o no.
+  // se resetea cada vez que cambias de club, sea el inicial o no.
   TEMPORADAS_GRACIA_CONTRATO: 2,
-  // El primer club de la carrera te ficha sabiendo que sos un debutante
+  // El primer club de la carrera te ficha sabiendo que eres un debutante
   // de verdad (no un jugador hecho de paso) — le da el doble de margen
   // antes de poder cortarte, en vez de las 2 temporadas normales de
   // cualquier club fichado después (ver `esPrimerClub` en carrera.js).
@@ -1123,7 +1123,7 @@ export const GameConfig: GameConfigShape = {
   // partido puntual (antes eran tiradas 100% independientes: un delantero
   // podía meter muchos goles en la temporada y aun así terminar con pocos
   // MVP y un promedio mediocre, porque nada conectaba una cosa con la
-  // otra). Ahora el partido en el que participás en un gol tiene, en ese
+  // otra). Ahora el partido en el que participas en un gol tiene, en ese
   // mismo partido, más chance de MVP y mejor rating — las estadísticas
   // quedan coherentes entre sí en vez de ser tres sorteos que no se hablan.
   BONUS_MVP_POR_GOL: 0.14,
@@ -1299,7 +1299,7 @@ export const GameConfig: GameConfigShape = {
   // (edad ≤ OVR_EDAD_PRIME_MAX, donde el crecimiento ya es pleno) y por
   // debajo del umbral — un veterano que bajó de nivel en la meseta o el
   // ocaso NUNCA lo activa, aunque su OVR haya caído por debajo del umbral:
-  // el "salto de calidad" es cosa de pibe que recién arranca, no de
+  // el "salto de calidad" es cosa de un jugador joven que recién arranca, no de
   // alguien en decadencia.
   UMBRAL_CRECIMIENTO_ACELERADO: 72,
   CRECIMIENTO_ACELERADO_FACTOR_MAX: 1.8,
@@ -1314,7 +1314,7 @@ export const GameConfig: GameConfigShape = {
   // Caída natural por edad: desde OVR_EDAD_DECLIVE_INICIO empieza a restar
   // OVR de a poco (aunque el jugador rinda bien), superpuesta a la meseta
   // de arriba en vez de arrancar recién cuando esta termina — así el neto
-  // (crecimiento - desgaste) pasa de "todavía sumás algo" a "cuesta
+  // (crecimiento - desgaste) pasa de "todavía sumas algo" a "cuesta
   // mantenerte" de forma gradual dentro de la misma ventana de 29-34, en
   // vez de un quiebre brusco a los 32. Desde OVR_EDAD_ACELERA_DECLIVE el
   // desgaste se acelera bastante más — nadie se mantiene en su pico para
@@ -1383,20 +1383,24 @@ export const GameConfig: GameConfigShape = {
   // recorrer mucho terreno dentro de una carrera de duración finita.
   //
   // Los rangos de acá NO son directamente "dónde termina la carrera": se
-  // corrieron ~3000 carreras simuladas con rendimiento variable (bueno y
-  // malo, no siempre óptimo) contra la fórmula real de ajustarOvrTramo, y
-  // estos valores son los que hacen que el PICO FINAL de OVR quede
-  // repartido ~10% por debajo de 80, ~60% entre 80-89, ~30% en 90+ (los
-  // techos altos apuntan por encima de 90 porque varios de esos casos se
-  // quedan cortos por el camino, sea por mala racha o por no alcanzar el
-  // límite superior del rango).
-  POTENCIAL_TECHO_PROB_BAJO: 0.05,
-  POTENCIAL_TECHO_PROB_MEDIO: 0.55, // acumulado con el de arriba: 60% — el 40% restante es el tramo alto
-  POTENCIAL_TECHO_BAJO_MIN: 72,
-  POTENCIAL_TECHO_BAJO_MAX: 83,
-  POTENCIAL_TECHO_MEDIO_MIN: 85,
-  POTENCIAL_TECHO_MEDIO_MAX: 90,
-  POTENCIAL_TECHO_ALTO_MIN: 91,
+  // corrieron 600 carreras completas simuladas de punta a punta (vía el
+  // store real, no la fórmula aislada, con un jugador que no se retira
+  // apenas puede sino que sigue fichando mientras haya oferta — rendimiento
+  // variable, no siempre óptimo) para medir el PICO FINAL de OVR real.
+  // Con 5%/55%/40% (bajo 72-83 / medio 85-90 / alto 91-98) el pico
+  // terminaba en ~4% por debajo de 80, ~19% en 80-85, ~77% en 86+ (35% ya
+  // por encima de 90) — muy corrido hacia arriba. Con 30%/50%/20% (bajo
+  // 70-79 / medio 80-85 / alto 86-98) el pico queda en ~25% por debajo de
+  // 80, ~53% en 80-85, ~22% en 86+ (~10% por encima de 90) — la mayoría de
+  // las carreras, incluso jugando bien, terminan como jugadores sólidos de
+  // 80s, no de crack de 90+.
+  POTENCIAL_TECHO_PROB_BAJO: 0.3,
+  POTENCIAL_TECHO_PROB_MEDIO: 0.5, // acumulado con el de arriba: 80% — el 20% restante es el tramo alto
+  POTENCIAL_TECHO_BAJO_MIN: 70,
+  POTENCIAL_TECHO_BAJO_MAX: 79,
+  POTENCIAL_TECHO_MEDIO_MIN: 80,
+  POTENCIAL_TECHO_MEDIO_MAX: 85,
+  POTENCIAL_TECHO_ALTO_MIN: 86,
   POTENCIAL_TECHO_ALTO_MAX: 98,
   POTENCIAL_TECHO_FACTOR_MIN: 0.08, // qué fracción de lo que se pasaría del techo se deja pasar igual
 
@@ -1448,7 +1452,7 @@ export const GameConfig: GameConfigShape = {
   // mientras sigas en el mismo club (ver PESO_TITULAR_INICIAL más abajo y
   // cómo se hereda/resetea en carrera.js). Una gran temporada ya no se
   // "olvida" al arrancar la próxima.
-  PESO_TITULAR_INICIAL: 0.4, // novato o recién fichado: tenés que ganarte el puesto
+  PESO_TITULAR_INICIAL: 0.4, // novato o recién fichado: tienes que ganarte el puesto
   PESO_TITULAR_MIN: 0.05,
   PESO_TITULAR_MAX: 0.95,
   PESO_TITULAR_RATING_NEUTRO: 6.5, // rating de tramo que ni suma ni resta peso
@@ -1599,7 +1603,7 @@ export const GameConfig: GameConfigShape = {
   // de campaña de ~0.66, casi igual a la de un club mediano de la misma
   // liga — el equipo más ganador de Europa no se sentía distinto de uno
   // de mitad de tabla. Esta variante le da al club el 85% del peso, para
-  // que los grandes de verdad se sientan candidatos de entrada, y vos
+  // que los grandes de verdad se sientan candidatos de entrada, y tú
   // (con una gran temporada) los empujes más arriba todavía.
   FUERZA_TITULO_PESO_CLUB: 0.85,
   FUERZA_TITULO_PESO_FORMA: 0.04,
@@ -1805,7 +1809,7 @@ export const GameConfig: GameConfigShape = {
   // aparecía como "consuelo" al no clasificar, con el mismo número fijo
   // que un año de amistosos (2), lo que las hacía indistinguibles. Ahora
   // TODO año de torneo grande arranca con esta campaña (clasifiques o
-  // no), y si clasificás, se le suma la fase de grupos + eliminación
+  // no), y si clasificas, se le suma la fase de grupos + eliminación
   // directa — así el total ya no salta solo entre "2 o 6".
   PARTIDOS_ELIMINATORIAS_MIN: 6,
   PARTIDOS_ELIMINATORIAS_MAX: 10,
@@ -1835,10 +1839,10 @@ export const GameConfig: GameConfigShape = {
   // juegas tú depende de tu OVR relativo, cómo vienen tus decisiones
   // (rendimientoAcumulado), tu forma (una lesión, por ejemplo, te deja
   // afuera de bastantes partidos aunque el equipo los juegue igual) y de
-  // si sos titular ese tramo (ver calcularTitular): antes ese dato era
+  // si eres titular ese tramo (ver calcularTitular): antes ese dato era
   // solo decorativo (se mostraba el badge, pero no cambiaba en nada
   // cuántos minutos te tocaban) — ahora si el club te para de arranque
-  // efectivamente jugás más.
+  // efectivamente juegas más.
   //
   // El peso del OVR es asimétrico a propósito: por debajo de la
   // referencia castiga fuerte (PESO_BAJO) y por encima suma suave
@@ -1875,10 +1879,10 @@ export const GameConfig: GameConfigShape = {
   // metía 1 gol o 20. Dos correcciones, pensadas para ir juntas:
   //
   // 1) Penalización por edad: nadie te da la titularidad de entrada solo
-  //    porque tu OVR no es terrible a los 16-19 — te lo tenés que ganar
+  //    porque tu OVR no es terrible a los 16-19 — te lo tienes que ganar
   //    con el tiempo. Plateau, no un tapering desde el día 1: se sostiene
   //    al máximo hasta PARTICIPACION_EDAD_NOVATO_PLATEAU_HASTA (un club
-  //    no empieza a confiar de a poco apenas cumplís 17) y recién ahí
+  //    no empieza a confiar de a poco apenas cumples 17) y recién ahí
   //    empieza a bajar lineal hacia 0 en PARTICIPACION_EDAD_NOVATO_HASTA.
   // 2) Peso del rendimiento REAL de la temporada (promedio de rating —
   //    mismo dato que ya usa calcularFuerzaCampana, null en el primer
@@ -2032,7 +2036,7 @@ export const GameConfig: GameConfigShape = {
   // ============================================================
   // FAMA — reputación pública del jugador, escala acotada 0-100
   // como el resto de los medidores del juego (OVR, pesoTitular) —
-  // pero es un eje DISTINTO del OVR a propósito: podés ser muy
+  // pero es un eje DISTINTO del OVR a propósito: puedes ser muy
   // bueno y poco conocido, o al revés. Monotónica: solo sube,
   // nunca decae — no hay "mala prensa" que te reste fama en esta
   // versión, solo eventos de prensa que suman poco o mucho según

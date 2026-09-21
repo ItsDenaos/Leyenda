@@ -64,7 +64,7 @@ describe('OfertaCardItem', () => {
   it('retiro forzoso: muestra "Fin de carrera" y el modificador --retiro-forzoso', () => {
     const equipo = GameDatabase.equipos[0]!
     const liga = GameDatabase.ligas.find((l) => l.id === equipo.ligaId)!
-    const oferta: OfertaItem = { id: 'o4', tipoOferta: 'retiro', forzoso: true, equipo, liga, desc: 'Te retirás.' }
+    const oferta: OfertaItem = { id: 'o4', tipoOferta: 'retiro', forzoso: true, equipo, liga, desc: 'Te retiras.' }
 
     const wrapper = mount(OfertaCardItem, { props: { oferta } })
     expect(wrapper.find('.decision-card__tag').text()).toBe('Fin de carrera')
