@@ -330,6 +330,25 @@ describe('useCareerStore', () => {
     expect(store.cargar()).toBe(false)
   })
 
+  it('abandonarCarrera borra el guardado y deja carreraIniciada en false, sin poder recargarla', () => {
+    const store = useCareerStore()
+    store.iniciarCarrera(jugadorDePrueba())
+    expect(store.carreraIniciada).toBe(true)
+    expect(store.hayCarreraGuardada()).toBe(true)
+
+    store.abandonarCarrera()
+
+    expect(store.carreraIniciada).toBe(false)
+    expect(store.player).toBeNull()
+    expect(store.temporadaActual).toBeNull()
+    expect(store.hayCarreraGuardada()).toBe(false)
+
+    setActivePinia(createPinia())
+    const storeNuevo = useCareerStore()
+    expect(storeNuevo.cargar()).toBe(false)
+    expect(storeNuevo.carreraIniciada).toBe(false)
+  })
+
   it('cede a otro club por bajo rendimiento (préstamo) y vuelve solo al club dueño', () => {
     const store = useCareerStore()
     store.iniciarCarrera(jugadorDePrueba())

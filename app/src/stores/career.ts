@@ -1363,6 +1363,17 @@ export const useCareerStore = defineStore('career', () => {
     }
   }
 
+  // Abandona la carrera en curso antes de que termine — a diferencia de
+  // finalizarCarrera, no hay retiro ni resumen: se borra el guardado y se
+  // vuelve al estado "sin carrera" (carreraIniciada pasa a false), listo
+  // para crear un personaje nuevo desde cero. No hace falta resetear el
+  // resto del estado acá — iniciarCarrera() ya lo pisa todo la próxima vez.
+  function abandonarCarrera() {
+    limpiarPartidaGuardada()
+    player.value = null
+    temporadaActual.value = null
+  }
+
   return {
     // estado
     player,
@@ -1394,5 +1405,6 @@ export const useCareerStore = defineStore('career', () => {
     cargar,
     hayCarreraGuardada,
     limpiarPartidaGuardada,
+    abandonarCarrera,
   }
 })
