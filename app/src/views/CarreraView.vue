@@ -24,7 +24,13 @@ const { message: toastMessage, visible: toastVisible, drainQueue } = useToast()
 
 const mostrarModalNumero = ref(false)
 const mostrarModalResumen = ref(false)
+const confirmandoAbandono = ref(false)
 let reintentoAlturaViewport: number | undefined
+
+function abandonarCarrera() {
+  career.abandonarCarrera()
+  router.push('/')
+}
 
 // `visualViewport.height` (cuando está disponible) es más confiable que
 // window.innerHeight en Chrome/Android: esa API está pensada justo para
@@ -130,6 +136,17 @@ watch(
         <TimelineList />
       </section>
 
+      <div v-if="!career.carreraFinalizada" class="abandonar">
+        <button v-if="!confirmandoAbandono" type="button" class="abandonar__link" @click="confirmandoAbandono = true">
+          Abandonar esta carrera
+        </button>
+        <template v-else>
+          <span class="abandonar__pregunta">¿Seguro? Perdés todo el progreso.</span>
+          <button type="button" class="abandonar__confirmar" @click="abandonarCarrera">Sí, abandonar</button>
+          <button type="button" class="abandonar__cancelar" @click="confirmandoAbandono = false">Cancelar</button>
+        </template>
+      </div>
+
       <footer class="app-footer">{{ GameConfig.VERSION ? `Leyenda v${GameConfig.VERSION} · Publicado el ${GameConfig.FECHA_PUBLICACION}` : '' }}</footer>
     </main>
 
@@ -152,6 +169,54 @@ watch(
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
+}
+
+.abandonar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+  text-align: center;
+}
+.abandonar__link {
+  background: none;
+  border: none;
+  padding: 0.3rem;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.abandonar__link:hover {
+  opacity: 1;
+  color: var(--danger);
+}
+.abandonar__pregunta {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+.abandonar__confirmar {
+  background: none;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  color: var(--danger);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.abandonar__cancelar {
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 0.3rem 0.7rem;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  cursor: pointer;
 }
 
 @media (max-width: 640px) {

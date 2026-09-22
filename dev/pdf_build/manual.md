@@ -1,6 +1,6 @@
 # Leyenda — Manual de Juego
 
-**Versión 1.3.1 — publicada el 22 de septiembre de 2026 · 14:54**
+**Versión 1.3.2 — publicada el 22 de septiembre de 2026 · 15:34**
 
 Bienvenido a *Leyenda*. Eres un futbolista desde tus primeros pasos como profesional hasta el día en que cuelgas los botines — tú tomas las decisiones, el resto lo escribe la carrera. Esta guía te explica cómo se comporta el juego y qué esperar de cada pantalla, para que sepas a qué te enfrentas.
 
@@ -68,6 +68,8 @@ La pantalla principal tiene 3 partes fijas:
 - **Arriba (el header):** tu nombre, posición, dorsal, club actual y tu **OVR** (tu nivel general, el número más importante del juego — cuanto más alto, mejor eres). El color del círculo de tu OVR cambia según tu nivel: bronce, plata, oro, zafiro, rubí y, en la cima absoluta, amatista. Debajo, tu edad, tu país, tu **fama** (tu reputación, un dato aparte de tu OVR — ver [sección 12](#12-trofeos-y-competiciones)) y tu valor de mercado actual.
 - **En el medio (scrolleable):** la temporada en curso — tu progreso (%), tus estadísticas de esta temporada (partidos, goles, asistencias, MVP y promedio de rating) y tu estado de forma — y, debajo, el **historial** de todas tus temporadas anteriores, con sus estadísticas y los trofeos que ganaste en cada una.
 - **Abajo (fijo):** el panel de **decisiones** — acá es donde interactúas. Cada tanto se abre una pausa con algo para resolver: dos decisiones para tomar, o un lote de ofertas de fichaje.
+
+Si en algún momento querés dejar esta carrera a mitad de camino y arrancar una nueva desde cero, hay un link "Abandonar esta carrera" al final de la pantalla (justo arriba del pie con la versión del juego). Te pide confirmar porque borra todo el progreso sin vuelta atrás.
 
 ---
 

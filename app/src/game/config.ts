@@ -386,8 +386,8 @@ export const GameConfig: GameConfigShape = {
   // que arma el texto — acá solo viven los datos).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada componente.
-  VERSION: "1.3.1",
-  FECHA_PUBLICACION: "22 de septiembre de 2026 · 14:54",
+  VERSION: "1.3.2",
+  FECHA_PUBLICACION: "22 de septiembre de 2026 · 15:34",
 
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,
@@ -2044,5 +2044,15 @@ export const GameConfig: GameConfigShape = {
   // ============================================================
   FAMA_MAX: 100,
   FAMA_POR_TROFEO: 2, // un trofeo de club o de selección, cada uno
-  FAMA_POR_PREMIO_INDIVIDUAL: 6, // Bota/Balón de Oro, Once Ideal — pesan más que un trofeo de equipo
+  // Arrancó en 6, pero eso dejaba el primer premio individual de la
+  // carrera (normalmente ganado temprano, con poca fama acumulada todavía
+  // por trofeos/prensa) apenas cruzando a "Regional" — un anticlímax para
+  // algo tan prestigioso. Con 15 (validado corriendo 300 carreras
+  // completas contra la fórmula real), el primer Bota/Balón de Oro/Once
+  // Ideal de una carrera cae directo en "Conocido" en el peor caso medido
+  // (percentil 10 ≈ 46) y en "Estrella" en el caso típico (mediana ≈ 58),
+  // sin inflar la trayectoria de fama de toda la carrera (el promedio
+  // final apenas sube de 55 a 59 — FAMA_POR_TROFEO no se tocó a propósito,
+  // porque compone mucho más que esto a lo largo de 15-20 temporadas).
+  FAMA_POR_PREMIO_INDIVIDUAL: 15, // Bota/Balón de Oro, Once Ideal — pesan más que un trofeo de equipo
 };

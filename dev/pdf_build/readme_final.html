@@ -110,7 +110,7 @@
   <h1>LEYENDA</h1>
   <p class="cover__sub">Documentación técnica completa del proyecto</p>
   <div class="cover__meta">
-    <div><strong>Versión:</strong> 1.3.1 — publicada el 22 de septiembre de 2026</div>
+    <div><strong>Versión:</strong> 1.3.2 — publicada el 22 de septiembre de 2026</div>
     <div><strong>Alcance:</strong> Cada fórmula, cada constante y dónde vive cada pieza en el código</div>
     <div><strong>Motor:</strong> HTML / CSS / JavaScript vanilla, sin dependencias ni build</div>
   </div>
@@ -118,7 +118,7 @@
 
 <h1>Leyenda ⚽</h1>
 <p>Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Aplicación web de una sola página (SPA), sin backend ni base de datos externa: todo el motor corre en el navegador, en <strong>Vue 3 + TypeScript + Pinia + Vite</strong>.</p>
-<p><strong>Versión:</strong> 1.3.1 — publicada el 22 de septiembre de 2026 · 14:54.</p>
+<p><strong>Versión:</strong> 1.3.2 — publicada el 22 de septiembre de 2026 · 15:34.</p>
 <blockquote>
 <p>Este documento describe <strong>absolutamente toda la lógica del juego</strong>: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscas &quot;cómo se juega&quot; en términos de jugador, ver el <em>Manual de Juego</em> aparte.</p>
 </blockquote>
@@ -901,9 +901,10 @@ valor = round(valorPorOvr × multiplicadorClub / 1000) × 1000    (redondeado al
 <li><strong>Trofeos de la temporada</strong>: al cerrar cada temporada, cada trofeo en <code>t.trofeos</code> (que en ese punto ya incluye los de club/selección <strong>y</strong> los premios individuales que acaba de agregar <code>evaluarPremiosMundiales</code>, <a href="#">sección 14.2</a>) suma <code>FAMA_POR_TROFEO</code> o <code>FAMA_POR_PREMIO_INDIVIDUAL</code> si es Bota de Oro/Balón de Oro/Once Ideal (<a href="app/src/stores/career.ts:916">career.ts:916-924</a>):</li>
 </ul>
 <pre><code>FAMA_POR_TROFEO: 2              (config.ts:2046)
-FAMA_POR_PREMIO_INDIVIDUAL: 6   (config.ts:2047, pesa más que un trofeo de equipo)
+FAMA_POR_PREMIO_INDIVIDUAL: 15  (config.ts:2057, pesa más que un trofeo de equipo)
 FAMA_MAX: 100                   (config.ts:2045)
 </code></pre>
+<p><code>FAMA_POR_PREMIO_INDIVIDUAL</code> arrancó en 6, pero eso dejaba el primer premio individual de una carrera (normalmente ganado temprano, con poca fama acumulada todavía) apenas cruzando a &quot;Regional&quot; — un anticlímax para algo tan prestigioso como un Balón de Oro. Con 15 (validado corriendo 300 carreras completas contra la fórmula real), el primer premio de la carrera cae en &quot;Conocido&quot; en el peor caso medido (percentil 10 ≈ 46 de fama) y en &quot;Estrella&quot; en el caso típico (mediana ≈ 58), sin inflar la trayectoria de fama de toda la carrera (el promedio final sube apenas de 55 a 59) — <code>FAMA_POR_TROFEO</code> no se tocó a propósito, porque compone mucho más que esto a lo largo de 15-20 temporadas de trofeos.</p>
 <p>Se muestra como una <strong>etiqueta de nivel</strong>, no como número crudo — a propósito, para que se lea como un eje distinto del OVR y no compita con él como &quot;el número importante&quot;. <code>famaTierLabel</code>/<code>famaTierColor</code> (<a href="app/src/game/format.ts:20">game/format.ts:20-37</a>) mapean 6 niveles (Anónimo, Regional, Conocido, Estrella, Ídolo, Leyenda mundial) con una paleta de color propia — deliberadamente distinta de <code>ovrTierColor</code> (bronce/plata/oro/zafiro/rubí/amatista), para no leerse como el mismo medidor. Aparece como chip en el hero (<code>HeroPanel.vue:80-82</code>) y como tile en el resumen final de carrera (<code>ResumenModal.vue:157</code>) — ver <a href="#">sección 22</a>.</p>
 <hr>
 <h2 id="16-sistema-de-fichajes-y-ofertas">16. Sistema de fichajes y ofertas</h2>
@@ -1489,6 +1490,8 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </li>
 <li><p><strong>Pie de versión</strong> (<code>GameConfig.VERSION</code>, <code>GameConfig.FECHA_PUBLICACION</code> — <a href="app/src/game/config.ts:389">config.ts:389-390</a>): un único punto de verdad para el número de versión y la fecha de publicación. Cada una de las 3 vistas (<code>PersonajeView.vue</code>, <code>EquipoView.vue</code>, <code>CarreraView.vue</code>) renderiza su propio <code>&lt;footer class=&quot;app-footer&quot;&gt;</code> leyendo esas mismas dos constantes — en <code>PersonajeView.vue</code>/<code>EquipoView.vue</code> es el último elemento de la vista (scroll normal); en <code>CarreraView.vue</code> va dentro de <code>.career</code>, después del historial, para no restarle alto fijo al hero/spotlight/decisiones.</p>
 </li>
+<li><p><strong>&quot;Abandonar esta carrera&quot;</strong>: link discreto justo antes del pie de versión, visible mientras <code>!career.carreraFinalizada</code> (una vez retirado, &quot;Aceptar&quot; en el panel de decisiones ya cumple ese rol). Un solo click no alcanza — cambia a una confirmación inline (&quot;¿Seguro? Perdés todo el progreso.&quot; + &quot;Sí, abandonar&quot;/&quot;Cancelar&quot;, <code>CarreraView.vue</code>) antes de llamar a <code>career.abandonarCarrera()</code> y navegar a <code>/</code>. Es la única acción destructiva de la interfaz sin un modal dedicado — se resolvió con un toggle de estado local (<code>confirmandoAbandono</code>) en vez de sumar un componente nuevo, dado que es un solo par de botones.</p>
+</li>
 </ul>
 <hr>
 <h2 id="23-persistencia-y-estado">23. Persistencia y estado</h2>
@@ -1497,7 +1500,8 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 <li><strong><code>localStorage[&quot;leyenda-carrera&quot;]</code></strong> (<code>STORAGE_KEY</code>, <a href="app/src/stores/career.ts:38">career.ts:38</a>) guarda un snapshot serializado con todo el estado necesario para reconstruir la carrera: <code>player</code>, <code>temporadaActual</code>, <code>temporadasFinalizadas</code>, <code>temporadasEnClubActual</code>, <code>esPrimerClub</code>, <code>edadRetiroForzoso</code>, <code>factorTalento</code>, <code>potencialTecho</code>, <code>carreraFinalizada</code>, <code>eventosUsados</code> (como array — se reconstruye como <code>Set</code> al cargar) y el contexto de la solicitud de cambio de dorsal.</li>
 <li><strong><code>guardar()</code></strong> (<a href="app/src/stores/career.ts:1281">career.ts:1281</a>) se llama después de <strong>cada</strong> checkpoint que cambia el estado de la carrera: iniciar carrera, cerrar un tramo, cerrar una temporada, resolver una decisión o una oferta, confirmar un cambio de dorsal, y retirarse — nunca hay una ventana donde el progreso en memoria esté más adelantado que lo último guardado. Envuelto en <code>try/catch</code> sin re-lanzar: si <code>localStorage</code> falla (modo privado, cuota llena), la carrera sigue jugable en memoria, simplemente no persiste ese guardado puntual.</li>
 <li><strong><code>cargar()</code></strong> (<a href="app/src/stores/career.ts:1316">career.ts:1316</a>) reconstruye todo el estado del store a partir del snapshot guardado, y devuelve <code>true</code>/<code>false</code> según si había una partida guardada válida. Se invoca <strong>solo</strong> al entrar a <code>/carrera</code> sin una carrera ya activa en memoria (<a href="app/src/views/CarreraView.vue:44">views/CarreraView.vue:44</a>) — o sea, al recargar la página estando en esa ruta (la navegación normal Personaje → Equipo → Carrera arranca la carrera directo en memoria vía <code>iniciarCarrera</code>, sin pasar por <code>cargar()</code>). Si tampoco hay nada guardado, redirige a <code>/</code>.</li>
-<li><strong><code>hayCarreraGuardada()</code></strong> (<a href="app/src/stores/career.ts:1307">career.ts:1307</a>) y <strong><code>limpiarPartidaGuardada()</code></strong> (<a href="app/src/stores/career.ts:1357">career.ts:1357</a>) están expuestas por el store (comprobar si existe una partida sin cargarla, y borrarla del todo) pero <strong>ninguna vista las usa todavía</strong> — quedan disponibles para una futura pantalla de &quot;continuar carrera&quot; o &quot;borrar mi progreso&quot; en la creación de personaje.</li>
+<li><strong><code>hayCarreraGuardada()</code></strong> (<a href="app/src/stores/career.ts:1307">career.ts:1307</a>) comprueba si existe una partida sin cargarla — expuesta por el store, pero <strong>ninguna vista la usa todavía</strong>, queda disponible para una futura pantalla de &quot;continuar carrera&quot; en la creación de personaje.</li>
+<li><strong><code>limpiarPartidaGuardada()</code></strong> (<a href="app/src/stores/career.ts:1357">career.ts:1357</a>) borra el guardado del todo — la usa <code>abandonarCarrera()</code> (<a href="app/src/stores/career.ts:1371">career.ts:1371-1374</a>), la acción detrás del botón &quot;Abandonar esta carrera&quot; (<code>CarreraView.vue</code>, ver <a href="#">sección 22</a>): además de borrar <code>localStorage</code>, pisa <code>player</code>/<code>temporadaActual</code> a <code>null</code> para que <code>carreraIniciada</code> pase a <code>false</code> de inmediato — sin esto, <code>limpiarPartidaGuardada()</code> sola solo limpiaría el guardado pero dejaría la carrera abandonada viva en memoria hasta recargar la página.</li>
 <li><strong><code>localStorage[&quot;leyendaPlayerDraft&quot;]</code></strong> sigue existiendo aparte, con el mismo rol que tenía en la vanilla: identidad del jugador + club/OVR inicial, desde la creación de personaje hasta que <code>iniciarCarrera</code> arranca la Temporada 1 (ver <a href="#">sección 4</a> y <a href="#">sección 5</a>) — no se toca una vez la carrera está en curso.</li>
 <li>No hay backend, base de datos externa, ni llamadas de red propias del juego (aparte de pedir escudos/banderas/imágenes de trofeos como archivos estáticos, y las banderas de país a flagcdn.com).</li>
 </ul>
@@ -2104,14 +2108,14 @@ en cualquier otro año →  solo amistosos/eliminatorias, sin trofeo en juego
 </tr>
 <tr>
 <td><code>FAMA_POR_PREMIO_INDIVIDUAL</code></td>
-<td>6</td>
+<td>15</td>
 <td>Fama ganada por cada Bota/Balón de Oro o Once Ideal, al cierre de temporada</td>
 </tr>
 </tbody></table>
 <hr>
 <h2 id="25-limitaciones-conocidas-y-notas-para-el-futuro">25. Limitaciones conocidas y notas para el futuro</h2>
 <ul>
-<li><strong><code>hayCarreraGuardada()</code>/<code>limpiarPartidaGuardada()</code></strong> ya están implementadas en el store (ver <a href="#">sección 23</a>) pero ninguna vista las usa todavía — no hay pantalla de &quot;continuar carrera&quot; ni forma de borrar un guardado desde la interfaz, solo recargar <code>/carrera</code> (que carga automático) o borrar <code>localStorage</code> a mano.</li>
+<li><strong><code>hayCarreraGuardada()</code></strong> ya está implementada en el store (ver <a href="#">sección 23</a>) pero ninguna vista la usa todavía — no hay pantalla de &quot;continuar carrera&quot; explícita, solo recargar <code>/carrera</code> (que carga automático). Borrar un guardado desde la interfaz sí es posible ahora, con el botón &quot;Abandonar esta carrera&quot;.</li>
 <li><strong><code>pierna</code> hábil</strong> se guarda pero no se usa en ninguna fórmula todavía — es puramente cosmético en la ficha/camiseta.</li>
 <li>Los números de partidos por competición (<a href="#">sección 21</a>) son una referencia realista, no oficiales fijos, para ligas/copas cuyo formato cambió seguido en la realidad (Argentina, México, Colombia) — están documentados caso por caso en los comentarios de <code>data/database.ts</code>.</li>
 <li>24 de los 47 países de la creación de personaje tienen liga propia cargada (subió de 5 con la incorporación de 19 ligas nuevas); el resto arranca &quot;de extranjero&quot; en las 5 grandes ligas europeas — es coherente con el diseño actual (documentado en <a href="#">sección 5</a>), no un bug, pero sigue siendo la superficie más obvia para sumar más ligas locales a futuro.</li>

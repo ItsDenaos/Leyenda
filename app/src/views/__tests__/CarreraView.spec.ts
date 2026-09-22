@@ -104,4 +104,62 @@ describe('CarreraView', () => {
 
     expect(setProperty).toHaveBeenCalledWith('--vh-real', expect.any(String))
   })
+
+  it('"Abandonar esta carrera" pide confirmación y, tras confirmar, borra la carrera y navega a /', async () => {
+    const career = useCareerStore()
+    const equipo = GameDatabase.equipos[0]!
+    career.iniciarCarrera({
+      apellido: 'PEREZ',
+      numero: 10,
+      pierna: 'derecha',
+      edad: 17,
+      pais: 'Argentina',
+      flag: '🇦🇷',
+      paisCode: 'ar',
+      posicion: 'DC',
+      equipoId: equipo.id,
+      ovrInicial: 58,
+    })
+
+    const wrapper = mount(CarreraView)
+    await nextTick()
+
+    expect(wrapper.text()).not.toContain('Perdés todo el progreso')
+    await wrapper.find('.abandonar__link').trigger('click')
+    expect(wrapper.text()).toContain('Perdés todo el progreso')
+    expect(push).not.toHaveBeenCalled()
+
+    await wrapper.find('.abandonar__confirmar').trigger('click')
+
+    expect(push).toHaveBeenCalledWith('/')
+    expect(career.carreraIniciada).toBe(false)
+    expect(career.hayCarreraGuardada()).toBe(false)
+  })
+
+  it('"Cancelar" en la confirmación de abandono no borra nada', async () => {
+    const career = useCareerStore()
+    const equipo = GameDatabase.equipos[0]!
+    career.iniciarCarrera({
+      apellido: 'PEREZ',
+      numero: 10,
+      pierna: 'derecha',
+      edad: 17,
+      pais: 'Argentina',
+      flag: '🇦🇷',
+      paisCode: 'ar',
+      posicion: 'DC',
+      equipoId: equipo.id,
+      ovrInicial: 58,
+    })
+
+    const wrapper = mount(CarreraView)
+    await nextTick()
+
+    await wrapper.find('.abandonar__link').trigger('click')
+    await wrapper.find('.abandonar__cancelar').trigger('click')
+
+    expect(wrapper.text()).not.toContain('Perdés todo el progreso')
+    expect(push).not.toHaveBeenCalled()
+    expect(career.carreraIniciada).toBe(true)
+  })
 })
