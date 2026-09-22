@@ -31,7 +31,7 @@ export function famaTierLabel(fama: number): string {
   if (fama >= 70) return 'Ídolo'
   if (fama >= 50) return 'Estrella'
   if (fama >= 30) return 'Conocido'
-  if (fama >= 10) return 'Promesa'
+  if (fama >= 10) return 'Regional'
   return 'Anónimo'
 }
 

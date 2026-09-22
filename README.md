@@ -2,7 +2,7 @@
 
 Simulador de carrera de un futbolista, de principiante a leyenda (o al fracaso). Aplicación web de una sola página (SPA), sin backend ni base de datos externa: todo el motor corre en el navegador, en **Vue 3 + TypeScript + Pinia + Vite**.
 
-**Versión:** 1.3.0 — publicada el 21 de septiembre de 2026 · 00:35.
+**Versión:** 1.3.1 — publicada el 22 de septiembre de 2026 · 14:54.
 
 > Este documento describe **absolutamente toda la lógica del juego**: cada fórmula, cada constante de balance y dónde vive cada pieza en el código. Está pensado como referencia técnica completa, no como introducción rápida — si buscas "cómo se juega" en términos de jugador, ver el *Manual de Juego* aparte.
 
@@ -107,7 +107,7 @@ Leyenda/
         │   ├── database.ts                  GameDatabase — ligas, equipos, competiciones y selecciones
         │   ├── database-helpers.ts          Lookups compartidos (equipoDe, ligaDe)
         │   ├── events.ts                    GameEvents — banco de 226 eventos de decisión + lesiones
-        │   └── countries.ts                 Los 46 países de la creación de personaje
+        │   └── countries.ts                 Los 47 países de la creación de personaje
         ├── composables/
         │   ├── useAnimatedNumber.ts         Interpolación de números/anillo (ease-out cúbico, 900ms)
         │   ├── useToast.ts                  Sistema de notificaciones cortas
@@ -166,7 +166,7 @@ Formulario de 3 pasos (acordeón en móvil, los 3 siempre abiertos en escritorio
 | 1. ¿Quién eres? | Apellido | Texto libre, máx. 16 caracteres, se muestra en mayúsculas en la camiseta. |
 | | Edad | Botones de **16 a 19 años** (`GameConfig.EDAD_MIN`/`EDAD_MAX`, [config.ts:393-394](app/src/game/config.ts:393)). |
 | | Pierna hábil | Izquierda / derecha — **no afecta ninguna fórmula del juego**, es solo cosmético (se guarda pero no se lee en ningún cálculo). |
-| 2. ¿De dónde eres? | País | 46 países (`COUNTRIES`, [data/countries.ts:12](app/src/data/countries.ts:12)), con buscador. Define bandera y, en el paso siguiente, el pool de clubes iniciales. |
+| 2. ¿De dónde eres? | País | 47 países (`COUNTRIES`, [data/countries.ts:12](app/src/data/countries.ts:12)), con buscador. Define bandera y, en el paso siguiente, el pool de clubes iniciales. |
 | 3. ¿Dónde juegas? | Posición | 12 posiciones sobre una cancha (`FILAS_CANCHA`, [PersonajeView.vue:31](app/src/views/PersonajeView.vue:31)): POR, DFC, LI, LD, MCD, MC, MI, MD, MCO, EI, ED, DC. |
 
 El **dorsal** se asigna solo al azar, no se elige — pero no parejo entre 1 y 99 (así, un debutante tenía la misma chance de arrancar con el 7 que con el 87, nada realista). `sortearDorsalInicial()` ([config.ts:406](app/src/game/config.ts:406), llamado desde [PersonajeView.vue:59](app/src/views/PersonajeView.vue:59)) sortea por bandas: **70%** de las carreras arranca con un número común (**1-30**), **20%** con uno menos común (**31-50**), y solo el **10%** restante con uno alto (**51-99**) — el caso ocasional, no la norma. Recién se puede pedir cambiarlo al cerrar la primera temporada (ver [sección 18](#18-solicitud-de-cambio-de-dorsal)).
@@ -186,7 +186,7 @@ y se navega a `/equipo`. Es un borrador intermedio, no la carrera en sí — se 
 
 Se presentan **4 ofertas de club**, elegidas así (`generarOfertasInicialesParaJugador`, [game/initial-offers.ts:23](app/src/game/initial-offers.ts:23)):
 
-- **Si el país elegido tiene una liga propia** en la base de datos (**23 de los 46** países de la creación de personaje, desde Alemania/Argentina/España hasta Bolivia/Costa Rica/Paraguay — todas las que tienen `pais` cargado en `GameDatabase.ligas`, ver [sección 21](#21-base-de-datos-de-ligas-y-equipos-datadatabasets)), las 4 ofertas salen de esa liga, en esta banda fija (`OFERTAS_INICIALES`, [config.ts:505-510](app/src/game/config.ts:505), aplicada por `generarOfertasIniciales`, [config.ts:595](app/src/game/config.ts:595)):
+- **Si el país elegido tiene una liga propia** en la base de datos (**24 de los 47** países de la creación de personaje, desde Alemania/Argentina/España hasta Bolivia/Costa Rica/Paraguay/El Salvador — todas las que tienen `pais` cargado en `GameDatabase.ligas`, ver [sección 21](#21-base-de-datos-de-ligas-y-equipos-datadatabasets)), las 4 ofertas salen de esa liga, en esta banda fija (`OFERTAS_INICIALES`, [config.ts:505-510](app/src/game/config.ts:505), aplicada por `generarOfertasIniciales`, [config.ts:595](app/src/game/config.ts:595)):
   - 2 clubes **humildes** (mitad de abajo por poder, dentro de esa liga)
   - 1 club **consolidado** (entre el 50% y el 85% por poder)
   - 1 club **al azar**, de cualquier categoría (la única chance de arrancar en un club grande)
@@ -714,7 +714,7 @@ FAMA_POR_PREMIO_INDIVIDUAL: 6   (config.ts:2047, pesa más que un trofeo de equi
 FAMA_MAX: 100                   (config.ts:2045)
 ```
 
-Se muestra como una **etiqueta de nivel**, no como número crudo — a propósito, para que se lea como un eje distinto del OVR y no compita con él como "el número importante". `famaTierLabel`/`famaTierColor` ([game/format.ts:20-37](app/src/game/format.ts:20)) mapean 6 niveles (Anónimo, Promesa, Conocido, Estrella, Ídolo, Leyenda mundial) con una paleta de color propia — deliberadamente distinta de `ovrTierColor` (bronce/plata/oro/zafiro/rubí/amatista), para no leerse como el mismo medidor. Aparece como chip en el hero (`HeroPanel.vue:80-82`) y como tile en el resumen final de carrera (`ResumenModal.vue:157`) — ver [sección 22](#22-interfaz-componentes-composables-y-responsive).
+Se muestra como una **etiqueta de nivel**, no como número crudo — a propósito, para que se lea como un eje distinto del OVR y no compita con él como "el número importante". `famaTierLabel`/`famaTierColor` ([game/format.ts:20-37](app/src/game/format.ts:20)) mapean 6 niveles (Anónimo, Regional, Conocido, Estrella, Ídolo, Leyenda mundial) con una paleta de color propia — deliberadamente distinta de `ovrTierColor` (bronce/plata/oro/zafiro/rubí/amatista), para no leerse como el mismo medidor. Aparece como chip en el hero (`HeroPanel.vue:80-82`) y como tile en el resumen final de carrera (`ResumenModal.vue:157`) — ver [sección 22](#22-interfaz-componentes-composables-y-responsive).
 
 ---
 
@@ -890,7 +890,7 @@ Sistema aparte del banco de eventos (aunque su tarjeta se muestra en el mismo lu
 
 ### 19.1 Selecciones nacionales (`GameDatabase.selecciones`)
 
-**46 selecciones** — una por cada país de `COUNTRIES` ([data/countries.ts:12](app/src/data/countries.ts:12)) — cada una con `fuerza`/`prestigio` (mismo eje 0-100 que clubes/ligas, ver [sección 14.0](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)) y su `confederacion` (`UEFA` / `CONMEBOL` / `CONCACAF` / `CAF` / `AFC` — más amplio que el de `ligas`, porque acá entran todos los países de la creación de personaje, no solo los que tienen liga propia cargada). Van a mano según pedigrí futbolístico real: de Brasil (fuerza 92) a Catar (fuerza 38).
+**47 selecciones** — una por cada país de `COUNTRIES` ([data/countries.ts:12](app/src/data/countries.ts:12)) — cada una con `fuerza`/`prestigio` (mismo eje 0-100 que clubes/ligas, ver [sección 14.0](#14-sistema-de-competiciones-liga-copas-clasificación-internacional)) y su `confederacion` (`UEFA` / `CONMEBOL` / `CONCACAF` / `CAF` / `AFC` — más amplio que el de `ligas`, porque acá entran todos los países de la creación de personaje, no solo los que tienen liga propia cargada). Van a mano según pedigrí futbolístico real: de Brasil (fuerza 92) a El Salvador (fuerza 34).
 
 ### 19.2 Convocatoria
 
@@ -1016,7 +1016,7 @@ Cada opción define el texto del botón y sus `efectos` (`rendimiento` −3..+3 
 | Primera División (El Salvador) | El Salvador | CONCACAF | 44 | 38 | 14 |
 | Primera División (Bolivia) | Bolivia | CONMEBOL | 42 | 38 | 15 |
 
-**23 de las 29** tienen el campo `pais` cargado con un país que existe en `COUNTRIES` (`data/countries.ts`) — esas son las que pueden ser el punto de partida "local" en la creación de personaje (ver [sección 5](#5-elección-de-club-inicial-viewsequipoviewvue)). Turquía, Grecia, Rusia, China, El Salvador y Ucrania tienen liga cargada pero **no** son nacionalidades elegibles todavía — se puede fichar por sus clubes, pero no arrancar la carrera como local ahí.
+**24 de las 29** tienen el campo `pais` cargado con un país que existe en `COUNTRIES` (`data/countries.ts`) — esas son las que pueden ser el punto de partida "local" en la creación de personaje (ver [sección 5](#5-elección-de-club-inicial-viewsequipoviewvue)). Turquía, Grecia, Rusia, China y Ucrania tienen liga cargada pero **no** son nacionalidades elegibles todavía — se puede fichar por sus clubes, pero no arrancar la carrera como local ahí.
 
 **510 equipos reales** repartidos en esas 29 ligas, cada uno con: nombre real, sus propios `fuerza`/`prestigio`/`economia`, iniciales y colores propios (para el placeholder si el escudo no carga) y el nombre del archivo de escudo real. Los ~25 clubes más reconocibles del mundo de las 10 ligas originales tienen esos 3 valores puestos a mano; el resto (incluidos los 296 equipos de las 19 ligas nuevas) se derivó con una variación estable por club (mismo id → siempre el mismo resultado) a partir de 3 niveles de referencia por liga — "grande" / "consolidado" / "humilde" — para que no todos los equipos de una misma liga terminen con el número idéntico.
 
@@ -1034,7 +1034,7 @@ Cada opción define el texto del botón y sus `efectos` (`rendimiento` −3..+3 
 
 Todos los números de partidos (mínimos garantizados + rondas extra) son una referencia realista basada en el formato vigente de cada torneo — ver los comentarios junto a cada entrada en el archivo para el detalle de cada formato.
 
-**46 selecciones nacionales** (`GameDatabase.selecciones`) — una por cada país de la creación de personaje, con `fuerza`/`prestigio` propios y su confederación (`UEFA`/`CONMEBOL`/`CONCACAF`/`CAF`/`AFC`) — ver [sección 19](#19-selección-nacional) para cómo se usan.
+**47 selecciones nacionales** (`GameDatabase.selecciones`) — una por cada país de la creación de personaje, con `fuerza`/`prestigio` propios y su confederación (`UEFA`/`CONMEBOL`/`CONCACAF`/`CAF`/`AFC`) — ver [sección 19](#19-selección-nacional) para cómo se usan.
 
 ---
 
@@ -1237,10 +1237,10 @@ Todas viven en [`app/src/game/config.ts`](app/src/game/config.ts). Cambiar cualq
 - **`hayCarreraGuardada()`/`limpiarPartidaGuardada()`** ya están implementadas en el store (ver [sección 23](#23-persistencia-y-estado)) pero ninguna vista las usa todavía — no hay pantalla de "continuar carrera" ni forma de borrar un guardado desde la interfaz, solo recargar `/carrera` (que carga automático) o borrar `localStorage` a mano.
 - **`pierna` hábil** se guarda pero no se usa en ninguna fórmula todavía — es puramente cosmético en la ficha/camiseta.
 - Los números de partidos por competición ([sección 21](#21-base-de-datos-de-ligas-y-equipos-datadatabasets)) son una referencia realista, no oficiales fijos, para ligas/copas cuyo formato cambió seguido en la realidad (Argentina, México, Colombia) — están documentados caso por caso en los comentarios de `data/database.ts`.
-- 23 de los 46 países de la creación de personaje tienen liga propia cargada (subió de 5 con la incorporación de 19 ligas nuevas); el resto arranca "de extranjero" en las 5 grandes ligas europeas — es coherente con el diseño actual (documentado en [sección 5](#5-elección-de-club-inicial-viewsequipoviewvue)), no un bug, pero sigue siendo la superficie más obvia para sumar más ligas locales a futuro.
+- 24 de los 47 países de la creación de personaje tienen liga propia cargada (subió de 5 con la incorporación de 19 ligas nuevas); el resto arranca "de extranjero" en las 5 grandes ligas europeas — es coherente con el diseño actual (documentado en [sección 5](#5-elección-de-club-inicial-viewsequipoviewvue)), no un bug, pero sigue siendo la superficie más obvia para sumar más ligas locales a futuro.
 - **Rusia sigue cargada como confederación `UEFA`**, aunque sus clubes están suspendidos de las competiciones de UEFA desde 2022 — el juego no modela esa suspensión, así que un club ruso con la fuerza suficiente sí puede "clasificar" a la Champions/Europa League en la ficción del juego. Es una simplificación deliberada (no hay ningún mecanismo de "confederación con competiciones restringidas"), no un error de tipeo.
 - **La Liga Premier de Ucrania quedó con 16 equipos** en vez de los 20 reales de esta temporada (ver [sección 21](#21-base-de-datos-de-ligas-y-equipos-datadatabasets)) — se prefirió no completarla con clubes inventados sin escudo real.
-- **Turquía, Grecia, Rusia, China, El Salvador y Ucrania** tienen liga y equipos cargados pero todavía no son nacionalidades elegibles en la creación de personaje — se puede fichar por sus clubes durante la carrera, pero no arrancarla siendo local ahí.
+- **Turquía, Grecia, Rusia, China y Ucrania** tienen liga y equipos cargados pero todavía no son nacionalidades elegibles en la creación de personaje — se puede fichar por sus clubes durante la carrera, pero no arrancarla siendo local ahí.
 - **AFC todavía no tiene copa continental de segundo nivel** (a diferencia de UEFA/CONMEBOL) — un club japonés o chino solo puede clasificar a la AFC Champions League Elite, nunca a un equivalente de la Europa League/Sudamericana.
 - **CAF no tiene ninguna liga doméstica de club cargada** — solo existe como confederación de selecciones nacionales (para la Copa Africana de Naciones, [sección 19](#19-selección-nacional)); ningún club africano es fichable todavía.
 - **El rival de carrera** ([sección 14.3](#143-rival-de-carrera-motor-activo-oculto-en-la-interfaz)) sigue generándose y avanzando en cada carrera, pero está oculto en la interfaz a pedido (feedback de testers) — no se muestra en ningún lado hoy. No es un bug ni un olvido: el motor quedó intacto por si se reactiva más adelante.

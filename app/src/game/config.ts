@@ -386,8 +386,8 @@ export const GameConfig: GameConfigShape = {
   // que arma el texto — acá solo viven los datos).
   // Actualizar acá al publicar una versión nueva — no repetir el
   // número/fecha sueltos en cada componente.
-  VERSION: "1.3.0",
-  FECHA_PUBLICACION: "21 de septiembre de 2026 · 00:35",
+  VERSION: "1.3.1",
+  FECHA_PUBLICACION: "22 de septiembre de 2026 · 14:54",
 
   // ---------------- CREACIÓN DE PERSONAJE ----------------
   EDAD_MIN: 16,

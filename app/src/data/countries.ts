@@ -29,6 +29,7 @@ export const COUNTRIES: Country[] = [
   { name: 'Dinamarca', code: 'dk', flag: '🇩🇰' },
   { name: 'Ecuador', code: 'ec', flag: '🇪🇨' },
   { name: 'Egipto', code: 'eg', flag: '🇪🇬' },
+  { name: 'El Salvador', code: 'sv', flag: '🇸🇻' },
   { name: 'Escocia', code: 'gb-sct', flag: '🏴' },
   { name: 'España', code: 'es', flag: '🇪🇸' },
   { name: 'Estados Unidos', code: 'us', flag: '🇺🇸' },
