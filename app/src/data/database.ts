@@ -202,6 +202,7 @@ export const GameDatabase: GameDatabaseShape = {
     { pais: "Panamá", paisCode: "pa", paisFlag: "🇵🇦", confederacion: "CONCACAF", fuerza: 44, prestigio: 32 },
     { pais: "Jamaica", paisCode: "jm", paisFlag: "🇯🇲", confederacion: "CONCACAF", fuerza: 38, prestigio: 28 },
     { pais: "Canadá", paisCode: "ca", paisFlag: "🇨🇦", confederacion: "CONCACAF", fuerza: 54, prestigio: 35 },
+    { pais: "El Salvador", paisCode: "sv", paisFlag: "🇸🇻", confederacion: "CONCACAF", fuerza: 34, prestigio: 22 },
     // -------- UEFA --------
     { pais: "España", paisCode: "es", paisFlag: "🇪🇸", confederacion: "UEFA", fuerza: 88, prestigio: 90 },
     { pais: "Portugal", paisCode: "pt", paisFlag: "🇵🇹", confederacion: "UEFA", fuerza: 84, prestigio: 75 },

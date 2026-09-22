@@ -4,7 +4,7 @@ import { GameDatabase } from '../database'
 describe('GameDatabase', () => {
   it('tiene la cantidad de registros esperada', () => {
     expect(GameDatabase.ligas).toHaveLength(29)
-    expect(GameDatabase.selecciones).toHaveLength(46)
+    expect(GameDatabase.selecciones).toHaveLength(47)
     expect(GameDatabase.equipos).toHaveLength(510)
     expect(GameDatabase.competiciones).toHaveLength(71)
   })
